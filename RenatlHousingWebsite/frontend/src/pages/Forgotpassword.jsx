@@ -1,0 +1,48 @@
+import React, { useState } from "react";
+import API from "../lib/axios";
+import { useNavigate } from "react-router-dom";
+
+const ForgotPassword = () => {
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage("");
+    setError("");
+
+    try {
+      const response = await API.post("/api/auth/forgot-password", { email });
+      setMessage(response.data.msg);
+      setTimeout(() => navigate("/verify-otp"), 3000); // Redirect after 3 sec
+    } catch (err) {
+      setError(err.response?.data?.msg || "Something went wrong");
+    }
+  };
+
+  return (
+    <div className="flex justify-center items-center h-screen bg-gray-100">
+      <form onSubmit={handleSubmit} className="bg-white p-6 w-96 rounded shadow">
+        <h2 className="text-2xl font-bold mb-4">Forgot Password</h2>
+        {message && <p className="text-green-500">{message}</p>}
+        {error && <p className="text-red-500">{error}</p>}
+        <input
+          type="email"
+          name="email"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="w-full p-2 border rounded mb-2"
+        />
+        <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded">
+          Send OTP
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default ForgotPassword;

@@ -9,6 +9,19 @@ const api = axios.create({
   }
 });
 
+// axios.post("/api/auth/login", {
+//   email: email,
+//   password: password
+// }, { withCredentials: true }) // Cookies भेजने के लिए
+// .then(response => {
+//   console.log(response.data); // Success response
+// })
+// .catch(error => {
+//   console.error("There was an error!", error);
+// });
+
+
+
 // Add request interceptor
 api.interceptors.request.use(
   (config) => {

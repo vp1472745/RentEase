@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import passport from "passport";
 import cookieParser from "cookie-parser"; // ✅ Import cookie-parser
+import morgan from "morgan"; // ✅ Import Morgan
 import authRoutes from "./src/routes/authRoutes.js";
 import googleAuthRoutes from "./src/routes/Oauth-google.js";
 import propertyRoutes from "./src/routes/propertyRoute.js";
@@ -18,6 +19,7 @@ import "./src/config/passport.js";
 const app = express();
 
 // Middleware Configuration
+app.use(morgan("dev")); // ✅ Apply Morgan for logging
 app.use(express.json());
 app.use(cookieParser()); // ✅ Enable Cookie Parsing
 app.use(
@@ -96,6 +98,11 @@ app.use("/api/properties", propertyRoutes); // ✅ Property Routes
 // Default Route
 app.get("/", (req, res) => {
   res.send("🏠 RentEase Backend Running...");
+});
+
+app.post("/api/auth/signup", (req, res) => {
+  console.log("Request Received:", req.body);
+  res.json({ msg: "OTP sent!" });
 });
 
 // Start Server

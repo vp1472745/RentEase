@@ -1,76 +1,30 @@
-import React, { useState, useEffect } from "react";
-import Modal from "react-modal";
+import React from "react";
 
-Modal.setAppElement("#root");
-
-const OtpModal = ({ isOpen, onClose, onSubmitOtp, resendOtp }) => {
-  const [otp, setOtp] = useState("");
-  const [countdown, setCountdown] = useState(60);
-  const [resendDisabled, setResendDisabled] = useState(true);
-
-  useEffect(() => {
-    if (isOpen) {
-      startCountdown();
-    }
-  }, [isOpen]);
-
-  const startCountdown = () => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev === 1) {
-          clearInterval(timer);
-          setResendDisabled(false);
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  const handleSubmit = () => {
-    onSubmitOtp(otp);
-  };
-
-  const handleResend = () => {
-    resendOtp();
-    setResendDisabled(true);
-    setCountdown(60);
-    startCountdown();
-  };
+const OtpModal = ({ isOpen, onClose, otpValue, setOtpValue, onSubmitOtp, resendOtp, countdown, resendDisabled }) => {
+  if (!isOpen) return null;
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onRequestClose={onClose}
-      className="modal"
-      overlayClassName="overlay"
-      contentLabel="OTP Modal"
-    >
-      <h3 className="text-center text-xl font-semibold">Enter OTP</h3>
-      <div className="mb-4">
-        <label htmlFor="otp" className="block text-sm font-medium text-gray-700">OTP</label>
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+        <h2 className="text-xl font-semibold mb-4">Verify OTP</h2>
+
         <input
           type="text"
-          id="otp"
-          className="mt-1 p-2 w-full border border-gray-300 rounded-md"
           placeholder="Enter OTP"
-          value={otp}
-          onChange={(e) => setOtp(e.target.value)}
+          value={otpValue}
+          onChange={(e) => setOtpValue(e.target.value)}
+          className="w-full p-2 border rounded mb-4"
         />
+
+        <button onClick={onSubmitOtp} className="w-full bg-blue-500 text-white p-2 rounded mb-2">Submit OTP</button>
+
+        <button onClick={resendOtp} disabled={resendDisabled} className="w-full text-blue-500">
+          Resend OTP {resendDisabled ? `(${countdown}s)` : ""}
+        </button>
+
+        <button onClick={onClose} className="absolute top-2 right-2 text-gray-500">✖</button>
       </div>
-      <button
-        onClick={handleSubmit}
-        className="mt-2 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700"
-      >
-        Submit OTP
-      </button>
-      <button
-        onClick={handleResend}
-        className={`mt-2 py-2 px-4 bg-gray-300 text-white rounded-md ${resendDisabled ? "cursor-not-allowed" : ""}`}
-        disabled={resendDisabled}
-      >
-        {resendDisabled ? `Resend in ${countdown}s` : "Resend OTP"}
-      </button>
-    </Modal>
+    </div>
   );
 };
 
