@@ -39,8 +39,9 @@ function App() {
     console.log("Resending OTP...");
     alert("New OTP sent to your registered email/phone!");
   };
-
+  
   return (
+    
     <GoogleOAuthProvider clientId="385746889631-oepj52hiaskkn8oqbp3244r888uupr2d.apps.googleusercontent.com">
       <Router>
         <header>

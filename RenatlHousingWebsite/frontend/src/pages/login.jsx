@@ -2,7 +2,10 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../lib/axios";
 import { Eye, EyeOff } from "lucide-react"; // ✅ Import Icons
-import signup from "../assets/singup.gif";
+import signup from "../assets/sii.gif";
+import { ToastContainer, toast } from 'react-toastify'; // Import ToastContainer and toast
+import 'react-toastify/dist/ReactToastify.css'; // Import CSS for toast notifications
+
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
@@ -25,7 +28,7 @@ const Login = () => {
       const data = response.data;
 
       // Show success message
-      alert(data.msg || "Login successful!");
+      toast.success(data.msg || "Login successful!"); // Show success notification
 
       // If API returns a token, store it (if required)
       if (data.token) {
@@ -35,19 +38,20 @@ const Login = () => {
       navigate("/"); // Redirect to home page or any other page after login
     } catch (err) {
       console.error("Login Error:", err);
-      setError(err.response?.data?.msg || "Login failed. Please try again.");
+      // setError(err.response?.data?.msg || "Login failed. Please try again.");
+      toast.error(err.response?.data?.msg || "Login failed. Please try again."); // Show error notification
     }
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="flex bg-black w-200 h-160">
-        <div>
-          <img src={signup} alt="" className="bg-white  w-150 " />
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-blue-200 to-blue-500">
+      <div className="flex flex-col md:flex-row items-center justify-center w-full max-w-4xl mt-5 bg-white shadow-lg rounded-lg p-8">
+        <div className="w-full md:w-1/2 mb-5 md:mb-0">
+          <img src={signup} alt="Signup" className="w-full max-w-lg h-auto rounded-lg" />
         </div>
-        <div>
-          <form onSubmit={handleSubmit} className="bg-white p-6 h-160 w-96 ">
-            <h2 className="text-2xl font-bold mb-4">Login</h2>
+        <div className="w-full md:w-1/2">
+          <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg ">
+            <h2 className="text-2xl font-bold mb-4 text-gray-800">Login</h2>
 
             {error && <p className="text-red-500">{error}</p>}
 
@@ -58,11 +62,11 @@ const Login = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full p-2 border rounded mb-2"
+              className="w-full p-2 border border-gray-300 rounded mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
             />
 
             {/* Password Input with Toggle */}
-            <div className="relative w-full">
+            <div className="relative w-full mb-4">
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
@@ -70,12 +74,12 @@ const Login = () => {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full p-2 border rounded mb-4 pr-10"
+                className="w-full p-2 border border-gray-300 rounded pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2 top-2 text-gray-500"
+                className="absolute right-2 top-2 text-gray-500 cursor-pointer"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -83,7 +87,7 @@ const Login = () => {
 
             <button
               type="submit"
-              className="w-full bg-blue-500 text-white p-2 rounded"
+              className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-200 cursor-pointer"
             >
               Login
             </button>
@@ -102,6 +106,7 @@ const Login = () => {
           </form>
         </div>
       </div>
+      <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
     </div>
   );
 };

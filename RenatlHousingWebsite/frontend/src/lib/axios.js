@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:6000",  // Apne backend ka base URL daalo
+  baseURL: "http://localhost:5000",  // Apne backend ka base URL daalo
   headers: {
     "Content-Type": "application/json",
   },
