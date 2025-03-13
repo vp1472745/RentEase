@@ -41,12 +41,12 @@ const Login = () => {
 
   return (
     <div className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="flex bg-black w-170">
+      <div className="flex bg-black w-200 h-160">
         <div>
-          <img src={signup} alt="" className="bg-white  w-96 " />
+          <img src={signup} alt="" className="bg-white  w-150 " />
         </div>
         <div>
-          <form onSubmit={handleSubmit} className="bg-white p-6 h-96 w-96 ">
+          <form onSubmit={handleSubmit} className="bg-white p-6 h-160 w-96 ">
             <h2 className="text-2xl font-bold mb-4">Login</h2>
 
             {error && <p className="text-red-500">{error}</p>}

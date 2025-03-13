@@ -1,13 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import API from "../lib/axios";
 import { useNavigate } from "react-router-dom";
 
 const VerifyOTP = () => {
   const [otp, setOtp] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(localStorage.getItem("resetEmail") || ""); // Auto-fill email
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Ensure email is filled if stored in localStorage
+    setEmail(localStorage.getItem("resetEmail") || "");
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,6 +21,10 @@ const VerifyOTP = () => {
 
     try {
       const response = await API.post("/api/auth/verify-reset-otp", { email, otp });
+
+      // Store OTP in localStorage for Reset Password auto-fill
+      localStorage.setItem("resetOTP", otp);
+
       setMessage(response.data.msg);
       setTimeout(() => navigate("/reset-password"), 3000); // Redirect after 3 sec
     } catch (err) {
@@ -37,6 +46,7 @@ const VerifyOTP = () => {
           onChange={(e) => setEmail(e.target.value)}
           required
           className="w-full p-2 border rounded mb-2"
+          readOnly // Prevents user from changing email
         />
         <input
           type="text"

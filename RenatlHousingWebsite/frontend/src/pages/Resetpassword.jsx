@@ -1,14 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import API from "../lib/axios";
 import { useNavigate } from "react-router-dom";
 
 const ResetPassword = () => {
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
+  const [email, setEmail] = useState(localStorage.getItem("resetEmail") || ""); // Auto-fill email
+  const [otp, setOtp] = useState(localStorage.getItem("resetOTP") || ""); // Auto-fill OTP
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setEmail(localStorage.getItem("resetEmail") || "");
+    setOtp(localStorage.getItem("resetOTP") || "");
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,6 +23,11 @@ const ResetPassword = () => {
     try {
       const response = await API.post("/api/auth/reset-password", { email, otp, newPassword });
       setMessage(response.data.msg);
+
+      // Clear stored data after successful reset
+      localStorage.removeItem("resetEmail");
+      localStorage.removeItem("resetOTP");
+
       setTimeout(() => navigate("/login"), 3000); // Redirect to login after 3 sec
     } catch (err) {
       setError(err.response?.data?.msg || "Password reset failed");
@@ -38,6 +48,7 @@ const ResetPassword = () => {
           onChange={(e) => setEmail(e.target.value)}
           required
           className="w-full p-2 border rounded mb-2"
+          readOnly // Prevents user from changing email
         />
         <input
           type="text"
@@ -47,6 +58,7 @@ const ResetPassword = () => {
           onChange={(e) => setOtp(e.target.value)}
           required
           className="w-full p-2 border rounded mb-2"
+          readOnly // Prevents user from changing OTP
         />
         <input
           type="password"

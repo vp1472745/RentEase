@@ -17,7 +17,8 @@ const sendEmail = async (to, subject, text) => {
       from: process.env.EMAIL_USER,
       to,
       subject,
-      text,
+      text:`click the link
+      http://localhost:5173/varifi/${otp}`,
     };
 
     await transporter.sendMail(mailOptions);

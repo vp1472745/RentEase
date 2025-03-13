@@ -15,6 +15,10 @@ const ForgotPassword = () => {
 
     try {
       const response = await API.post("/api/auth/forgot-password", { email });
+
+      // ✅ Save email to localStorage for auto-fill in Verify OTP and Reset Password
+      localStorage.setItem("resetEmail", email);
+
       setMessage(response.data.msg);
       setTimeout(() => navigate("/verify-otp"), 3000); // Redirect after 3 sec
     } catch (err) {

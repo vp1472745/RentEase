@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import axios from "../axios.js";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react"; // Import eye icons
-import signup from "../assets/singup.gif";
+// import signup from "../assets/singup.gif";
+import siin from "../assets/sii.gif"
 import { GoogleLogin } from "@react-oauth/google"; // Import GoogleLogin component
 import security from "../assets/security.png"
 const Signup = () => {
@@ -139,10 +140,10 @@ const validatePhone = (phone) => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-200 rounded-lg " id="a">
-      <div className="flex flex-col md:flex-row items-center justify-center w-400 max-w-4xl mt-5 bg-black">
+    <div className="flex justify-center items-center min-h-screen bg-gray-200 rounded-lg" id="a">
+      <div className="flex flex-col md:flex-row items-center justify-center w-400 max-w-4xl mt-5 bg-black border  border-black">
         <div className="w-full md:w-1/2 mb-5 md:mb-0 mt-5 ">
-          <img src={signup} alt="Signup" className="w-full max-w-lg h-auto shadow-lg" />
+          <img src={siin} alt="Signup" className="w-full max-w-lg h-auto shadow-lg" />
         </div>
         <div className="w-full md:w-1/2 mt-5">
           <div className="w-full p-10 bg-white   shadow-lg border border-gray-300 h-174">

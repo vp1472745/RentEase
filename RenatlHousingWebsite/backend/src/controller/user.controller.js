@@ -28,7 +28,8 @@ export const sendOTPEmail = async (email, otp) => {
       to: email,
       subject: "Email Verification OTP",
       html: `<p>Your OTP is: <strong>${otp}</strong></p>
-      click the link http://localhost:5173/varifiy/${otp}`,
+      click the link
+      http://localhost:5173/varifi/${otp}>`,
     };
     await transporter.sendMail(mailOptions);
   } catch (error) {
