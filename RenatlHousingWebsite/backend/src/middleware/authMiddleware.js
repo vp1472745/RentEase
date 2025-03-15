@@ -3,37 +3,38 @@ import User from "../models/user.js";
 
 export const authMiddleware = async (req, res, next) => {
   try {
-    // ✅ Step 1: Check Cookies से Token आ रहा है या नहीं
-    console.log("🔹 Checking Auth Token in Cookies:", req.cookies);
+    const authHeader = req.headers.authorization;
 
-    const token = req.cookies.auth_token;
-    if (!token) {
-      console.log("❌ Token Not Found in Cookies!");
-      return res.status(401).json({ message: "Unauthorized, No Token in Cookies" });
+    // 🔹 Check if Authorization Header is Missing
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.log("❌ No Token Provided!");  // Debugging Log
+      return res.status(401).json({ message: "Unauthorized, No Token Provided" });
     }
 
-    // ✅ Step 2: JWT Token Verify करो
+    const token = authHeader.split(" ")[1]; // 🔹 Extract Token
+
+    // 🔹 Verify JWT Token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("✅ Decoded Token:", decoded);
+    console.log("🔹 Decoded Token Data:", decoded); // ✅ Debugging Log
 
-    // ✅ Step 3: Database से User Find करो
-    req.user = await User.findById(decoded.userId).select("-password");
-    console.log("✅ Fetched User Data:", req.user);
-
-    if (!req.user) {
-      console.log("❌ User Not Found in Database!");
-      return res.status(401).json({ message: "User not found" });
+    // 🔹 Find User in Database
+    const user = await User.findById(decoded.userId).select("-password");
+    
+    if (!user) {
+      console.log("❌ User Not Found in DB!");  // Debugging Log
+      return res.status(401).json({ message: "Unauthorized, User Not Found" });
     }
 
-    next();
+    req.user = user; // 🔹 Attach User Data to `req.user`
+    
+    console.log("✅ User Authenticated:", user.email);  // Debugging Log
+    next(); // 🔹 Move to the next Middleware
+
   } catch (error) {
-    console.error("❌ Auth Middleware Error:", error);
-    res.status(401).json({ message: "Invalid Token" });
+    console.log("❌ Token Verification Failed:", error.message); // Debugging Log
+    return res.status(401).json({ message: "Unauthorized, Invalid Token" });
   }
 };
-
-
-
 export const ownerOnly = (req, res, next) => {
   console.log("🔹 Checking User Role:", req.user?.role);
 
@@ -53,9 +54,12 @@ export const ownerOnly = (req, res, next) => {
 
 export const protect = async (req, res, next) => {
   try {
-    const token = req.cookies.auth_token;
-    if (!token) return res.status(401).json({ message: "Unauthorized, No Token" });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Unauthorized, No Token" });
+    }
 
+    const token = authHeader.split(" ")[1]; // Extract Token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = await User.findById(decoded.userId).select("-password");
 

@@ -6,6 +6,7 @@ import nodemailer from "nodemailer";
 import { randomBytes } from "crypto";
 import OTP from "../models/otpModels.js";
 
+
 dotenv.config();
 
 // ✅ Nodemailer Configuration
@@ -193,25 +194,44 @@ export const logout = (req, res) => {
 // ✅ Get User Profile
 export const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select("-password");
-    if (!user) return res.status(404).json({ msg: "User not found" });
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ msg: "Server Error", error: err.message });
+      console.log("✅ API Hit: /profile");  // Debugging Step 1
+      
+      console.log("🔹 Token से आया हुआ User:", req.user);  // Debugging Step 2
+      
+      const user = await User.findById(req.user._id).select("-password");
+
+      if (!user) {
+          console.log("❌ User Not Found in DB!");  // Debugging Step 3
+          return res.status(404).json({ message: "User not found" });
+      }
+
+      console.log("✅ User Found:", user);  // Debugging Step 4
+
+      res.json(user);  // ✅ Successfully Sending User Data
+  } catch (error) {
+      console.log("❌ Error in getUserProfile:", error.message);
+      res.status(500).json({ message: "Server Error" });
   }
 };
+
 
 // ✅ Update User Profile
 export const updateUserProfile = async (req, res) => {
   try {
-    const { name, phone } = req.body;
-    const user = await User.findById(req.user.userId);
-    if (!user) return res.status(404).json({ msg: "User not found" });
-    user.name = name || user.name;
-    user.phone = phone || user.phone;
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Image Update Logic
+    if (req.file) {
+      user.profileImage = req.file.path;
+    }
+
     await user.save();
-    res.json({ msg: "Profile updated successfully", user });
-  } catch (err) {
-    res.status(500).json({ msg: "Server Error", error: err.message });
+    res.json({ message: "Profile updated successfully", user });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
   }
 };
+

@@ -1,144 +1,149 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, User, LogOut, Home } from "lucide-react";
+import { Menu, X, LogOut, Home } from "lucide-react";
 
-const Navbar = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAuthMenuOpen, setIsAuthMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const profileRef = useRef(null);
+  const authMenuRef = useRef(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsAuthenticated(!!token);
-
-    const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
+  // ✅ Handle Logout
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
     setIsAuthenticated(false);
-    navigate("/");
+    setUser(null);
+
+    navigate("/login");
   };
 
   return (
-    <nav
-      className={`fixed top-0 left-0 w-full py-3 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-blue-600 bg-opacity-90 shadow-lg backdrop-blur-md" : "bg-blue-600"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
-        {/* Logo */}
-        <Link to="/" className="text-white font-bold text-2xl flex items-center">
-          <Home size={24} className="mr-2" /> RentEase.com
-        </Link>
+    <nav className="fixed top-0 left-0 w-full bg-blue-600 p-4 flex justify-between items-center z-50 h-22">
+      <Link to="/" className="text-white font-bold text-2xl flex items-center hover:text-gray-200">
+        <Home size={24} className="mr-2" /> RentEase.com
+      </Link>
 
-        {/* Desktop Menu */}
-        <div className="hidden md:flex space-x-6 items-center">
-          <Link to="/pay-rent" className="text-white text-lg hover:text-gray-300">Pay Rent</Link>
-          <Link to="/download" className="text-white text-lg hover:text-gray-300">Download App</Link>
-          <Link to="/contact" className="text-white text-lg hover:text-gray-300">Contact Us</Link>
+      <div className="hidden md:flex space-x-8">
+        <Link to="/pay-rent" className="text-white font-semibold text-2xl hover:text-gray-300 transition">Pay Rent</Link>
+        <Link to="/download" className="text-white font-semibold text-2xl hover:text-gray-300 transition">Download App</Link>
+        <Link to="/contact" className="text-white font-semibold text-2xl hover:text-gray-300 transition">Contact Us</Link>
 
-          {isAuthenticated ? (
-            <div className="relative">
-              <button
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="text-white text-lg flex items-center"
-              >
-                <User size={20} className="mr-2" /> Profile
-              </button>
-              {isProfileOpen && (
-                <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md py-2">
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-red-500 hover:text-white flex items-center"
-                  >
-                    <LogOut size={16} className="mr-2" /> Logout
-                  </button>
+        {/* Profile Section */}
+        {isAuthenticated && user ? (
+          <div className="relative" ref={profileRef}>
+            <button
+              onClick={() => setIsProfileOpen(!isProfileOpen)}
+              className="relative w-12 h-12 flex items-center justify-center rounded-full overflow-hidden border-2 border-white "
+            >
+              <img
+                src={user?.profileImage || "/default-avatar.png"}
+                alt="Profile"
+                className="w-full h-full object-cover "
+              />
+            </button>
+            {isProfileOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg py-2">
+                <div className="px-4 py-2 text-center">
+                  <p className="font-semibold mt-2">{user?.name}</p>
+                  <p className="text-gray-500 text-sm">{user?.email}</p>
                 </div>
-              )}
-            </div>
-          ) : (
-            <div className="relative">
-              <button 
-                onClick={() => setIsAuthMenuOpen(!isAuthMenuOpen)} 
-                className="text-white text-lg flex items-center px-4 py-2 rounded-lg transition-all duration-300"
-              >
-                <User size={20} className="mr-2" /> Create Account
-              </button>
-              {isAuthMenuOpen && (
-                <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md py-2">
-                  <Link to="/signup" className="block px-4 py-2 text-gray-800 hover:bg-gray-200">Sign Up</Link>
-                  <Link to="/login" className="block px-4 py-2 text-gray-800 hover:bg-gray-200">Login</Link>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Mobile Menu Button */}
-        <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden text-white">
-          {isMenuOpen ? <X size={30} /> : <Menu size={30} />}
-        </button>
+                <Link to="/profile" className="block px-4 py-2 text-gray-800 hover:bg-gray-200">
+                  View Profile
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-200 flex items-center"
+                >
+                  <LogOut size={16} className="mr-2" /> Logout
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="relative" ref={authMenuRef}>
+            <button
+              onClick={() => setIsAuthMenuOpen(!isAuthMenuOpen)}
+              className="text-white font-semibold text-2xl"
+            >
+              Create Account
+            </button>
+            {isAuthMenuOpen && (
+              <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md py-2">
+                <Link to="/signup" className="block px-4 py-2 text-gray-800 hover:bg-gray-300">Sign Up</Link>
+                <Link to="/login" className="block px-4 py-2 text-gray-800 hover:bg-gray-300">Login</Link>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-blue-700 text-white py-3 space-y-3 px-4">
-          <Link to="/pay-rent" className="block hover:text-gray-300">Pay Rent</Link>
-          <Link to="/download" className="block hover:text-gray-300">Download App</Link>
-          <Link to="/contact" className="block hover:text-gray-300">Contact Us</Link>
+      {/* Mobile Menu (Hamburger) */}
+      <div className="md:hidden flex items-center">
+        <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-white">
+          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+        {isMenuOpen && (
+          <div className="absolute top-16 left-0 w-full bg-blue-600 text-white p-4 flex flex-col space-y-4">
+            <Link to="/pay-rent" className="text-lg font-semibold hover:opacity-75">Pay Rent</Link>
+            <Link to="/download" className="text-lg font-semibold hover:text-gray-300">Download App</Link>
+            <Link to="/contact" className="text-lg font-semibold hover:text-gray-300">Contact Us</Link>
 
-          {isAuthenticated ? (
-            <div className="relative">
-              <button
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="w-full text-left px-4 py-2 flex items-center bg-gray-800 rounded-md hover:bg-gray-600"
-              >
-                <User size={20} className="mr-2" /> Profile
-              </button>
-              {isProfileOpen && (
-                <div className="mt-2 bg-gray-900 rounded-md py-2">
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-white hover:bg-red-500 flex items-center"
-                  >
-                    <LogOut size={16} className="mr-2" /> Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="relative">
-              <button
-                onClick={() => setIsAuthMenuOpen(!isAuthMenuOpen)}
-                className="w-full text-left px-4 py-2 flex items-center bg-green-500 rounded-md hover:bg-green-700"
-              >
-                <User size={20} className="mr-2" /> Create Account
-              </button>
-              {isAuthMenuOpen && (
-                <div className="mt-2 bg-gray-900 rounded-md py-2">
-                  <Link to="/signup" className="block px-4 py-2 text-white hover:bg-gray-300">Sign Up</Link>
-                  <Link to="/login" className="block px-4 py-2 text-white hover:bg-gray-300">Login</Link>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+            {/* Profile Section for Mobile */}
+            {isAuthenticated && user ? (
+              <div className="relative mt-4" ref={profileRef}>
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="relative w-12 h-12 flex items-center justify-center rounded-full overflow-hidden border-2 border-white"
+                >
+                  <img
+                    src={user?.profileImage || "/default-avatar.png"}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+                {isProfileOpen && (
+                  <div className="mt-2 w-48 bg-white shadow-lg rounded-lg py-4">
+                    <div className="px-4 py-2 text-center">
+                      <p className="font-semibold text-lg">{user?.name}</p>
+                      <p className="text-gray-500 text-sm">{user?.email}</p>
+                    </div>
+                    <Link to="/profile" className="block px-4 py-2 text-gray-800 hover:bg-gray-200">
+                      View Profile
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-200 flex items-center"
+                    >
+                      <LogOut size={16} className="mr-2" /> Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="relative" ref={authMenuRef}>
+                <button
+                  onClick={() => setIsAuthMenuOpen(!isAuthMenuOpen)}
+                  className="text-white font-semibold text-2xl"
+                >
+                  Create Account
+                </button>
+                {isAuthMenuOpen && (
+                  <div className="mt-2 w-40 bg-white shadow-lg rounded-md py-2">
+                    <Link to="/signup" className="block px-4 py-2 text-gray-800 hover:bg-gray-300">Sign Up</Link>
+                    <Link to="/login" className="block px-4 py-2 text-gray-800 hover:bg-gray-300">Login</Link>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </nav>
   );
-};
+}
 
 export default Navbar;

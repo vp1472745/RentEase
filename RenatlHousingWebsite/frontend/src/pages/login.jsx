@@ -1,45 +1,48 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../lib/axios";
-import { Eye, EyeOff } from "lucide-react"; // ✅ Import Icons
+import { Eye, EyeOff } from "lucide-react";
 import signup from "../assets/sii.gif";
-import { ToastContainer, toast } from 'react-toastify'; // Import ToastContainer and toast
-import 'react-toastify/dist/ReactToastify.css'; // Import CSS for toast notifications
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const Login = () => {
+const Login = ({ setIsAuthenticated, setUser }) => {  // ✅ Navbar में Auth अपडेट करने के लिए Props जोड़ा
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // ✅ Password Visibility State
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-
+  
     try {
-      // API Call for login
+      console.log("🔹 Sending Login Request:", formData);
+  
       const response = await API.post("/api/auth/login", formData);
-
-      // Extracting response data
       const data = response.data;
-
-      // Show success message
-      toast.success(data.msg || "Login successful!"); // Show success notification
-
-      // If API returns a token, store it (if required)
+  
+      console.log("✅ Login Successful:", data);
+      toast.success(data.msg || "Login successful!");
+  
       if (data.token) {
-        localStorage.setItem("authToken", data.token);
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));  // ✅ यूज़र डेटा भी स्टोर किया
+  
+        setIsAuthenticated(true);  // ✅ Auth State अपडेट किया
+        setUser(data.user);  // ✅ यूज़र डेटा सेट किया
+  
+        navigate("/");
+      } else {
+        console.error("❌ No token received from API");
       }
-
-      navigate("/"); // Redirect to home page or any other page after login
     } catch (err) {
-      console.error("Login Error:", err);
-      // setError(err.response?.data?.msg || "Login failed. Please try again.");
-      toast.error(err.response?.data?.msg || "Login failed. Please try again."); // Show error notification
+      console.error("❌ Login Error:", err.response?.data || err.message);
+      toast.error(err.response?.data?.msg || "Login failed. Please try again.");
     }
   };
 
@@ -50,7 +53,7 @@ const Login = () => {
           <img src={signup} alt="Signup" className="w-full max-w-lg h-auto rounded-lg" />
         </div>
         <div className="w-full md:w-1/2">
-          <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg ">
+          <form onSubmit={handleLogin} className="bg-white p-6 rounded-lg ">
             <h2 className="text-2xl font-bold mb-4 text-gray-800">Login</h2>
 
             {error && <p className="text-red-500">{error}</p>}

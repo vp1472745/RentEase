@@ -7,26 +7,43 @@ import ComingSoon from "./component/commingsonn.jsx";
 import Receipt from "./pages/Receiptedgenator.jsx";
 import Signup from "./pages/signup.jsx";
 import Login from "./pages/login.jsx";
-import OtpModal from "./models/otpModel.jsx"; // ✅ Import OTP Modal
+import OtpModal from "./models/otpModel.jsx";
 import ForgotPassword from "./pages/Forgotpassword.jsx";
 import VerifyOTP from "./pages/Verifyotp.jsx";
 import ResetPassword from "./pages/Resetpassword.jsx";
+import Profile from "./pages/profile.jsx";  
 
 function App() {
+  // ✅ Authentication State Management
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token"));
-  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false); // ✅ OTP Modal state
-  const [otp, setOtp] = useState("");
+  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
 
-  // ✅ Update token from localStorage
   useEffect(() => {
-    setToken(localStorage.getItem("token"));
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      setUser(JSON.parse(storedUser));  // ✅ LocalStorage से User Load करो
+      setIsAuthenticated(true);
+    }
   }, []);
 
-  // ✅ OTP Submit Handler
+  // ✅ Logout Function
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    
+    setIsAuthenticated(false);
+    setUser(null);
+    setToken(null);
+  };
+
   const handleOtpSubmit = (enteredOtp) => {
     console.log("Entered OTP:", enteredOtp);
     if (enteredOtp === "123456") {
-      // Dummy check
       alert("OTP Verified Successfully!");
       setIsOtpModalOpen(false);
     } else {
@@ -34,18 +51,23 @@ function App() {
     }
   };
 
-  // ✅ Resend OTP Function
   const handleResendOtp = () => {
     console.log("Resending OTP...");
     alert("New OTP sent to your registered email/phone!");
   };
-  
+
   return (
-    
     <GoogleOAuthProvider clientId="385746889631-oepj52hiaskkn8oqbp3244r888uupr2d.apps.googleusercontent.com">
       <Router>
         <header>
-          <Navbar token={token} />
+          <Navbar 
+            isAuthenticated={isAuthenticated} 
+            user={user} 
+            setIsAuthenticated={setIsAuthenticated} 
+            setUser={setUser} 
+            token={token}
+            handleLogout={handleLogout}  // ✅ Logout Function Pass किया
+          />
         </header>
 
         <main>
@@ -53,22 +75,15 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/receipted" element={<Receipt />} />
             <Route path="/comming" element={<ComingSoon />} />
-            <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/verify-otp" element={<VerifyOTP />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-            <Route
-              path="/signup"
-              element={<Signup setIsOtpModalOpen={setIsOtpModalOpen} />} // ✅ Pass OTP state
-            />
-            <Route
-              path="/login"
-              element={<Login setIsOtpModalOpen={setIsOtpModalOpen} />} // ✅ Pass OTP state
-            />
+            <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/verify-otp" element={<VerifyOTP />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/signup" element={<Signup setIsOtpModalOpen={setIsOtpModalOpen} />} />
+            <Route path="/profile" element={<Profile />} /> 
           </Routes>
         </main>
 
-        {/* ✅ OTP Modal Component */}
         <OtpModal
           isOpen={isOtpModalOpen}
           onClose={() => setIsOtpModalOpen(false)}

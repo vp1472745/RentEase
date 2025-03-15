@@ -9,11 +9,13 @@ import authRoutes from "./src/routes/authRoutes.js";
 import googleAuthRoutes from "./src/routes/Oauth-google.js";
 import propertyRoutes from "./src/routes/propertyRoute.js";
 import twilio from "twilio"; // ✅ Import Twilio
+import profileRouter from './src/routes/profileRoutes.js'
 
 dotenv.config();
 
 // Import Passport Configuration
 import "./src/config/passport.js";
+
 
 // Initialize Express App
 const app = express();
@@ -94,11 +96,12 @@ app.post("/api/auth/verify-phone-otp", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/auth/google", googleAuthRoutes); // Google Auth on Separate Route
 app.use("/api/properties", propertyRoutes); // ✅ Property Routes
-
-// Default Route
+// Add this line after other routes
+app.use("/api/profile",profileRouter)
 app.get("/", (req, res) => {
   res.send("🏠 RentEase Backend Running...");
 });
+
 
 app.post("/api/auth/signup", (req, res) => {
   console.log("Request Received:", req.body);
