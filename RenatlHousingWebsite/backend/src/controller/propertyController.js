@@ -3,16 +3,31 @@ import Property from "../models/property.js";
 // ✅ Add New Property (Owner Only)
 export const addProperty = async (req, res) => {
   try {
-    console.log("✅ Property Add Request by:", req.user); // Debugging Log
+    console.log("✅ Property Add Request by:", req.user);
 
-    // ❌ Check if req.user is undefined
     if (!req.user) {
       return res.status(401).json({ message: "Unauthorized, User not found" });
     }
 
-    const { title, description, address, city, state, price, images } = req.body;
+    const {
+      title,
+      description,
+      address,
+      city,
+      state,
+      price,
+      images,
+      propertyType,
+      bhkType,
+      area,
+      furnishType,
+      facilities,
+      monthlyRent,
+      availableFrom,
+      securityDeposit,
+      rentalDurationMonths,
+    } = req.body;
 
-    // ✅ New Property Create करो और `owner` Assign करो
     const newProperty = new Property({
       title,
       description,
@@ -21,29 +36,36 @@ export const addProperty = async (req, res) => {
       state,
       price,
       images,
-      owner: req.user._id, // ✅ Assign Owner ID
+      owner: req.user._id, // Assign Owner ID
+
+      // New Fields
+      propertyType,
+      bhkType,
+      area,
+      furnishType,
+      facilities,
+      monthlyRent,
+      availableFrom,
+      securityDeposit,
+      rentalDurationMonths,
     });
 
     await newProperty.save();
     res.status(201).json({ message: "Property Added Successfully", property: newProperty });
-
   } catch (error) {
     console.error("❌ Add Property Error:", error);
     res.status(400).json({ message: error.message });
   }
 };
 
-
-// ✅ Get All Properties (Available Only)
+// ✅ Get All Properties
 export const getAllProperties = async (req, res) => {
   try {
-    const properties = await Property.find().populate("owner", "name email"); // ✅ Owner की Details भी Fetch करो
+    const properties = await Property.find().populate("owner", "name email");
 
     if (!properties || properties.length === 0) {
       return res.status(404).json({ message: "No Properties Found" });
     }
-
-    console.log("✅ Properties Fetched Successfully:", properties); // Debugging Log
 
     res.status(200).json(properties);
   } catch (error) {
@@ -65,8 +87,6 @@ export const getPropertyById = async (req, res) => {
   }
 };
 
-
-
 // ✅ Search Properties (City & Price Range)
 export const searchProperties = async (req, res) => {
   try {
@@ -74,17 +94,17 @@ export const searchProperties = async (req, res) => {
 
     let query = {}; // Empty Query Object
 
-    // ✅ Check city before adding regex
+    // Filter for city
     if (city && city.trim() !== "") {
       query.city = { $regex: new RegExp(city, "i") };
     }
 
-    // ✅ Check address before adding regex
+    // Filter for address
     if (address && address.trim() !== "") {
       query.address = { $regex: new RegExp(address, "i") };
     }
 
-    // ✅ Add price range filters
+    // Filter for price range
     if (minPrice || maxPrice) {
       query.price = {
         ...(minPrice ? { $gte: Number(minPrice) } : {}),
@@ -92,9 +112,6 @@ export const searchProperties = async (req, res) => {
       };
     }
 
-    console.log("🔍 Final MongoDB Query:", JSON.stringify(query, null, 2)); // Debugging Log
-
-    // ✅ Fetch properties from database
     const properties = await Property.find(query).populate("owner", "name email phone");
 
     if (!properties.length) {
@@ -108,6 +125,40 @@ export const searchProperties = async (req, res) => {
   }
 };
 
+// ✅ Update Property (Owner Only)
+export const updateProperty = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
 
+    if (!property) return res.status(404).json({ message: "Property not found" });
 
-// yaha property ko add get or search krne liye y file create kiya gya hai
+    if (property.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to update this property" });
+    }
+
+    const updatedProperty = await Property.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.status(200).json({ message: "Property Updated Successfully", property: updatedProperty });
+  } catch (error) {
+    console.error("❌ Update Property Error:", error.message);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// ✅ Delete Property (Owner Only)
+export const deleteProperty = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
+
+    if (!property) return res.status(404).json({ message: "Property not found" });
+
+    if (property.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to delete this property" });
+    }
+
+    await property.remove();
+    res.status(200).json({ message: "Property Deleted Successfully" });
+  } catch (error) {
+    console.error("❌ Delete Property Error:", error.message);
+    res.status(500).json({ message: "Server Error" });
+  }
+};

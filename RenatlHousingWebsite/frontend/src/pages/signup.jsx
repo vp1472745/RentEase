@@ -8,7 +8,7 @@ import { GoogleLogin } from "@react-oauth/google"; // Import GoogleLogin compone
 import security from "../assets/security.png";
 import { ToastContainer, toast } from 'react-toastify'; // Import ToastContainer and toast
 import 'react-toastify/dist/ReactToastify.css'; // Import CSS for toast notifications
-import pdf from "../assets/condition.pdf"
+// import pdf from "condition.pdf"
 const Signup = () => {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -254,8 +254,7 @@ const Signup = () => {
                   onChange={() => setTermsAccepted(!termsAccepted)}
                   className="mr-2"
                 />
-                <a href={pdf}>  I agree to the terms and conditions</a>
-              
+ <a href="/condition.pdf" target="_blank" rel="noopener noreferrer">I agree to the terms and conditions</a>              
               </label>
 
               <button

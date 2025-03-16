@@ -3,34 +3,39 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import passport from "passport";
-import cookieParser from "cookie-parser"; // ✅ Import cookie-parser
-import morgan from "morgan"; // ✅ Import Morgan
+import cookieParser from "cookie-parser";
+import morgan from "morgan";
 import authRoutes from "./src/routes/authRoutes.js";
 import googleAuthRoutes from "./src/routes/Oauth-google.js";
 import propertyRoutes from "./src/routes/propertyRoute.js";
-import twilio from "twilio"; // ✅ Import Twilio
 import profileRouter from './src/routes/profileRoutes.js'
+import twilio from "twilio";
+import multer from "multer"; // ✅ Import Multer for Image Uploads
+import path from "path"; // ✅ Import Path for File Handling
+import fs from "fs"; // ✅ File System for Managing Uploads
 
 dotenv.config();
 
 // Import Passport Configuration
 import "./src/config/passport.js";
 
-
 // Initialize Express App
 const app = express();
 
 // Middleware Configuration
-app.use(morgan("dev")); // ✅ Apply Morgan for logging
+app.use(morgan("dev"));
 app.use(express.json());
-app.use(cookieParser()); // ✅ Enable Cookie Parsing
+app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:5173", // ✅ Frontend URL
-    credentials: true, // ✅ Allow Cookies
+    origin: "http://localhost:5173",
+    credentials: true,
   })
 );
 app.use(passport.initialize());
+
+// ✅ Serve Uploaded Images as Static Files
+app.use("/uploads", express.static("uploads"));
 
 // MongoDB Connection
 const connectDB = async () => {
@@ -56,18 +61,13 @@ let phoneOtpDatabase = {}; // Store OTPs temporarily in-memory
 // Route to send OTP to phone number
 app.post("/api/auth/send-phone-otp", async (req, res) => {
   const { phoneNumber } = req.body;
-
-  // Generate 6-digit OTP
   const otp = Math.floor(100000 + Math.random() * 900000);
-
-  // Store OTP in memory
   phoneOtpDatabase[phoneNumber] = otp;
 
   try {
-    // Send OTP via SMS (Twilio)
     const message = await client.messages.create({
       body: `Your OTP is: ${otp}`,
-      from: process.env.TWILIO_PHONE_NUMBER, // Your Twilio phone number
+      from: process.env.TWILIO_PHONE_NUMBER,
       to: phoneNumber,
     });
 
@@ -83,29 +83,50 @@ app.post("/api/auth/send-phone-otp", async (req, res) => {
 app.post("/api/auth/verify-phone-otp", (req, res) => {
   const { phoneNumber, otp } = req.body;
 
-  // Check OTP from the in-memory database
   if (phoneOtpDatabase[phoneNumber] === parseInt(otp)) {
-    delete phoneOtpDatabase[phoneNumber]; // Clear OTP after verification
+    delete phoneOtpDatabase[phoneNumber];
     res.json({ message: "OTP verified successfully!" });
   } else {
     res.status(400).json({ message: "Invalid OTP" });
   }
 });
 
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/auth/google", googleAuthRoutes); // Google Auth on Separate Route
-app.use("/api/properties", propertyRoutes); // ✅ Property Routes
-// Add this line after other routes
-app.use("/api/profile",profileRouter)
-app.get("/", (req, res) => {
-  res.send("🏠 RentEase Backend Running...");
+// ✅ Multer Storage Setup for Image Uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = "uploads/";
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
 });
 
+const upload = multer({ storage: storage });
 
-app.post("/api/auth/signup", (req, res) => {
-  console.log("Request Received:", req.body);
-  res.json({ msg: "OTP sent!" });
+// ✅ Route to Handle Image Uploads
+app.post("/api/properties/upload", upload.array("images", 5), (req, res) => {
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ message: "No files uploaded" });
+  }
+
+  // ✅ Generate Image URLs
+  const imageUrls = req.files.map((file) => `http://localhost:5000/uploads/${file.filename}`);
+
+  res.json({ imageUrls });
+});
+
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/auth/google", googleAuthRoutes);
+app.use("/api/properties", propertyRoutes);
+app.use("/api/profile", profileRouter);
+
+app.get("/", (req, res) => {
+  res.send("🏠 RentEase Backend Running...");
 });
 
 // Start Server

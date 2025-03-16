@@ -1,0 +1,65 @@
+.post-property {
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 400px;
+    margin: auto;
+}
+
+.progress {
+    margin-bottom: 20px;
+}
+
+.progress-bar {
+    display: flex;
+}
+
+.progress-step {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    border-bottom: 2px solid transparent;
+}
+
+.completed {
+    border-bottom: 2px solid green;
+}
+
+.in-progress {
+    border-bottom: 2px solid purple;
+}
+
+.pending {
+    border-bottom: 2px solid gray;
+}
+
+.bhk-options, .furnish-options {
+    display: flex;
+    margin: 10px 0;
+}
+
+.bhk-btn, .furnish-btn {
+    flex: 1;
+    margin: 5px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    background-color: #f9f9f9;
+}
+
+.bhk-btn.active, .furnish-btn.active {
+    background-color: #e0e7ff;
+    border-color: #6762e0;
+}
+
+.share-with-agents {
+    margin: 20px 0;
+}
+
+.next-btn {
+    background-color: green;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+}

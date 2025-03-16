@@ -12,9 +12,9 @@ import ForgotPassword from "./pages/Forgotpassword.jsx";
 import VerifyOTP from "./pages/Verifyotp.jsx";
 import ResetPassword from "./pages/Resetpassword.jsx";
 import Profile from "./pages/profile.jsx";  
+import AddProperty from "./pages/addproperty.jsx";  // ✅ Ensure .jsx extension
 
 function App() {
-  // ✅ Authentication State Management
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token"));
@@ -26,12 +26,11 @@ function App() {
 
     if (storedToken && storedUser) {
       setToken(storedToken);
-      setUser(JSON.parse(storedUser));  // ✅ LocalStorage से User Load करो
+      setUser(JSON.parse(storedUser));
       setIsAuthenticated(true);
     }
   }, []);
 
-  // ✅ Logout Function
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -66,7 +65,7 @@ function App() {
             setIsAuthenticated={setIsAuthenticated} 
             setUser={setUser} 
             token={token}
-            handleLogout={handleLogout}  // ✅ Logout Function Pass किया
+            handleLogout={handleLogout}
           />
         </header>
 
@@ -81,7 +80,9 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/signup" element={<Signup setIsOtpModalOpen={setIsOtpModalOpen} />} />
             <Route path="/profile" element={<Profile />} /> 
+            {/* <Route path="/add-property" element={<AddProperty />} />  ✅ Fixed Route Placement */}
           </Routes>
+          <AddProperty />
         </main>
 
         <OtpModal

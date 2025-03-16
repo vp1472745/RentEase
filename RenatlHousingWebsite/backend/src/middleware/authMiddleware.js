@@ -1,74 +1,78 @@
 import jwt from "jsonwebtoken";
-import User from "../models/user.js"; 
+import User from "../models/user.js";
 
+// ✅ Authentication Middleware - Validates Token & Attaches User to Request
 export const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
-    // 🔹 Check if Authorization Header is Missing
+    console.log("🔹 Headers Received:", authHeader || "No Auth Header");
+
+    // 🛑 No Token Case
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.log("❌ No Token Provided!");  // Debugging Log
-      return res.status(401).json({ message: "Unauthorized, No Token Provided" });
+      console.error("❌ No Token Provided!");
+      return res.status(401).json({ message: "Unauthorized: No Token Provided" });
     }
 
-    const token = authHeader.split(" ")[1]; // 🔹 Extract Token
+    // 🎯 Extract Token
+    const token = authHeader.split(" ")[1];
+    console.log("🔹 Extracted Token:", token);
 
-    // 🔹 Verify JWT Token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("🔹 Decoded Token Data:", decoded); // ✅ Debugging Log
+    // ✅ Verify Token
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log("✅ Token Decoded:", decoded);
 
-    // 🔹 Find User in Database
-    const user = await User.findById(decoded.userId).select("-password");
-    
-    if (!user) {
-      console.log("❌ User Not Found in DB!");  // Debugging Log
-      return res.status(401).json({ message: "Unauthorized, User Not Found" });
+      // 🔎 Find User in Database
+      const user = await User.findById(decoded.userId).select("-password");
+
+      // 🛑 If User Not Found
+      if (!user) {
+        console.error("❌ User Not Found!");
+        return res.status(401).json({ message: "Unauthorized: User Not Found" });
+      }
+
+      // 🔥 Attach User to Request Object
+      req.user = user;
+      console.log(`✅ Authenticated User: ${user.email} (${user.role})`);
+
+      next();
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        console.error("❌ Token Expired!");
+        return res.status(401).json({ message: "Unauthorized: Token Expired" });
+      } else if (error instanceof jwt.JsonWebTokenError) {
+        console.error("❌ Invalid Token:", error.message);
+        return res.status(401).json({ message: "Unauthorized: Invalid Token" });
+      }
+      throw error; // 🔥 Any Other Unexpected Error
     }
-
-    req.user = user; // 🔹 Attach User Data to `req.user`
-    
-    console.log("✅ User Authenticated:", user.email);  // Debugging Log
-    next(); // 🔹 Move to the next Middleware
-
   } catch (error) {
-    console.log("❌ Token Verification Failed:", error.message); // Debugging Log
-    return res.status(401).json({ message: "Unauthorized, Invalid Token" });
+    console.error("❌ Authentication Middleware Error:", error.message);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+// ✅ Owner-Only Middleware - Restricts Access to "owners" Only
 export const ownerOnly = (req, res, next) => {
-  console.log("🔹 Checking User Role:", req.user?.role);
-
-  if (!req.user) {
-    console.log("❌ req.user is undefined!");
-    return res.status(401).json({ message: "Unauthorized Access" });
-  }
-
-  if (req.user.role !== "owner") {
-    console.log("❌ Access Denied! Role is:", req.user.role);
-    return res.status(403).json({ message: "Access Denied, Owners Only" });
-  }
-
-  console.log("✅ User Authorized as Owner");
-  next();
-};
-
-export const protect = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Unauthorized, No Token" });
+    console.log("🔹 Checking User Role:", req.user?.role || "No Role Found");
+
+    if (!req.user || !req.user.role) {
+      console.error("❌ Role Undefined or User Not Authenticated!");
+      return res.status(401).json({ message: "Unauthorized: No Role Defined" });
     }
 
-    const token = authHeader.split(" ")[1]; // Extract Token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.userId).select("-password");
+    // 🎯 Check If User is Owner
+    if (req.user.role.toLowerCase() !== "owner") {
+      console.error("❌ Access Denied! User Role:", req.user.role);
+      return res.status(403).json({ message: "Access Denied: Owners Only" });
+    }
 
-    if (!req.user) return res.status(401).json({ message: "User not found" });
-
-    console.log("✅ User Found:", req.user); // Debugging Log
-    
+    console.log("✅ User Authorized as Owner");
     next();
   } catch (error) {
-    res.status(401).json({ message: "Invalid Token" });
+    console.error("❌ Owner Middleware Error:", error.message);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
