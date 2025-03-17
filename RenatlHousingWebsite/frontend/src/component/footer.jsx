@@ -11,7 +11,7 @@ const Footer = () => {
   return (
     <>
       {/* Animated Banner Below Navbar */}
-      <motion.div
+      {/* <motion.div
         className="bg-gradient-to-r from-yellow-400 via-red-500 to-purple-600 text-white text-center py-6 px-4 mb-0 ] mt-5"
         initial="hidden"
         whileInView="visible"
@@ -47,7 +47,7 @@ const Footer = () => {
             Get Started
           </motion.a>
         </div>
-      </motion.div>
+      </motion.div> */}
 
       {/* Footer Section */}
       <footer className="bg-gradient-to-r from-gray-800 to-gray-900 text-white pt-10 pb-6 h-[60vh]">

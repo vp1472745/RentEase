@@ -1,12 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Footer from "../component/footer.jsx";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay, EffectFade } from "swiper/modules";
-import Receipted from "../pages/Receiptedgenator.jsx";
-import ComingSoon from "../component/commingsonn.jsx";
-import { Link } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Pagination, Autoplay, EffectFade, Navigation } from "swiper/modules";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import SearchBar from "../pages/search.jsx";
 
 import {
   CreditCard,
@@ -17,35 +16,15 @@ import {
   Award,
   Headphones,
 } from "lucide-react";
+
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
+import "swiper/css/navigation";
 
 import banner from "../assets/banner.gif";
 import one from "../assets/homebanner.jpg";
 import second from "../assets/second.jpg";
-
-// Dummy Testimonials Data
-const testimonials = [
-  {
-    id: 1,
-    name: "Rajiv Dhawan",
-    location: "Hyderabad",
-    rating: 5.0,
-    img: "/image.png",
-    feedback:
-      "Housing’s online rent agreement service acts as a one-stop-shop for tenants like me. Really appreciate the facility. Housing is a highly recommendable platform for tenants and landlords.",
-  },
-  {
-    id: 2,
-    name: "Victor Suri",
-    location: "Bangalore",
-    rating: 5.0,
-    img: "/imagetwo.png",
-    feedback:
-      "Really appreciate the ease Housing’s online rent agreement facility provides. They know what a tenant generally goes through and have tried to address the very same issues.",
-  },
-];
 
 // Services Data
 const services = [
@@ -95,6 +74,22 @@ const features = [
 ];
 
 function Home() {
+  const [properties, setProperties] = useState([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/properties");
+        setProperties(res.data);
+      } catch (error) {
+        console.error("Error fetching properties:", error);
+      }
+    };
+
+    fetchProperties();
+  }, []);
+
   return (
     <div className="w-full h-auto">
       {/* Hero Section */}
@@ -104,22 +99,15 @@ function Home() {
       >
         <h1 className="text-3xl md:text-5xl font-bold">Find Your Perfect Home</h1>
         <p className="mt-4 text-base md:text-lg">Rent hassle-free homes across the city.</p>
-          {/* Search Bar */}
-  <div className="mt-6 bg-white text-black px-4 py-2 rounded-full shadow-md flex items-center w-full max-w-md">
-    <Search size={20} className="mr-2 text-gray-500" />
-    <input
-      type="text"
-      placeholder="Search for properties..."
-      className="outline-none bg-transparent w-full"
-    />
-  </div>
+        <SearchBar />
       </div>
 
-      
-
-      {/* Services Section */}
+      {/* House Edge Section (Services) */}
       <section className="py-12 px-4 md:px-12">
-        <h2 className="text-3xl font-bold text-center mb-6">Housing Edge</h2>
+        <h2 className="text-3xl font-bold">Housing Edge</h2>
+        <h3 className="mb-10 text-xl font-bold text-blue-600">
+          Explore property-related services
+        </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {services.map(({ title, description, icon, link }, index) => (
             <div
@@ -137,10 +125,58 @@ function Home() {
         </div>
       </section>
 
-      {/* Why Choose Housing Edge */}
-      <motion.section className="py-12 px-4 sm:px-6 lg:px-20">
+      {/* Explore Properties as a Slider */}
+      <section className="py-12 px-4 md:px-12 bg-gray-50">
+        <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Explore Properties</h2>
+        {properties.length === 0 ? (
+          <p className="text-center text-gray-500">No properties found!</p>
+        ) : (
+          <div className="relative">
+            <Swiper
+              modules={[Pagination, Navigation]}
+              slidesPerView={3}
+              spaceBetween={20}
+              navigation
+              pagination={{ clickable: true }}
+              breakpoints={{
+                320: { slidesPerView: 1 },
+                768: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 },
+              }}
+              className="w-full"
+            >
+              {properties.map((property) => (
+                <SwiperSlide key={property._id}>
+                  <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
+                    <img
+                      src={property.images[0]}
+                      alt={property.title}
+                      className="h-48 w-full object-cover"
+                    />
+                    <div className="p-4">
+                      <h3 className="text-xl font-semibold">{property.title}</h3>
+                      <p className="text-gray-600">{property.city}, {property.state}</p>
+                      <p className="text-indigo-600 font-bold mt-2">₹{property.monthlyRent}/month</p>
+                      <p className="text-sm text-gray-500 mt-1">{property.bhkType.join(", ")}, {property.furnishType.join(", ")}</p>
+                      <button
+                        onClick={() => navigate(`/property/${property._id}`)}
+                        className="mt-4 w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+        )}
+      </section>
+
+      {/* Why Use Our Website */}
+      <motion.div className="py-12 px-4 sm:px-6 lg:px-20">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">
-          Why Choose Housing Edge
+          Why Use Our Website?
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {features.map(({ icon, title, description }, index) => (
@@ -154,7 +190,7 @@ function Home() {
             </motion.div>
           ))}
         </div>
-      </motion.section>
+      </motion.div>
 
       {/* Image Slider */}
       <div className="w-full h-auto rounded-lg overflow-hidden shadow-lg">
@@ -168,14 +204,7 @@ function Home() {
         >
           {[one, second].map((image, index) => (
             <SwiperSlide key={index}>
-              <motion.img
-                src={image}
-                alt="Home Banner"
-                className="w-full h-full object-contain rounded-lg"
-                initial={{ scale: 1.2, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 1 }}
-              />
+              <motion.img src={image} alt="Home Banner" className="w-full h-full object-contain rounded-lg" />
             </SwiperSlide>
           ))}
         </Swiper>

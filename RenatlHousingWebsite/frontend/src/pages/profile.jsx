@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../lib/axios";
+import { LogOut } from "lucide-react";
 
 const Profile = () => {
-  const [user, setUser ] = useState({ name: "", email: "", phone: "", profileImage: "" });
+  const [user, setUser] = useState({ name: "", email: "", phone: "", profileImage: "" });
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const Profile = () => {
         const res = await axios.get("/api/auth/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setUser (res.data);
+        setUser(res.data);
       } catch (error) {
         console.error("Error fetching profile:", error.response?.data?.msg || error.message);
       }
@@ -31,35 +32,45 @@ const Profile = () => {
   }, [navigate]);
 
   const handleChange = (e) => {
-    setUser ({ ...user, [e.target.name]: e.target.value });
+    setUser({ ...user, [e.target.name]: e.target.value });
   };
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("Token missing! User not authenticated.");
+        navigate("/login");
+        return;
+      }
+
       const formData = new FormData();
       formData.append("name", user.name);
       formData.append("phone", user.phone);
       if (file) formData.append("profileImage", file);
 
       const res = await axios.put("/api/auth/profile/update", formData, {
-        headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      setUser (res.data.user);
+      setUser(res.data.user);
       alert(res.data.msg);
     } catch (error) {
       const errorMsg = error.response?.data?.msg || error.message || "Something went wrong!";
       console.error("Error updating profile:", errorMsg);
       alert(errorMsg);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleLogout = () => {
@@ -69,12 +80,34 @@ const Profile = () => {
   };
 
   return (
-    <div className="max-w-lg mx-auto mt-30 p-6 bg-white shadow-lg rounded-lg border border-gray-200 ">
+    <div className="max-w-lg mx-auto mt-30 p-6 bg-white shadow-lg rounded-lg border border-gray-200">
+      {/* Profile Icon and Logout Button */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center">
+          <img
+            src={user.profileImage ? user.profileImage : "/default-avatar.png"}
+            alt="Profile"
+            className="w-12 h-12 rounded-full border-4 border-blue-500 shadow-md"
+          />
+          <div className="ml-4">
+            <h2 className="text-2xl font-bold text-gray-800">{user.name}</h2>
+            <p className="text-sm text-gray-500">{user.email}</p>
+          </div>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="text-red-600 hover:text-red-800 font-semibold"
+        >
+          <LogOut size={20} className="mr-2" />
+          Logout
+        </button>
+      </div>
+
       <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">Profile</h2>
 
       <div className="flex justify-center mb-4">
         <img
-          src={user.profileImage ? `http://localhost:5000${user.profileImage}` : "/default-avatar.png"}
+          src={user.profileImage ? user.profileImage : "/default-avatar.png"}
           alt="Profile"
           className="w-32 h-32 rounded-full border-4 border-blue-500 shadow-md"
         />

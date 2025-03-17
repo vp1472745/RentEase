@@ -117,7 +117,7 @@ export const login = async (req, res) => {
 
     if (!user.isVerified) return res.status(403).json({ msg: "Please verify your email first" });
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign({ userId: user._id, role: user.role,profileImage:user.profileImage}, process.env.JWT_SECRET, { expiresIn: "1h" });
     res.cookie("auth_token", token, { httpOnly: true, sameSite: "strict" });
     res.json({ msg: "Login successful", token, user: { name: user.name, email: user.email, role: user.role } });
   } catch (error) {

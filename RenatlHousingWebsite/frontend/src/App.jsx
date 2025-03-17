@@ -13,7 +13,7 @@ import VerifyOTP from "./pages/Verifyotp.jsx";
 import ResetPassword from "./pages/Resetpassword.jsx";
 import Profile from "./pages/profile.jsx";  
 import AddProperty from "./pages/addproperty.jsx";  // ✅ Ensure .jsx extension
-
+import Properties from "./pages/property.jsx"
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
@@ -79,10 +79,11 @@ function App() {
             <Route path="/verify-otp" element={<VerifyOTP />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/signup" element={<Signup setIsOtpModalOpen={setIsOtpModalOpen} />} />
-            <Route path="/profile" element={<Profile />} /> 
-            {/* <Route path="/add-property" element={<AddProperty />} />  ✅ Fixed Route Placement */}
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/add-property" element={<AddProperty />} />  {/* Correct Route Placement for AddProperty */}
+            <Route path="/properties" element={<Properties />} />
+
           </Routes>
-          <AddProperty />
         </main>
 
         <OtpModal

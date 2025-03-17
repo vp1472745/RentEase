@@ -1,7 +1,5 @@
 import User from "../models/user.js";
-import path from "path";
 
-// ✅ Get Profile Controller
 export const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select("-password");
@@ -23,13 +21,10 @@ export const getUserProfile = async (req, res) => {
 };
 
 // 🔹 Update User Profile
+import cloudinary from "../config/cloudinaryConfig.js"; // import the cloudinary config
+
 export const updateUserProfile = async (req, res) => {
   try {
-    console.log("✅ Profile update request received.");
-    console.log("📂 Uploaded file details:", req.file);
-    console.log("📩 Request Body:", req.body);
-    console.log("📢 Headers:", req.headers);
-
     if (!req.user || !req.user._id) {
       return res.status(401).json({ msg: "Unauthorized Access" });
     }
@@ -45,26 +40,30 @@ export const updateUserProfile = async (req, res) => {
     user.name = name || user.name;
     user.phone = phone || user.phone;
 
-    // Handle profile image upload
+    // Handle profile image upload using Cloudinary
     if (req.file) {
-      user.profileImage = `/uploads/${req.file.filename}`;
-    } else {
-      console.log("⚠ No file uploaded!");
+      // Upload the image to Cloudinary
+      const result = await cloudinary.v2.uploader.upload(req.file.path, {
+        folder: 'profiles', // specify the folder (optional)
+        use_filename: true,  // keep the original file name
+        unique_filename: false, // avoid appending random characters to the file name
+      });
+
+      // Save the Cloudinary URL in the user's profile
+      user.profileImage = result.secure_url;
+      
     }
 
     await user.save();
-    console.log("✅ User updated successfully.");
-
     res.json({
       msg: "Profile updated successfully",
       user: {
         name: user.name,
         email: user.email,
         phone: user.phone,
-        profileImage: user.profileImage ? `${req.protocol}://${req.get("host")}${user.profileImage}` : null
+        profileImage: user.profileImage || null,
       }
     });
-
   } catch (err) {
     console.error("❌ Profile Update Error:", err.message);
     res.status(500).json({ msg: "Server Error", error: err.message });

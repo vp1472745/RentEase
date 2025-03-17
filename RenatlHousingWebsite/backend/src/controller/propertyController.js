@@ -88,29 +88,40 @@ export const getPropertyById = async (req, res) => {
 };
 
 // ✅ Search Properties (City & Price Range)
+// ✅ Search Properties (City, Address, Price Range, Property Type)
 export const searchProperties = async (req, res) => {
   try {
-    const { city, address, minPrice, maxPrice } = req.query;
+    // Add Cache-Control header to disable caching
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // Disable caching
+
+    const { city, address, minPrice, maxPrice, propertyType } = req.query;
 
     let query = {}; // Empty Query Object
 
-    // Filter for city
+    // 🔹 Filter for city
     if (city && city.trim() !== "") {
       query.city = { $regex: new RegExp(city, "i") };
     }
 
-    // Filter for address
+    // 🔹 Filter for address
     if (address && address.trim() !== "") {
       query.address = { $regex: new RegExp(address, "i") };
     }
 
-    // Filter for price range
+    // 🔹 Filter for price range
     if (minPrice || maxPrice) {
       query.price = {
         ...(minPrice ? { $gte: Number(minPrice) } : {}),
         ...(maxPrice ? { $lte: Number(maxPrice) } : {}),
       };
     }
+
+    // 🔹 Filter for Property Type
+    if (propertyType && propertyType.trim() !== "") {
+      query.propertyType = { $regex: new RegExp(propertyType, "i") }; 
+    }
+
+    console.log("🔍 Search Query:", query); // Debugging ke liye ✅
 
     const properties = await Property.find(query).populate("owner", "name email phone");
 

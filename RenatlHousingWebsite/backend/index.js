@@ -13,7 +13,7 @@ import twilio from "twilio";
 import multer from "multer"; // ✅ Import Multer for Image Uploads
 import path from "path"; // ✅ Import Path for File Handling
 import fs from "fs"; // ✅ File System for Managing Uploads
-
+import  profileRoutes from "../backend/src/routes/profileRoutes.js"
 dotenv.config();
 
 // Import Passport Configuration
@@ -124,7 +124,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/auth/google", googleAuthRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/profile", profileRouter);
-
+app.use("/api/auth/profile", profileRoutes);
 app.get("/", (req, res) => {
   res.send("🏠 RentEase Backend Running...");
 });

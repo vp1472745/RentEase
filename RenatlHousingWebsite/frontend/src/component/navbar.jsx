@@ -21,8 +21,10 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
     navigate("/login");
   };
 
+  console.log(user);
+
   return (
-    <nav className="fixed top-0 left-0 w-full bg-blue-600 p-4 flex justify-between items-center z-50 h-22">
+    <nav className="fixed top-0 left-0 w-full bg-blue-600 p-4 flex justify-between items-center z-50 h-15">
       <Link to="/" className="text-white font-bold text-2xl flex items-center hover:text-gray-200">
         <Home size={24} className="mr-2" /> RentEase.com
       </Link>
@@ -31,6 +33,14 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
         <Link to="/pay-rent" className="text-white font-semibold text-2xl hover:text-gray-300 transition">Pay Rent</Link>
         <Link to="/download" className="text-white font-semibold text-2xl hover:text-gray-300 transition">Download App</Link>
         <Link to="/contact" className="text-white font-semibold text-2xl hover:text-gray-300 transition">Contact Us</Link>
+        <Link to="/add-property" className="text-white font-semibold text-2xl hover:text-gray-300 transition">Add Property</Link>
+
+        {/* Add Property link - only visible for authenticated users */}
+        {isAuthenticated && user && (
+          <Link to="/add-property" className="text-white font-semibold text-2xl hover:text-gray-300 transition">
+            Add Property
+          </Link>
+        )}
 
         {/* Profile Section */}
         {isAuthenticated && user ? (
@@ -91,6 +101,14 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
             <Link to="/pay-rent" className="text-lg font-semibold hover:opacity-75">Pay Rent</Link>
             <Link to="/download" className="text-lg font-semibold hover:text-gray-300">Download App</Link>
             <Link to="/contact" className="text-lg font-semibold hover:text-gray-300">Contact Us</Link>
+            <Link to="/addproperty" className="text-lg font-semibold hover:text-gray-300">Add Property</Link>
+
+            {/* Add Property link for mobile - only visible for authenticated users */}
+            {isAuthenticated && user && (
+              <Link to="/add-property" className="text-lg font-semibold hover:text-gray-300">
+                Add Property
+              </Link>
+            )}
 
             {/* Profile Section for Mobile */}
             {isAuthenticated && user ? (

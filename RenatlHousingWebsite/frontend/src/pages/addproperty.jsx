@@ -38,12 +38,15 @@ const AddProperty = () => {
 
   const handleMultiSelect = (field, value) => {
     setFormData((prevData) => {
-      const updatedArray = prevData[field].includes(value)
-        ? prevData[field].filter((item) => item !== value)
-        : [...prevData[field], value];
+      const currentArray = Array.isArray(prevData[field]) ? prevData[field] : [];
+      const updatedArray = currentArray.includes(value)
+        ? currentArray.filter((item) => item !== value)
+        : [...currentArray, value];
+  
       return { ...prevData, [field]: updatedArray };
     });
   };
+  
 
   const handleImageUpload = async (event) => {
     const uploadData = new FormData();
@@ -70,90 +73,47 @@ const AddProperty = () => {
     }
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-  
-    const token = localStorage.getItem("token");
-  
-    if (!token) {
-      console.error("❌ No token found! Please log in.");
-      return;
-    }
-  
-    // Check the formData before submitting
-    console.log('Form Data being sent:', formData); // Debugging log
-  
-    const submitData = new FormData();
-  
-    // Ensure all necessary fields are included
-    const fieldsToSubmit = [
-      "title",
-      "description",
-      "address",
-      "city",
-      "state",
-      "images",
-      "propertyType",
-      "bhkType",
-      "furnishType",
-      "area",
-      "facilities",
-      "monthlyRent",
-      "availableFrom",
-      "securityDeposit",
-      "rentalDurationMonths",
-    ];
-  
-    fieldsToSubmit.forEach((field) => {
-      if (!formData[field] || formData[field].trim() === "") {
-        console.error(`❌ ${field} is required but empty.`);
-        return;
-      }
-      submitData.append(field, formData[field]);
-    });
-  
-    // Add multi-select fields (propertyType, bhkType, furnishType, facilities)
-    const multiSelectFields = [
-      "propertyType",
-      "bhkType",
-      "furnishType",
-      "facilities",
-    ];
-    multiSelectFields.forEach((field) => {
-      formData[field].forEach((item) => {
-        if (item.trim()) {
-          submitData.append(`${field}[]`, item);
-        }
-      });
-    });
-  
-    // Append image data
-    formData.images.forEach((image) => {
-      submitData.append("images", image);
-    });
-  
-    console.log("🔹 Sending request with headers:", {
-      "Content-Type": "multipart/form-data",
-      Authorization: `Bearer ${token}`,
-    });
-  
-    try {
-      const res = await axios.post("/api/properties/add", submitData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      });
-      console.log("✅ Property successfully added:", res.data);
-    } catch (error) {
-      console.error("❌ Error adding property:", error.response?.data || error);
-    }
-  };
-  
-  
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  const submitData = new FormData();
 
+  Object.keys(formData).forEach((key) => {
+    const value = formData[key];
+    if (Array.isArray(value)) {
+      value.forEach((item) => submitData.append(`${key}[]`, item));
+    } else if (value) {
+      submitData.append(key, value);
+    }
+  });
 
+  try {
+    const response = await fetch(`${API_BASE_URL}http://localhost:5000`, {
+      method: "POST",
+      body: submitData,
+      headers: { Authorization: `Bearer ${userToken}` },
+      
+      
+    });
+   
+    const contentType = response.headers.get("content-type");
+    if (!response.ok) {
+      throw new Error(`❌ Error: ${response.status} ${response.statusText}`);
+      
+    }
+   
+    if (contentType && contentType.includes("application/json")) {
+      const data = await response.json();
+      console.log("✅ Property added successfully:", data);
+    } else {
+      throw new Error("❌ Received non-JSON response. Check API endpoint.");
+    }
+  } catch (error) {
+    console.error("❌ Submission Error:", error);
+    console.log("vv");
+  }
+};
+
+  
   const nextStep = () => setStep((prev) => prev + 1);
   const prevStep = () => setStep((prev) => prev - 1);
 
@@ -162,7 +122,7 @@ const AddProperty = () => {
   const progress = (filledFields / totalFields) * 100;
 
   return (
-    <div className="flex flex-col md:flex-row items-start justify-center min-h-screen p-6 bg-gray-100">
+    <div className="flex flex-col md:flex-row items-start justify-center  min-h-[90vh] p-6 bg-gray-100 mt-20 ">
       <div className="w-32 h-32 md:w-40 md:h-40 mb-6 md:mb-0 md:mr-10 self-start">
         <CircularProgressbar
           value={progress}
@@ -313,7 +273,7 @@ const AddProperty = () => {
             ) : (
               <button
                 type="submit"
-                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
+                className={`bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
                 disabled={uploading}
               >
                 {uploading ? "Uploading..." : "Submit"}
