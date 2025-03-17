@@ -17,11 +17,13 @@ router.post("/add", authMiddleware, ownerOnly, addProperty);
 
 // ✅ Search Properties (Fix)
 
+// ✅ Search Properties (Multiple Filters)
 router.get("/search", async (req, res) => {
     try {
       // Add Cache-Control header to disable caching
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  
+      
+      // Create the query object
       let query = {};
   
       // If city is provided, filter based on city
@@ -39,16 +41,19 @@ router.get("/search", async (req, res) => {
         query.propertyType = { $regex: req.query.propertyType, $options: "i" }; // case-insensitive match
       }
   
+      // Log the query for debugging
       console.log("🔍 Query Params for Filtering:", query);
   
       // Fetch filtered properties from the database
-      const properties = await Property.find(query);
+      const properties = await Property.find(query);  // Using combined AND condition here
   
+      // If no properties match the query, send a 404 response
       if (!properties.length) {
         return res.status(404).json({ message: "No matching properties found" });
       }
   
-      res.json(properties); // Send the filtered properties as a response
+      // Send the filtered properties as a response
+      res.json(properties);
     } catch (error) {
       console.error("❌ Error fetching properties:", error);
       res.status(500).json({ error: "Server Error" });

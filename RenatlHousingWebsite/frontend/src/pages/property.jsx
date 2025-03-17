@@ -20,45 +20,38 @@ function Properties() {
 
   useEffect(() => {
     const fetchProperties = async () => {
-        try {
-            setLoading(true);
-            const searchParams = new URLSearchParams(location.search);
-            const city = searchParams.get("city") || "";
-            const locality = searchParams.get("locality") || "";
-            const category = searchParams.get("category") || "";
-
-            console.log("Query Params:", { city, locality, category });
-
-            // Make API request with filters
-            const res = await axios.get(`http://localhost:5000/api/properties`, {
-                params: { city, locality, category },
-            });
-
-            console.log("API Response:", res.data);
-
-            let fetchedProperties = res.data || [];
-
-            // Filter the properties based on the params
-            fetchedProperties = fetchedProperties.filter((property) =>
-                (city ? property.city === city : true) &&
-                (locality ? property.locality === locality : true) &&
-                (category ? property.category === category : true)
-            );
-
-            console.log("Fetched Properties after filter:", fetchedProperties); // Added for debugging
-
-            setProperties(fetchedProperties);
-        } catch (error) {
-            console.error("Error fetching properties:", error);
-            setProperties([]);
-        } finally {
-            setLoading(false);
-        }
+      try {
+        setLoading(true);
+  
+        const searchParams = new URLSearchParams(location.search);
+        const city = searchParams.get("city") || "";
+        const locality = searchParams.get("locality") || "";
+        const category = searchParams.get("category") || "";
+  
+        console.log("Query Params Sent:", { city, address: locality, propertyType: category });
+  
+        const res = await axios.get(`http://localhost:5000/api/properties/search`, {
+          params: { 
+            city, 
+            address: locality, 
+            propertyType: category 
+          },
+        });
+  
+        console.log("API Response:", res.data);
+  
+        setProperties(res.data || []);
+      } catch (error) {
+        console.error("Error fetching properties:", error);
+        setProperties([]);
+      } finally {
+        setLoading(false);
+      }
     };
-
+  
     fetchProperties();
-}, [location.search]);
-
+  }, [location.search]);
+  
   return (
     <div>
       <Navbar /> {/* ✅ Navbar Added */}
@@ -73,7 +66,6 @@ function Properties() {
         <SearchBar />
       </div>
 
-    
       <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Available Properties</h2>
 
       {/* ✅ Agar Loading Hai Toh Show Karo */}
@@ -83,19 +75,29 @@ function Properties() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-4 md:px-12">
           {properties.map((property) => (
             <div key={property._id} className="bg-white shadow-md p-4 rounded-lg">
-              <img src={property.images[0]} alt={property.title} className="h-40 w-full object-cover rounded" />
+              <img
+                src={property.images[0]}
+                alt={property.title}
+                className="h-40 w-full object-cover rounded"
+              />
               <h3 className="text-xl font-semibold mt-2">{property.title}</h3>
               <p>{property.city}, {property.state}</p>
               <p className="text-indigo-600 font-bold">₹{property.monthlyRent}/month</p>
-              <button onClick={() => navigate(`/property/${property._id}`)} className="mt-2 bg-blue-600 text-white px-4 py-2 rounded">
+              <button
+                onClick={() => navigate(`/property/${property._id}`)}
+                className="mt-2 bg-blue-600 text-white px-4 py-2 rounded"
+              >
                 View Details
               </button>
             </div>
           ))}
         </div>
-      ) : null} {/* ✅ Agar koi property nahi mili, to kuch bhi na dikhao */}
+      ) : (
+        <p className="text-center text-gray-500">No properties found</p>
+      )}
     </div>
   );
 }
 
 export default Properties;
+  

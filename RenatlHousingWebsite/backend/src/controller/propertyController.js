@@ -89,39 +89,40 @@ export const getPropertyById = async (req, res) => {
 
 // ✅ Search Properties (City & Price Range)
 // ✅ Search Properties (City, Address, Price Range, Property Type)
+// ✅ Search Properties (City, Address, Property Type) with OR Condition
 export const searchProperties = async (req, res) => {
   try {
-    // Add Cache-Control header to disable caching
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // Disable caching
+    // Disable caching
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
 
-    const { city, address, minPrice, maxPrice, propertyType } = req.query;
+    const { city, address, propertyType } = req.query;
 
-    let query = {}; // Empty Query Object
+    let orQuery = [];
 
     // 🔹 Filter for city
     if (city && city.trim() !== "") {
-      query.city = { $regex: new RegExp(city, "i") };
+      orQuery.push({ city: { $regex: new RegExp(city, "i") } });
     }
 
     // 🔹 Filter for address
     if (address && address.trim() !== "") {
-      query.address = { $regex: new RegExp(address, "i") };
-    }
-
-    // 🔹 Filter for price range
-    if (minPrice || maxPrice) {
-      query.price = {
-        ...(minPrice ? { $gte: Number(minPrice) } : {}),
-        ...(maxPrice ? { $lte: Number(maxPrice) } : {}),
-      };
+      orQuery.push({ address: { $regex: new RegExp(address, "i") } });
     }
 
     // 🔹 Filter for Property Type
     if (propertyType && propertyType.trim() !== "") {
-      query.propertyType = { $regex: new RegExp(propertyType, "i") }; 
+      orQuery.push({ propertyType: { $regex: new RegExp(propertyType, "i") } });
     }
 
-    console.log("🔍 Search Query:", query); // Debugging ke liye ✅
+    // If no filter provided, return error or all properties (as per your choice)
+    if (orQuery.length === 0) {
+      return res.status(400).json({ message: "Please provide at least one filter to search." });
+    }
+
+    // Construct the query object with $or condition
+    const query = { $or: orQuery };
+
+    console.log("🔍 Search Query (OR):", query);
 
     const properties = await Property.find(query).populate("owner", "name email phone");
 
@@ -135,6 +136,7 @@ export const searchProperties = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+
 
 // ✅ Update Property (Owner Only)
 export const updateProperty = async (req, res) => {
