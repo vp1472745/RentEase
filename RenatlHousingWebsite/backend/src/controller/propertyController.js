@@ -26,6 +26,7 @@ export const addProperty = async (req, res) => {
       availableFrom,
       securityDeposit,
       rentalDurationMonths,
+      popularLocality, // ✅ New Field
     } = req.body;
 
     const newProperty = new Property({
@@ -36,7 +37,7 @@ export const addProperty = async (req, res) => {
       state,
       price,
       images,
-      owner: req.user._id, // Assign Owner ID
+      owner: req.user._id,
       propertyType,
       bhkType,
       area,
@@ -46,6 +47,7 @@ export const addProperty = async (req, res) => {
       availableFrom,
       securityDeposit,
       rentalDurationMonths,
+      popularLocality, // ✅ Store Popular Locality
     });
 
     await newProperty.save();
@@ -85,16 +87,16 @@ export const getPropertyById = async (req, res) => {
   }
 };
 
-// ✅ Search Properties with Advanced Filters
+// ✅ Search Properties with Popular Localities
 export const searchProperties = async (req, res) => {
   try {
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 
-    const { city, address, propertyType, bhkType, furnishType, facilities, monthlyRent, securityDeposit, rentalDurationMonths } = req.query;
+    const { city, address, propertyType, bhkType, furnishType, facilities, monthlyRent, securityDeposit, rentalDurationMonths, popularLocality } = req.query;
     
     let filter = {};
     
-    if (city) filter.city = new RegExp(city, "i"); // Case-insensitive city search
+    if (city) filter.city = new RegExp(city, "i");
     if (propertyType) filter.propertyType = new RegExp(propertyType, "i"); 
     if (bhkType) filter.bhkType = bhkType;
     if (furnishType) filter.furnishType = furnishType;
@@ -108,10 +110,14 @@ export const searchProperties = async (req, res) => {
     if (securityDeposit) filter.securityDeposit = { $lte: parseInt(securityDeposit) };
     if (rentalDurationMonths) filter.rentalDurationMonths = { $gte: parseInt(rentalDurationMonths) };
 
-    // 🔍 Address Search (Multiple Keywords Support)
     if (address) {
       const addressRegex = new RegExp(address.split(",").map(part => part.trim()).join("|"), "i");
       filter.address = addressRegex;
+    }
+
+    // ✅ Popular Localities Search
+    if (popularLocality) {
+      filter.popularLocality = new RegExp(popularLocality, "i");
     }
 
     console.log("🔍 Search Filters:", filter);

@@ -70,13 +70,14 @@ const SearchBar = () => {
 
   const handleSearch = () => {
     const params = new URLSearchParams();
+  
     if (city) params.append("city", city);
-    if (locality) params.append("locality", locality);
-    if (selectedCategory) params.append("category", selectedCategory);
-
+    if (locality) params.append("address", locality);  // Address से भी search होगा
+    if (selectedCategory) params.append("propertyType", selectedCategory); // Property Type भी add किया
+  
     navigate(`/properties?${params.toString()}`);
   };
-
+  
   return (
     <div className="flex flex-col items-center w-180 mt-5 h-30 rounded-t-2xl bg-blue-500 py-2">
       <div className="flex justify-center space-x-10 mb-6">

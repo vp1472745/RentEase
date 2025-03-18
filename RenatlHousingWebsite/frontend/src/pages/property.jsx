@@ -2,15 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import SearchBar from "../pages/search.jsx";
-import Navbar from "../component/navbar.jsx"; // ✅ Navbar added
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay, EffectFade } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/pagination";
-import "swiper/css/effect-fade";
+import Navbar from "../component/navbar.jsx";
 import banner from "../assets/banner.gif";
-import one from "../assets/homebanner.jpg";
-import second from "../assets/second.jpg";
 
 function Properties() {
   const [properties, setProperties] = useState([]);
@@ -27,14 +20,16 @@ function Properties() {
         const city = searchParams.get("city") || "";
         const locality = searchParams.get("locality") || "";
         const category = searchParams.get("category") || "";
+        const popularLocality = searchParams.get("popularLocality") || ""; // ✅ Popular Locality को URL से लो
   
-        console.log("Query Params Sent:", { city, address: locality, propertyType: category });
+        console.log("Query Params Sent:", { city, address: locality, propertyType: category, popularLocality });
   
         const res = await axios.get(`http://localhost:5000/api/properties/search`, {
           params: { 
             city, 
             address: locality, 
-            propertyType: category 
+            propertyType: category,
+            popularLocality // ✅ Backend को Send करो
           },
         });
   
@@ -54,9 +49,8 @@ function Properties() {
   
   return (
     <div>
-      <Navbar /> {/* ✅ Navbar Added */}
+      <Navbar />
 
-      {/* ✅ Hero Section with Search Bar */}
       <div
         className="relative flex flex-col items-center justify-center bg-cover bg-center text-center text-white h-[80vh]"
         style={{ backgroundImage: `url(${banner})` }}
@@ -68,7 +62,6 @@ function Properties() {
 
       <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Available Properties</h2>
 
-      {/* ✅ Agar Loading Hai Toh Show Karo */}
       {loading ? (
         <p className="text-center text-gray-500">Loading properties...</p>
       ) : properties.length > 0 ? (
@@ -100,4 +93,3 @@ function Properties() {
 }
 
 export default Properties;
-  

@@ -6,6 +6,7 @@ const propertySchema = new mongoose.Schema({
   address: { type: String, required: true },
   city: { type: String, required: true },
   state: { type: String, required: true },
+  popularLocality: { type: String, required: true }, // ✅ Added popularLocality
   
   images: [{ type: String }], // Multiple images
   owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -40,7 +41,6 @@ const propertySchema = new mongoose.Schema({
 
   monthlyRent: { type: Number, required: true },
   availableFrom: { type: Date, required: true },
-  // price: { type: Number, required: true },
   securityDeposit: { type: Number, required: true },
   rentalDurationMonths: { type: Number, required: true }, // in months
 });
