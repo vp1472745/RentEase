@@ -37,8 +37,6 @@ export const addProperty = async (req, res) => {
       price,
       images,
       owner: req.user._id, // Assign Owner ID
-
-      // New Fields
       propertyType,
       bhkType,
       area,
@@ -87,44 +85,38 @@ export const getPropertyById = async (req, res) => {
   }
 };
 
-// ✅ Search Properties (City & Price Range)
-// ✅ Search Properties (City, Address, Price Range, Property Type)
-// ✅ Search Properties (City, Address, Property Type) with OR Condition
+// ✅ Search Properties with Advanced Filters
 export const searchProperties = async (req, res) => {
   try {
-    // Disable caching
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 
-    const { city, address, propertyType } = req.query;
-
-    let orQuery = [];
-
-    // 🔹 Filter for city
-    if (city && city.trim() !== "") {
-      orQuery.push({ city: { $regex: new RegExp(city, "i") } });
+    const { city, address, propertyType, bhkType, furnishType, facilities, monthlyRent, securityDeposit, rentalDurationMonths } = req.query;
+    
+    let filter = {};
+    
+    if (city) filter.city = new RegExp(city, "i"); // Case-insensitive city search
+    if (propertyType) filter.propertyType = new RegExp(propertyType, "i"); 
+    if (bhkType) filter.bhkType = bhkType;
+    if (furnishType) filter.furnishType = furnishType;
+    
+    if (facilities) {
+      const facilitiesArray = facilities.split(",").filter(f => f);
+      if (facilitiesArray.length > 0) filter.facilities = { $all: facilitiesArray };
     }
 
-    // 🔹 Filter for address
-    if (address && address.trim() !== "") {
-      orQuery.push({ address: { $regex: new RegExp(address, "i") } });
+    if (monthlyRent) filter.monthlyRent = { $lte: parseInt(monthlyRent) };
+    if (securityDeposit) filter.securityDeposit = { $lte: parseInt(securityDeposit) };
+    if (rentalDurationMonths) filter.rentalDurationMonths = { $gte: parseInt(rentalDurationMonths) };
+
+    // 🔍 Address Search (Multiple Keywords Support)
+    if (address) {
+      const addressRegex = new RegExp(address.split(",").map(part => part.trim()).join("|"), "i");
+      filter.address = addressRegex;
     }
 
-    // 🔹 Filter for Property Type
-    if (propertyType && propertyType.trim() !== "") {
-      orQuery.push({ propertyType: { $regex: new RegExp(propertyType, "i") } });
-    }
+    console.log("🔍 Search Filters:", filter);
 
-    // If no filter provided, return error or all properties (as per your choice)
-    if (orQuery.length === 0) {
-      return res.status(400).json({ message: "Please provide at least one filter to search." });
-    }
-
-    // Construct the query object with $or condition
-    const query = { $or: orQuery };
-
-    console.log("🔍 Search Query (OR):", query);
-
-    const properties = await Property.find(query).populate("owner", "name email phone");
+    const properties = await Property.find(filter).populate("owner", "name email phone");
 
     if (!properties.length) {
       return res.status(404).json({ message: "No Properties Found" });
@@ -136,7 +128,6 @@ export const searchProperties = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
-
 
 // ✅ Update Property (Owner Only)
 export const updateProperty = async (req, res) => {

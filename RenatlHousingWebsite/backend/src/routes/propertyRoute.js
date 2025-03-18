@@ -7,7 +7,7 @@ import {
     deleteProperty
 } from "../controller/propertyController.js";
 import { authMiddleware, ownerOnly } from "../middleware/authMiddleware.js";
-import uploadMiddleware from "../middleware/multerMiddleware.js"; // ✅ Ensure multer middleware is imported
+import uploadMiddleware from "../middleware/multerMiddleware.js";
 import Property from "../models/property.js";
 
 const router = express.Router();
@@ -15,57 +15,65 @@ const router = express.Router();
 // ✅ Add New Property (Only Owner)
 router.post("/add", authMiddleware, ownerOnly, addProperty);
 
-// ✅ Search Properties (Fix)
-
 // ✅ Search Properties (Multiple Filters)
-router.get("/search", async (req, res) => {
-    try {
-      // Add Cache-Control header to disable caching
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      
-      // Create the query object
-      let query = {};
-  
-      // If city is provided, filter based on city
-      if (req.query.city) {
-        query.city = { $regex: req.query.city, $options: "i" }; // case-insensitive match
-      }
-  
-      // If locality is provided, filter based on locality (address field in database)
-      if (req.query.locality) {
-        query.address = { $regex: req.query.locality, $options: "i" }; // case-insensitive match
-      }
-  
-      // If propertyType is provided, filter based on propertyType
-      if (req.query.propertyType) {
-        query.propertyType = { $regex: req.query.propertyType, $options: "i" }; // case-insensitive match
-      }
-  
-      // Log the query for debugging
-      console.log("🔍 Query Params for Filtering:", query);
-  
-      // Fetch filtered properties from the database
-      const properties = await Property.find(query);  // Using combined AND condition here
-  
-      // If no properties match the query, send a 404 response
-      if (!properties.length) {
-        return res.status(404).json({ message: "No matching properties found" });
-      }
-  
-      // Send the filtered properties as a response
-      res.json(properties);
-    } catch (error) {
-      console.error("❌ Error fetching properties:", error);
-      res.status(500).json({ error: "Server Error" });
-    }
-  });
-  
+router.get("/search", async (req, res) => { 
+  try {
+    const { city, propertyType } = req.query;
 
+    let filter = {};
+    if (city) filter.city = new RegExp(`^${city}$`, "i"); // Exact match, case-insensitive
+    if (propertyType) filter.propertyType = new RegExp(propertyType, "i");
+
+    console.log("🔍 Filter Object:", filter);
+
+    const properties = await Property.find(filter);
+    console.log("📢 Found Properties:", properties.length);
+    
+    if (locality) {
+      const words = locality.split(" "); // Locality ko words me split karo
+      const localityRegex = new RegExp(words.join("|"), "i"); // Match any word
+      filter.address = localityRegex;
+    }
+    if (!properties.length) {
+      return res.status(404).json({ message: "No properties found for this city" });
+    }
+
+    res.json(properties);
+  } catch (error) {
+    console.error("❌ API Error:", error.message);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+// ✅ Get Localities by City (NEW ROUTE)
+router.get("/localities", async (req, res) => {
+  try {
+    const { city } = req.query;
+    console.log(city)
+    if (!city) {
+      return res.status(400).json({ message: "City is required" });
+    }
+
+    const properties = await Property.find({ city: new RegExp(`^${city}$`, "i") });
+
+    if (!properties.length) {
+      return res.status(404).json({ message: "No localities found for this city" });
+    }
+
+    // ✅ Get Unique Localities
+    const uniqueLocalities = [...new Set(properties.map(p => p.address.split(",")[0]))];
+
+    res.json(uniqueLocalities);
+  } catch (error) {
+    console.error("❌ Localities Fetch Error:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
 
 // ✅ Get All Properties
 router.get("/", getAllProperties);
 
-// ✅ Get Property By ID (Fix _id Conflict)
+// ✅ Get Property By ID
 router.get("/:id", async (req, res) => {
     try {
         const property = await Property.findById(req.params.id);

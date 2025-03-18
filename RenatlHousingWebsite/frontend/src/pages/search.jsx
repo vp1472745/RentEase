@@ -32,6 +32,7 @@ import GN_N from "../assets/GNN.png";
 import GN_H from "../assets/GNH.png";
 import CN from "../assets/CN.png";
 import CH from "../assets/CH.png";
+import PopularLocalities from "../pages/popularlocality.jsx"
 const cities = [
   { name: "Mumbai", image_N: mum_N, image_H: mum_H },
   { name: "Bengaluru", image_N: ban_N, image_H: ban_H },
@@ -43,10 +44,10 @@ const cities = [
   { name: "Dehli", image_N: delhi_N, image_H:  delhi_H },
   { name: "Faridabad", image_N: fari_N, image_H:  fari_H },
   { name: "Pune", image_N: pune_N, image_H:  pune_H },
-  { name: "Navi Mumbai", image_N: NM_N, image_H: NM_H },
+  { name: "NaviMumbai", image_N: NM_N, image_H: NM_H },
   { name: "Indore", image_N: I_N, image_H: I_H },
   { name: "Gaziyabad", image_N: G_N, image_H: G_H },
-  { name: "Greater Nodia", image_N: GN_N, image_H: GN_H },
+  { name: "GreaterNoida", image_N: GN_N, image_H: GN_H },
   { name: "Coimbatore", image_N: CN, image_H: CH },
   
 
@@ -77,7 +78,7 @@ const SearchBar = () => {
   };
 
   return (
-    <div className="flex flex-col items-center w-200 mt-5 rounded-3xl bg-[#1A1A3D] py-8">
+    <div className="flex flex-col items-center w-180 mt-5 h-30 rounded-t-2xl bg-blue-500 py-2">
       <div className="flex justify-center space-x-10 mb-6">
         {propertyCategories.map((category) => (
           <button
@@ -92,7 +93,7 @@ const SearchBar = () => {
         ))}
       </div>
 
-      <div className="flex items-center bg-white rounded-full shadow-md p-2 w-full max-w-3xl h-15">
+      <div className="flex items-center bg-white rounded-full shadow-md p-2 w-182 max-w-3xl h-15">
         <button onClick={() => setIsModalOpen(true)} className="bg-transparent text-black px-4 py-2 focus:outline-none">
           <span className="text-lg font-medium cursor-pointer">{city}</span>
         </button>
@@ -101,10 +102,10 @@ const SearchBar = () => {
           type="text"
           className="flex-grow px-4 py-2 text-black focus:outline-none"
           placeholder="Search Locality"
-          value={locality}
+          // value={locality}
           onChange={(e) => setLocality(e.target.value)}
         />
-        <button onClick={handleSearch} className="bg-blue-800 text-white px-6 py-2 rounded-full flex items-center h-12 w-30 text-lg cursor-pointer">
+        <button onClick={handleSearch} className="bg-blue-500 text-white px-6 py-2 rounded-full flex items-center h-12 w-30 text-lg cursor-pointer">
           <Search size={20} className="mr-2" /> Search
         </button>
       </div>
@@ -149,7 +150,14 @@ const SearchBar = () => {
           </div>
         </div>
       )}
+<div>
+     <PopularLocalities selectedCity={city} onSelect={(loc) => setLocality(loc)} />
+
+</div>
+
     </div>
+
+
   );
 };
 
