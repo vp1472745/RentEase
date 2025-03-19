@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, X, LogOut, Home } from "lucide-react";
-
+import free from "../assets/free.png"
 function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -30,16 +30,31 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
       </Link>
 
       <div className="hidden md:flex space-x-8">
-        <Link to="/pay-rent" className="text-white font-semibold text-2xl hover:text-gray-300 transition">Pay Rent</Link>
-        <Link to="/download" className="text-white font-semibold text-2xl hover:text-gray-300 transition">Download App</Link>
-        <Link to="/contact" className="text-white font-semibold text-2xl hover:text-gray-300 transition">Contact Us</Link>
-        <Link to="/add-property" className="text-white font-semibold text-2xl hover:text-gray-300 transition">Add Property</Link>
+        <Link to="/pay-rent" className="text-white font-semibold text-[20px] hover:text-gray-300 transition">Pay Rent</Link>
+        <Link to="/download" className="text-white font-semibold text-[20px] hover:text-gray-300 transition">Download App</Link>
+        <Link to="/contact" className="text-white font-semibold text-[20px] hover:text-gray-300 transition">Contact Us</Link>
+        <div className="flex h-10"> 
+          {/* <Link to="/add-property" className="text-white font-semibold text-[20px] hover:text-gray-300 transition">Add Property </Link> */}
+      
+        {/* <div className="mt-2 bg-red-600 w-15 h-6 ml-2 text-center rounded-md"> */}
+        {/* <span className="">Free</span> */}
+          {/* <img src={free} className="w-10 h-15 mt-0" alt="" /> */}
+        {/* </div> */}
+        </div>
+       
 
         {/* Add Property link - only visible for authenticated users */}
         {isAuthenticated && user && (
-          <Link to="/add-property" className="text-white font-semibold text-2xl hover:text-gray-300 transition">
+          <div className="flex">
+          <Link to="/add-property" className="text-white font-semibold text-[20px] hover:text-gray-300 transition">
             Add Property
+              {/* <img src={free} className="w-10 h-15 mt-0" alt="" /> */}
+             
           </Link>
+          <div className="mt-2 bg-red-600 w-15 h-6 ml-2 text-center rounded-md">
+              <span className="">Free</span>
+              </div>
+          </div>
         )}
 
         {/* Profile Section */}

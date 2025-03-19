@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+/* For WebKit browsers (Chrome, Edge, Safari) */
+html, body {
+    overflow: auto;
+    scrollbar-width: none; /* For Firefox */
+    -ms-overflow-style: none; /* For Internet Explorer & Edge */
+}
+
+/* Hide scrollbar for WebKit browsers */
+html::-webkit-scrollbar {
+    display: none;
+}

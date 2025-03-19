@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom"; // ✅ Navigation के लिए Import
 import searchicon from "../assets/grow.png";
 import popularLocalitiesData from "../data/popularLocalities.js"; // ✅ JSON File Import
-
+import { VscGoToSearch } from 'react-icons/vsc';
 const PopularLocalities = ({ selectedCity }) => {
   const scrollRef = useRef(null);
   const [localities, setLocalities] = useState([]);
@@ -27,15 +27,16 @@ const PopularLocalities = ({ selectedCity }) => {
   };
 
   return (
-    <div className="flex  items-center mt-4 w-300 ml-35">
-      <div className="flex items-center w-50 mt-3">
-        <img src={searchicon} className="w-6 h-6 " alt="search icon" />
-        <h2 className=" font-semibold  text-white">
+    <div className="flex  items-center mt-4 w-200 ">
+      <div className="flex items-center w-40 mt-3">
+        {/* <img src={searchicon} className="w-6 h-6 " alt="search icon" /> */}
+        <VscGoToSearch className="w-6 h-6  text-white stroke-[0.5]" />
+        <h2 className="ml-1 font-semibold  text-white text-[16px]">
           Popular Localities
         </h2>
       </div>
 
-      <div className="relative w-full max-w-3xl mt-4 flex items-center overflow-hidden">
+      <div className="relative w-150 max-w-3xl mt-4 flex items-center overflow-hidden px-4">
         {showLeftButton && (
           <button
             onClick={() => scroll("left")}
