@@ -24,7 +24,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
   console.log(user);
 
   return (
-    <nav className="fixed top-0 left-0 w-full bg-blue-600 p-4 flex justify-between items-center z-50 h-15">
+    <nav className="fixed top-0 left-0 w-full bg-blue-600 p-4 flex justify-between items-center z-50 h-20">
       <Link to="/" className="text-white font-bold text-2xl flex items-center hover:text-gray-200">
         <Home size={24} className="mr-2" /> RentEase.com
       </Link>

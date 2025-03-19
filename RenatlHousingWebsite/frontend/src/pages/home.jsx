@@ -6,7 +6,7 @@ import { Pagination, Autoplay, EffectFade, Navigation } from "swiper/modules";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import SearchBar from "../pages/search.jsx";
-
+import secondbanner from "../assets/secondbanner.jpg"
 import {
   CreditCard,
   Diamond,
@@ -22,10 +22,10 @@ import "swiper/css/pagination";
 import "swiper/css/effect-fade";
 import "swiper/css/navigation";
 
-import banner from "../assets/banner.gif";
+// import banner from "../assets/banner.gif";
 import one from "../assets/homebanner.jpg";
 import second from "../assets/second.jpg";
-
+import banner from "../assets/bannerlogo.jpg"
 // Services Data
 const services = [
   {
@@ -94,8 +94,8 @@ function Home() {
     <div className="w-full h-auto">
       {/* Hero Section */}
       <div
-        className="relative flex flex-col items-center justify-center bg-cover bg-center text-center text-white h-[90vh]"
-        style={{ backgroundImage: `url(${banner})` }}
+        className="relative flex flex-col items-center justify-center bg-cover bg-center text-center text-white h-[90vh] "
+        style={{ backgroundImage: `url(${secondbanner})` }}
       >
         <h1 className="text-3xl md:text-5xl font-bold">Find Your Perfect Home</h1>
         <p className="mt-4 text-base md:text-lg">Rent hassle-free homes across the city.</p>

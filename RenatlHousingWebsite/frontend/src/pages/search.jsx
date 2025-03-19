@@ -40,8 +40,8 @@ const cities = [
   { name: "Kolkata", image_N: kol_N, image_H: kol_H },
   { name: "Bhopal", image_N: bhopal_N, image_H: bhopal_H },
   { name: "Jaipur", image_N: jai_N, image_H: jai_H },
-  { name: "Nodia", image_N: nod_N, image_H:  nod_H },
-  { name: "Dehli", image_N: delhi_N, image_H:  delhi_H },
+  { name: "Noida", image_N: nod_N, image_H:  nod_H },
+  { name: "Delhi", image_N: delhi_N, image_H:  delhi_H },
   { name: "Faridabad", image_N: fari_N, image_H:  fari_H },
   { name: "Pune", image_N: pune_N, image_H:  pune_H },
   { name: "NaviMumbai", image_N: NM_N, image_H: NM_H },
@@ -79,13 +79,13 @@ const SearchBar = () => {
   };
   
   return (
-    <div className="flex flex-col items-center w-180 mt-5 h-30 rounded-t-2xl bg-blue-500 py-2">
-      <div className="flex justify-center space-x-10 mb-6">
+    <div className="flex flex-col items-center w-270 mt-3 h-30 rounded-t-2xl bg-blue-500 py-2">
+      <div className="flex justify-center space-x-10 mb-10 ">
         {propertyCategories.map((category) => (
           <button
             key={category}
             onClick={() => setSelectedCategory(category)}
-            className={`text-lg font-medium transition cursor-pointer px-1 py-2 rounded-md ${
+            className={` font-medium transition cursor-pointer px-1  rounded-md text-2xl mt-[20px] ${
               selectedCategory === category ? "hover:text-blue-400 text-white" : "text-white hover:text-blue-400"
             }`}
           >
@@ -94,19 +94,19 @@ const SearchBar = () => {
         ))}
       </div>
 
-      <div className="flex items-center bg-white rounded-full shadow-md p-2 w-182 max-w-3xl h-15">
+      <div className="flex items-center  rounded-full shadow-md p-2 w-[1100px] h-[250px] bg-white">
         <button onClick={() => setIsModalOpen(true)} className="bg-transparent text-black px-4 py-2 focus:outline-none">
-          <span className="text-lg font-medium cursor-pointer">{city}</span>
+          <span className="text-lg font-medium cursor-pointer text-[25px]">{city}</span>
         </button>
-        <div className="h-10 w-px bg-gray-300 mx-4" />
+        <div className="h-10 w-px bg-gray-300 mx-4 " />
         <input
           type="text"
-          className="flex-grow px-4 py-2 text-black focus:outline-none"
+          className="flex-grow px-4 py-5 text-black focus:outline-none text-[20px]"
           placeholder="Search Locality"
           // value={locality}
           onChange={(e) => setLocality(e.target.value)}
         />
-        <button onClick={handleSearch} className="bg-blue-500 text-white px-6 py-2 rounded-full flex items-center h-12 w-30 text-lg cursor-pointer">
+        <button onClick={handleSearch} className="bg-blue-500 text-white px-6 py-2 rounded-full flex items-center h-16 w-40  cursor-pointer text-2xl">
           <Search size={20} className="mr-2" /> Search
         </button>
       </div>

@@ -4,7 +4,7 @@ import axios from "axios";
 import SearchBar from "../pages/search.jsx";
 import Navbar from "../component/navbar.jsx";
 import banner from "../assets/banner.gif";
-
+import secondbanner from "../assets/secondbanner.jpg"
 function Properties() {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +34,6 @@ function Properties() {
         });
   
         console.log("API Response:", res.data);
-  
         setProperties(res.data || []);
       } catch (error) {
         console.error("Error fetching properties:", error);
@@ -51,9 +50,10 @@ function Properties() {
     <div>
       <Navbar />
 
+      {/* ✅ Hero Section */}
       <div
         className="relative flex flex-col items-center justify-center bg-cover bg-center text-center text-white h-[80vh]"
-        style={{ backgroundImage: `url(${banner})` }}
+        style={{ backgroundImage: `url(${secondbanner})` }}
       >
         <h1 className="text-3xl md:text-5xl font-bold">Find Your Perfect Home</h1>
         <p className="mt-4 text-base md:text-lg">Rent hassle-free homes across the city.</p>
@@ -62,6 +62,7 @@ function Properties() {
 
       <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Available Properties</h2>
 
+      {/* ✅ Loading Indicator */}
       {loading ? (
         <p className="text-center text-gray-500">Loading properties...</p>
       ) : properties.length > 0 ? (
@@ -74,8 +75,16 @@ function Properties() {
                 className="h-40 w-full object-cover rounded"
               />
               <h3 className="text-xl font-semibold mt-2">{property.title}</h3>
-              <p>{property.city}, {property.state}</p>
+              <p className="text-gray-600">{property.city}, {property.state}</p>
               <p className="text-indigo-600 font-bold">₹{property.monthlyRent}/month</p>
+
+              {/* ✅ Popular Locality Backend Se Show Karo */}
+              {property.popularLocality && (
+                <p className="text-blue-500 font-semibold mt-1">
+                  📍 Popular Locality: {property.popularLocality}
+                </p>
+              )}
+
               <button
                 onClick={() => navigate(`/property/${property._id}`)}
                 className="mt-2 bg-blue-600 text-white px-4 py-2 rounded"

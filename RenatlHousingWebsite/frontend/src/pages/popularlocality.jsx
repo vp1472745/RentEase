@@ -27,11 +27,11 @@ const PopularLocalities = ({ selectedCity }) => {
   };
 
   return (
-    <div className="flex flex-col items-center mt-4">
-      <div className="flex items-center">
-        <img src={searchicon} className="w-6 h-6" alt="search icon" />
-        <h2 className="text-lg font-semibold ml-2 text-white">
-          Popular Localities in {selectedCity}
+    <div className="flex  items-center mt-4 w-300 ml-35">
+      <div className="flex items-center w-50 mt-3">
+        <img src={searchicon} className="w-6 h-6 " alt="search icon" />
+        <h2 className=" font-semibold  text-white">
+          Popular Localities
         </h2>
       </div>
 
