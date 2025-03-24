@@ -79,14 +79,14 @@ const SearchBar = () => {
   };
   
   return (
-    <div className="flex flex-col items-center w-200 mt-3 h-30 rounded-t-2xl bg-blue-500 py-2">
-      <div className="flex justify-center space-x-10 mb-10 ">
+    <div className="flex flex-col items-center w-200 mt-3 h-30 rounded-t-2xl bg-purple-800 py-2">
+      <div className="flex justify-center space-x-10 mb-10 text-white ">
         {propertyCategories.map((category) => (
           <button
             key={category}
             onClick={() => setSelectedCategory(category)}
             className={` font-medium transition cursor-pointer px-1  rounded-md text-lg mt-[20px] ${
-              selectedCategory === category ? "hover:text-blue-400 text-white" : "text-white hover:text-blue-400"
+              selectedCategory === category ? "hover:text-red-400 text-white" : "text-white hover:text-black hover:bg-purple-300"
             }`}
           >
             {category}
@@ -109,8 +109,8 @@ const SearchBar = () => {
           // value={locality}
           onChange={(e) => setLocality(e.target.value)}
         />
-        <button onClick={handleSearch} className="bg-blue-500 text-white px-6 py-2 rounded-full  flex items-center h-14 w-30  cursor-pointer text-lg">
-          <Search size={15} className="mr-2" /> Search
+        <button onClick={handleSearch} className="bg-purple-800 px-6 py-2 rounded-full hover:bg-purple-300 hover:text-black font-semibold flex items-center h-14 w-30  cursor-pointer ">
+          <Search size={30} className="mr-2" /> Search
         </button>
       </div>
 

@@ -10,7 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.6",
     "@react-oauth/google": "^0.12.1",
+    "@shadcn/ui": "^0.0.4",
     "@tailwindcss/vite": "^4.0.9",
     "axios": "^1.8.3",
     "cloudinary": "^2.6.0",

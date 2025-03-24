@@ -1,0 +1,64 @@
+#pop {
+    position: relative;
+    display: inline-block; /* Ensures it wraps around the content */
+}
+
+#see {
+  
+    cursor: pointer;
+   
+}
+
+#details {
+    width: 350px;
+    height: 244px;
+    position: absolute;
+    display: none;
+    border: 2px solid black;
+    top: -150px; /* Adjusted so it appears below #see */
+    left: 0;
+    padding: 10px;
+    z-index: 10; /* Prevents overlapping issues */
+    cursor: pointer;
+}
+
+#pop:hover #details {
+    display: block;
+}
+
+
+
+#pai {
+    position: relative;
+    display: inline-block; /* Ensures it wraps around the content */
+   
+
+}
+
+#sai {
+    color:white;
+    cursor: pointer;
+    border-bottom: 2px solid white;
+    
+
+}
+
+#dai {
+    width: 400px;
+    height: 350px;
+    position: absolute;
+    display: none;
+    border: 2px solid black;
+    top: -320px; /* Adjusted so it appears below #see */
+ margin-left: 350px;
+    transform: translateX(-50%);
+    background-color:puprle; /* Make it visible */
+    padding: 10px;
+    z-index: 10; /* Prevents overlapping issues */
+    color: white;
+    cursor: pointer;
+}
+
+#pai:hover #dai {
+    display: block;
+}

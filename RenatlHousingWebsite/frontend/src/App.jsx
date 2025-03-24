@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import Navbar from "./component/navbar.jsx";
@@ -11,14 +11,28 @@ import OtpModal from "./models/otpModel.jsx";
 import ForgotPassword from "./pages/Forgotpassword.jsx";
 import VerifyOTP from "./pages/Verifyotp.jsx";
 import ResetPassword from "./pages/Resetpassword.jsx";
-import Profile from "./pages/profile.jsx";  
-import AddProperty from "./pages/addproperty.jsx";  // ✅ Ensure .jsx extension
-import Properties from "./pages/property.jsx"
+import Profile from "./pages/profile.jsx";
+import AddProperty from "./pages/addproperty.jsx";
+import Properties from "./pages/property.jsx";
+import Premium from "../src/pages/Premium.jsx"; // ✅ Premium page import kiya
+// import Discount from "../src/pages/discounttiming.jsx"
+
 function App() {
+  return (
+    <GoogleOAuthProvider clientId="385746889631-oepj52hiaskkn8oqbp3244r888uupr2d.apps.googleusercontent.com">
+      <Router>
+        <AppContent />
+      </Router>
+    </GoogleOAuthProvider>
+  );
+}
+
+function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
+  const location = useLocation(); // ✅ Now useLocation() is inside <Router>
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -34,7 +48,7 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    
+
     setIsAuthenticated(false);
     setUser(null);
     setToken(null);
@@ -55,10 +69,13 @@ function App() {
     alert("New OTP sent to your registered email/phone!");
   };
 
+  // Define routes where Navbar should NOT be visible
+  const hideNavbarRoutes = ["/login", "/signup", "/forgot-password", "/verify-otp", "/reset-password"];
+
   return (
-    <GoogleOAuthProvider clientId="385746889631-oepj52hiaskkn8oqbp3244r888uupr2d.apps.googleusercontent.com">
-      <Router>
-        <header>
+    <>
+      <header>
+        {!hideNavbarRoutes.includes(location.pathname) && (
           <Navbar 
             isAuthenticated={isAuthenticated} 
             user={user} 
@@ -67,33 +84,35 @@ function App() {
             token={token}
             handleLogout={handleLogout}
           />
-        </header>
+        )}
+      </header>
 
-        <main>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/receipted" element={<Receipt />} />
-            <Route path="/comming" element={<ComingSoon />} />
-            <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/verify-otp" element={<VerifyOTP />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/signup" element={<Signup setIsOtpModalOpen={setIsOtpModalOpen} />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/add-property" element={<AddProperty />} />  {/* Correct Route Placement for AddProperty */}
-            <Route path="/properties" element={<Properties />} />
+      <main>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/receipted" element={<Receipt />} />
+          <Route path="/comming" element={<ComingSoon />} />
+          <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/signup" element={<Signup setIsOtpModalOpen={setIsOtpModalOpen} />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/add-property" element={<AddProperty />} />
+          <Route path="/properties" element={<Properties />} />
+          <Route path="/premium" element={<Premium />} /> {/* ✅ Premium route add kiya */}
+          {/* <Route path="/discount" element={<Discount />} /> */}
+           {/* ✅ Premium route add kiya */}
+        </Routes>
+      </main>
 
-          </Routes>
-        </main>
-
-        <OtpModal
-          isOpen={isOtpModalOpen}
-          onClose={() => setIsOtpModalOpen(false)}
-          onSubmitOtp={handleOtpSubmit}
-          resendOtp={handleResendOtp}
-        />
-      </Router>
-    </GoogleOAuthProvider>
+      <OtpModal
+        isOpen={isOtpModalOpen}
+        onClose={() => setIsOtpModalOpen(false)}
+        onSubmitOtp={handleOtpSubmit}
+        resendOtp={handleResendOtp}
+      />
+    </>
   );
 }
 

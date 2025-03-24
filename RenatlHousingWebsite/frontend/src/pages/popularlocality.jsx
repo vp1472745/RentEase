@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom"; // ✅ Navigation के लिए Import
-import searchicon from "../assets/grow.png";
+import { VscGoToSearch } from "react-icons/vsc";
 import popularLocalitiesData from "../data/popularLocalities.js"; // ✅ JSON File Import
-import { VscGoToSearch } from 'react-icons/vsc';
+
 const PopularLocalities = ({ selectedCity }) => {
   const scrollRef = useRef(null);
   const [localities, setLocalities] = useState([]);
@@ -19,6 +19,43 @@ const PopularLocalities = ({ selectedCity }) => {
     }
   }, [selectedCity]);
 
+  // ✅ Scroll Function (Left / Right)
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = 150; // कितने pixels scroll होगा
+      if (direction === "left") {
+        scrollRef.current.scrollLeft -= scrollAmount;
+      } else {
+        scrollRef.current.scrollLeft += scrollAmount;
+      }
+    }
+  };
+
+  // ✅ Scroll Position चेक करके left और right button visibility अपडेट करो
+  useEffect(() => {
+    const handleScroll = () => {
+      if (scrollRef.current) {
+        setShowLeftButton(scrollRef.current.scrollLeft > 0);
+        setShowRightButton(
+          scrollRef.current.scrollLeft + scrollRef.current.clientWidth <
+            scrollRef.current.scrollWidth
+        );
+      }
+    };
+
+    const scrollElement = scrollRef.current;
+    if (scrollElement) {
+      scrollElement.addEventListener("scroll", handleScroll);
+      handleScroll(); // Initial check for visibility
+    }
+
+    return () => {
+      if (scrollElement) {
+        scrollElement.removeEventListener("scroll", handleScroll);
+      }
+    };
+  }, []);
+
   // ✅ जब कोई locality select हो, तो `/properties` Page पर Redirect करो
   const handleLocalityClick = (locality) => {
     const params = new URLSearchParams();
@@ -27,11 +64,10 @@ const PopularLocalities = ({ selectedCity }) => {
   };
 
   return (
-    <div className="flex  items-center mt-4 w-200 ">
+    <div className="flex items-center mt-4 w-full">
       <div className="flex items-center w-40 mt-3">
-        {/* <img src={searchicon} className="w-6 h-6 " alt="search icon" /> */}
-        <VscGoToSearch className="w-6 h-6  text-white stroke-[0.5]" />
-        <h2 className="ml-1 font-semibold  text-white text-[16px]">
+        <VscGoToSearch className="w-5 h-5 text-white stroke-[0.5]" />
+        <h2 className="ml-1 font-bold text-white text-[16px]">
           Popular Localities
         </h2>
       </div>
@@ -60,7 +96,7 @@ const PopularLocalities = ({ selectedCity }) => {
               <button
                 key={index}
                 onClick={() => handleLocalityClick(locality)} // ✅ Navigate on Click
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center font-medium hover:bg-blue-300 transition whitespace-nowrap cursor-pointer"
+                className="bg-purple-800 text-white px-4 py-2 rounded-lg flex items-center font-medium hover:bg-purple-300 hover:text-black transition whitespace-nowrap cursor-pointer"
               >
                 {locality} <ChevronRight size={18} className="ml-2" />
               </button>

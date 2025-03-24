@@ -7,6 +7,9 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import SearchBar from "../pages/search.jsx";
 import secondbanner from "../assets/secondbanner.jpg"
+import housingbanner from "../assets/bn.jpg"
+import hotel from "../assets/hotel.jpg"
+
 import {
   CreditCard,
   Diamond,
@@ -40,12 +43,12 @@ const services = [
     icon: <Diamond size={40} color="#6b46c1" />,
     link: "/comming",
   },
-  {
-    title: "Home Loans",
-    description: "Lowest Interest rate offers",
-    icon: <HomeIcon size={40} color="#6b46c1" />,
-    link: "/comming",
-  },
+  // {
+  //   title: "Home Loans",
+  //   description: "Lowest Interest rate offers",
+  //   icon: <HomeIcon size={40} color="#6b46c1" />,
+  //   link: "/comming",
+  // },
   {
     title: "Rent Receipt Generator",
     description: "Protection against cyber frauds",
@@ -91,28 +94,41 @@ function Home() {
   }, []);
 
   return (
-    <div className="w-full h-auto">
+    <div className="w-full h-auto bg-white">
       {/* Hero Section */}
-      <div
-        className="relative flex flex-col items-center justify-center bg-cover bg-center text-center text-white h-[90vh] "
-        style={{ backgroundImage: `url(${secondbanner})` }}
-      >
-        <h1 className="text-3xl md:text-5xl font-bold">Find Your Perfect Home</h1>
-        <p className="mt-4 text-base md:text-lg">Rent hassle-free homes across the city.</p>
-        <SearchBar />
-      </div>
+      <div className="relative flex flex-col items-center justify-center h-[90vh] text-center text-white">
+  {/* Background Image */}
+  <div
+    className="absolute inset-0 bg-cover bg-center"
+    style={{
+      backgroundImage: `url(${hotel})`,
+      filter: "brightness(50%)", // Adjust opacity (alternative method)
+    }}
+  ></div>
+
+  {/* Content */}
+  <div className="relative z-10">
+    <h1 className="text-4xl md:text-6xl font-bold text-white">
+      Find Your Perfect Home
+    </h1>
+    <p className="mt-4 text-base md:text-2xl font-bold text-white">
+      Rent hassle-free homes across the city.
+    </p>
+    <SearchBar />
+  </div>
+</div>
 
       {/* House Edge Section (Services) */}
       <section className="py-12 px-4 md:px-12">
-        <h2 className="text-3xl font-bold">Housing Edge</h2>
-        <h3 className="mb-10 text-xl font-bold text-blue-600">
+        <h2 className="text-3xl font-bold text-purple-800">Housing Edge</h2>
+        <h3 className="mb-10 text-xl font-bold text-purple-800 ">
           Explore property-related services
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="flex flex-wrap justify-between gap-25">
           {services.map(({ title, description, icon, link }, index) => (
             <div
               key={index}
-              className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center text-center shadow-blue-500"
+              className="bg-white shadow-md rounded-lg p-12 flex flex-col items-center text-center shadow-purple-800 "
             >
               <div className="mb-4">{icon}</div>
               <h3 className="text-xl font-semibold">{title}</h3>
@@ -126,8 +142,8 @@ function Home() {
       </section>
 
       {/* Explore Properties as a Slider */}
-      <section className="py-12 px-4 md:px-12 bg-gray-50">
-        <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Explore Properties</h2>
+      <section className="py-12 px-4 md:px-12 bg-white">
+        <h2 className="text-3xl font-bold text-purple-800 mb-8 text-center">Explore Properties</h2>
         {properties.length === 0 ? (
           <p className="text-center text-gray-500">No properties found!</p>
         ) : (
@@ -160,7 +176,7 @@ function Home() {
                       <p className="text-sm text-gray-500 mt-1">{property.bhkType.join(", ")}, {property.furnishType.join(", ")}</p>
                       <button
                         onClick={() => navigate(`/property/${property._id}`)}
-                        className="mt-4 w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700"
+                        className="mt-4 w-full bg-purple-800 text-white py-2 rounded hover:bg-purple-300 cursor-pointer"
                       >
                         View Details
                       </button>
@@ -175,14 +191,14 @@ function Home() {
 
       {/* Why Use Our Website */}
       <motion.div className="py-12 px-4 sm:px-6 lg:px-20">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">
+        <h2 className="text-3xl font-bold text-center text-purple-800 mb-8">
           Why Use Our Website?
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {features.map(({ icon, title, description }, index) => (
             <motion.div
               key={index}
-              className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center text-center shadow-blue-700"
+              className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center text-center shadow-purple-800"
             >
               <div className="mb-4">{icon}</div>
               <h3 className="text-lg font-semibold">{title}</h3>
