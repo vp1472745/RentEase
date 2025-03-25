@@ -48,6 +48,7 @@ export const addProperty = async (req, res) => {
       securityDeposit,
       rentalDurationMonths,
       popularLocality, // ✅ Store Popular Locality
+      nearby 
     });
 
     await newProperty.save();
