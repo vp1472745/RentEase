@@ -62,14 +62,14 @@ const CountdownTimer = () => {
             </div>
           ) : (
             <>
-              <div className="text-[15px] font-semibold py-2 flex">
-                <img src={discount} alt="" className="w-5 h-5 " />
-                <span className="ml-2">
+              <div className="text-[15px] font-semibold py-2  flex">
+                <img src={discount} alt="" className="w-6 h-6  mt-1" />
+                <span className="ml-2 text-[15px] ">
                   {" "}
                   Hurry! Purchase a plan before your exclusive discount
                 </span>
               </div>
-              <div className="mt-15 mr-72 absolute text-[15px] font-semibold">
+              <div className="mt-15 mr-72 absolute text-[15px] font-semibold ">
                 expires!
               </div>
               <div

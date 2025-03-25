@@ -3,7 +3,10 @@ import { Check, X, ChevronLeft, ChevronRight, Link } from "lucide-react";
 import { RiCloseFill } from "react-icons/ri";
 import { FaCheck } from "react-icons/fa6";
 import { CiCircleAlert } from "react-icons/ci";
+import { motion } from "framer-motion"; // Framer Motion Import
 import hkey from "../assets/hkey.png";
+import arrow from "../assets/arrow.png";
+import fe from "../assets/fea.png";
 import done from "../assets/done.png";
 import { TbBulb } from "react-icons/tb";
 import contactl from "../assets/contact.png";
@@ -157,9 +160,10 @@ const testimonials = [
   // Add more testimonials here
 ];
 export default function PremiumSubscription() {
-  const [hoveredPlan, setHoveredPlan] = useState(null);
+  const [hoveredPlan, setHoveredPlan] = useState();
   const [index, setIndex] = useState(0);
   const [validity, setValidity] = useState("45");
+  const [planSelected, setPlanSelected] = useState(false); // Define setPlanSelected
   const [selectedPlan, setSelectedPlan] = useState(basePlans[0].name);
   const [selected, setSelected] = useState(false);
   const [total, setTotal] = useState(0);
@@ -318,18 +322,19 @@ export default function PremiumSubscription() {
   };
   return (
     <>
-      <div
-        className="absolute inset-0 bg-cover bg-center h-15 bg-[#2a1035] rounded-br-3xl rounded-bl-3xl"
-        // style={{
-        //   backgroundImage: `url(${hotel})`,
-        //   filter: "brightness(50%)", // Adjust opacity (alternative method)
-        // }}
-      ></div>
+      <div className="min-h-screen bg-[#2a1035] overflow-x-hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-center h-15 bg-[#2a1035] rounded-br-3xl rounded-bl-3xl"
+          // style={{
+          //   backgroundImage: `url(${hotel})`,
+          //   filter: "brightness(50%)", // Adjust opacity (alternative method)
+          // }}
+        ></div>
 
-      {/* second main div */}
-      <div>
-        <div className="bg-[#8F87F1] h-80%  border w-100%">
-            <div className="bg-[#8F87F1]  p-6 text-white flex flex-col items-center  ml-150 w-260 h-30 mt-5  ">
+        {/* second main div */}
+        <div>
+          <div className="bg-[#8F87F1]   border">
+            <div className="bg-[#8F87F1]   p-6 text-white flex flex-col items-center  ml-80 w-260 h-30 mt-5 ]">
               <div className="flex  justify-between items-center mt-7">
                 {/* Left Side - Logo */}
                 <div className="flex items-center   ">
@@ -349,30 +354,30 @@ export default function PremiumSubscription() {
                   <div>
                     {/* "What's Premium" Button */}
                     <div className="">
-                    <div
-                      className="text-white px-2 py-2 rounded-full cursor-pointer   h-8 w-37 flex items-center bg-[#2a1035] ml-10 mt-5 "
-                      onClick={() => {
-                        setIsPremiumOpen(true);
-                        setCurrentIndex(0);
-                        resetProgress();
-                      }}
-                    >
-                      <TbBulb className="text-white" />
-                      <span className="text-[13px] font-bold text-white">
-                        What's Premium
-                      </span>
-                    </div>
+                      <div
+                        className="text-white px-2 py-2 rounded-full cursor-pointer   h-8 w-37 flex items-center bg-[#2a1035] ml-10 mt-5 "
+                        onClick={() => {
+                          setIsPremiumOpen(true);
+                          setCurrentIndex(0);
+                          resetProgress();
+                        }}
+                      >
+                        <TbBulb className="text-white" />
+                        <span className="text-[13px] font-bold text-white">
+                          What's Premium
+                        </span>
+                      </div>
                     </div>
                     {/* Status Viewer */}
                     {isPremiumOpen && (
                       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-90 z-50 ">
                         {/* Progress Bars */}
                         <div className="absolute top-5 flex items-center justify-center w-full px-4">
-                          <div className="flex gap-2 flex-grow justify-center ml-5 mt-20">
+                          <div className="flex gap-2 flex-grow justify-center ml-5 mt-10">
                             {statusImages.map((_, i) => (
                               <div
                                 key={i}
-                                className="w-20 h-1 bg-gray-500 rounded-md overflow-hidden mt-13 z-60"
+                                className="w-20 h-1 bg-gray-500 rounded-md overflow-hidden  z-60"
                               >
                                 <div
                                   className="h-full bg-white"
@@ -387,10 +392,10 @@ export default function PremiumSubscription() {
                         </div>
 
                         {/* Image Viewer Container */}
-                        <div className="relative w-90 h-[500px] flex items-center justify-center bg-[#2a1035] rounded-lg shadow-lg">
+                        <div className="relative w-90 h-[600px] flex items-center justify-center bg-[#2a1035] rounded-lg shadow-lg">
                           {/* Close Button (X) - Positioned outside the top-right of the box */}
                           <button
-                            className="absolute top-0 right-0 transform translate-x-full -translate-y-1/2 text-white text-3xl bg-gray-700 rounded-full w-8 h-8 flex items-center justify-center"
+                            className="absolute -top-9 cursor-pointer right-0 transform translate-x-full -translate-y-1/2 text-white text-3xl bg-gray-700 rounded-full w-8 h-8 flex items-center justify-center "
                             onClick={() => setIsPremiumOpen(false)}
                           >
                             &times;
@@ -398,7 +403,7 @@ export default function PremiumSubscription() {
 
                           {/* Left Button - Previous */}
                           <button
-                            className="absolute left-2 bg-gray-700 text-white px-4 py-2 rounded-full text-xl"
+                            className="absolute left-2 bg-gray-700 text-white px-4 py-2 rounded-full text-xl "
                             onClick={goToPrevImage}
                           >
                             &#10094;
@@ -413,7 +418,7 @@ export default function PremiumSubscription() {
 
                           {/* Right Button - Next */}
                           <button
-                            className="absolute right-2 bg-gray-700 text-white px-4 py-2 rounded-full text-xl"
+                            className="absolute right-2 bg-gray-700 text-white px-4 py-2 rounded-full text-xl "
                             onClick={goToNextImage}
                           >
                             &#10095;
@@ -434,62 +439,87 @@ export default function PremiumSubscription() {
             </div>
 
             {/* first main div */}
-            <div className="bg-[#2a1035] border border-black  w-[1350px] rounded-2xl h-[1700px] ml-70 ">
-             <div className="   ">
-                <div className="bg-[#2a1035] text-white p-4 rounded-2xl ml-9 ">
+            <div className="bg-[#2a1035] border border-black  w-[1250px] rounded-2xl h-[1700px] ml-33">
+              <div className="   ">
+                <div className="bg-[#2a1035] text-white p-4 rounded-2xl ml-9">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     {/* Image Section */}
-                    <div className="h-15 w-15 mt-2">
+                    <div className="h-15 w-15 mt-10">
                       <img
                         src={hkey}
                         alt="Key Icon"
                         className="w-full h-full object-contain"
                       />
                     </div>
+
                     {/* Text Section */}
-                    <div className="mt-2 text-center md:text-left flex-1 min-w-[250px]">
-                      <h3 className="text-lg font-semibold">Hey there,</h3>
-                      <p className="text-sm leading-5">
+                    <div className="mt-10 text-center md:text-left flex-1 min-w-[250px] ">
+                      <h3 className="text-[17px] font-bold">Hey there,</h3>
+                      <p className="text-[17px] leading-5">
                         Subscribe to Premium today to save ₹50,000 on brokerage,
                         along with <br className="hidden md:block" />
                         other benefits
                       </p>
                     </div>
-                    {/* Button Section */}
-                    <div className="flex items-center md:items-start space-y-2">
-                      <h2 className="text-md font-medium mr-3 mt-2">
-                        Change plan validity
-                      </h2>
 
-                      <div className="flex bg-[#8F87F1] gap-2 rounded-md h-10 p-1 mr-10">
-                        <button
-                          className={`cursor-pointer rounded-md px-4 py-1 ${
-                            validity === "45"
-                              ? "bg-[#2a1035] text-white font-bold text-[14px]"
-                              : "bg-[#8F87F1] text-white font-bold text-[14px]"
-                          }`}
-                          onClick={() => setValidity("45")}
+                    {/* Button Section */}
+                    {selectedPlan !== "Sachet" ? (
+                      <div className="flex items-center md:items-start space-y-2 relative mt-10">
+                        <h2 className="text-md font-medium mr-3 mt-2">
+                          Change plan validity
+                        </h2>
+
+                        {/* Animated Save 40% text */}
+                        <motion.div
+                          initial={{ x: 0, opacity: 0 }}
+                          animate={{ x: -70, opacity: 1 }}
+                          transition={{ duration: 2, ease: "easeInOut" }}
+                          className="absolute text-green-400 font-bold -right-15 -top-10 "
                         >
-                          45 days
-                        </button>
-                        <button
-                          className={`cursor-pointer rounded-md px-4 py-1 ${
-                            validity === "90"
-                              ? "bg-[#2a1035] text-white font-bold text-[14px]"
-                              : "bg-[#8F87F1] text-white font-bold text-[14px]"
-                          }`}
-                          onClick={() => setValidity("90")}
-                        >
-                          90 days
-                        </button>
+                          <div className="flex">
+                            {" "}
+                            <img
+                              src={arrow}
+                              alt=""
+                              className="w-7 h-7 mt-2"
+                            />{" "}
+                            Save 40%{" "}
+                          </div>
+                        </motion.div>
+
+                        <div className="flex bg-[#8F87F1] gap-2 rounded-md h-10 p-1 mr-10">
+                          <button
+                            className={`cursor-pointer rounded-md px-4 py-1 ${
+                              validity === "45"
+                                ? "bg-[#2a1035] text-white font-bold text-[14px]"
+                                : "bg-[#8F87F1] text-white font-bold text-[14px]"
+                            }`}
+                            onClick={() => setValidity("45")}
+                          >
+                            45 days
+                          </button>
+                          <button
+                            className={`cursor-pointer rounded-md px-4 py-1 ${
+                              validity === "90"
+                                ? "bg-[#2a1035] text-white font-bold text-[14px]"
+                                : "bg-[#8F87F1] text-white font-bold text-[14px]"
+                            }`}
+                            onClick={() => setValidity("90")}
+                          >
+                            90 days
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    
+                    ) : (
+                      <p className="text-white font-semibold mt-15 mr-10 text-[14px]">
+                        Sachet plan is valid for 7 days.
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
 
-              <div className="border-t  border-white w-[1250px] ml-10"></div>
+              <div className="border-t  border-white w-[1150px] ml-10"></div>
               <div className="bg-[#2a1035]   w-100">
                 {/* left side */}
                 <div className="flex w-[200px] ">
@@ -502,7 +532,7 @@ export default function PremiumSubscription() {
                     <div className="main div">
                       <div className="flex mt-12 ml-10 ">
                         <img src={contactl} alt="" className="w-5 h-5 mt-1" />
-                        <p className="text-[15px] ml-2 text-white">
+                        <p className="text-[17px] ml-2 text-white">
                           Zero Brokerage owners contacts
                         </p>
                       </div>
@@ -511,34 +541,35 @@ export default function PremiumSubscription() {
       "
                       >
                         <img src={s} alt="" className="w-5 h-5 mt-1 " />
-                        <p className="text-[15px] ml-2 text-white">
+                        <p className="text-[17px]  ml-2 text-white">
                           Priority Customer suppor
                         </p>
                       </div>
                       <div className="flex mt-5 ml-10 text-white">
                         <img src={w} alt="" className="w-5 h-5 mt-1" />
-                        <p className="text-[15px] ml-2">
+                        <p className="text-[17px]  ml-2">
                           Instant alerts on new properties
                         </p>
                       </div>
                       <div className="flex mt-6 ml-10">
                         <img src={ss} alt="" className="w-5 h-5 mt-1" />
-                        <p className="text-[15px] ml-2 text-white">
+                        <p className="text-[17px]  ml-2 text-white">
                           Dedicated relationship manager
-
                         </p>
-                        <CiCircleAlert className="mt-1 ml-1 cursor-pointer text-white" size={22} />
-
+                        <CiCircleAlert
+                          className="mt-1 ml-1 cursor-pointer text-white"
+                          size={22}
+                        />
                       </div>
                     </div>
 
-                    <div className="pop mt-8 ml-10  w-60 rounded-md  " id="pop">
+                    <div className="pop mt-9 ml-10  w-60 rounded-md  " id="pop">
                       <div className="flex">
                         <div
                           className="see border-t- border-b-pink-400"
                           id="see"
                         >
-                          <div className="text-pink-400">
+                          <div className="text-pink-400 text-[15px]">
                             {" "}
                             See additional benefits
                           </div>
@@ -546,7 +577,7 @@ export default function PremiumSubscription() {
                         <img
                           src={righta}
                           alt="kjnkj"
-                          className="w-4 h-3 mt-3 ml-3"
+                          className="w-4 h-3 mt-2 ml-3"
                         />
                       </div>
                       <div
@@ -561,7 +592,10 @@ export default function PremiumSubscription() {
                         <div className="grid ml-9 py-3 w-60  ">
                           <div className="flex  ">
                             <img src={s} alt="" className="w-7 h-7 mt-1  " />
-                            <span className="ml-5 text-white text-[20px]"> Customer Support</span>
+                            <span className="ml-5 text-white text-[20px]">
+                              {" "}
+                              Customer Support
+                            </span>
                           </div>
                           <div className="flex  bg-[#2a1035] rounded-full h-7 ml-10 mt-3 w-52 items-center">
                             <img
@@ -603,7 +637,9 @@ export default function PremiumSubscription() {
                                 className="w-[18px] h-[18px] mt-1 ml-2 "
                               />
 
-                              <span className="ml-2 text-[14px] text-white">All Plan</span>
+                              <span className="ml-2 text-[14px] text-white">
+                                All Plan
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -612,7 +648,7 @@ export default function PremiumSubscription() {
 
                     <div className="relative">
                       {/* Apply Coupon Button */}
-                      <div className="mt-20 bg-[#8F87F1] w-90   rounded-md p-2 ml-10">
+                      <div className="mt-18 bg-[#8F87F1] w-90   rounded-md p-2 ml-10">
                         <div className="flex ">
                           <button
                             className="flex text-[15px] cursor-pointer items-center h-7 w-full text-white "
@@ -732,11 +768,16 @@ export default function PremiumSubscription() {
                             </button>
 
                             <h2 className="text-lg font-semibold text-white mb-4">
-                            Upto ₹500 Cashback on payments via MobiKwik
+                              Upto ₹500 Cashback on payments via MobiKwik
                             </h2>
-                            <div className="flex">  Offer Details  <div className="w-70 mt-3 ml-2"><hr /></div></div>
+                            <div className="flex">
+                              {" "}
+                              Offer Details{" "}
+                              <div className="w-70 mt-3 ml-2">
+                                <hr />
+                              </div>
+                            </div>
                             <p className="text-white text-[16px] py-5">
-                             
                               <li className="">
                                 {" "}
                                 Get up to ₹500/- cashback on payments via
@@ -776,111 +817,183 @@ export default function PremiumSubscription() {
                   {/* right */}
                   <div>
                     <div>
-                      <div className="w-170 bg-[#2a1035] p-6 m-auto h-117 ml-21 relative mt-5">
-                       
+                      <div className="w-[700px] bg-[#2a1035] p-6 h-117 ml-16 relative mt-5">
                         <div>
-                          <div className="w-27 text-center ml-5 absolute rounded-md text-[15px] h-12 -mt-5 bg-[#DD88CF] border border-black text-white font-semibold">
+                          <div className="w-27 text-center ml-6 absolute rounded-md text-[15px] h-12 -mt-5 bg-[#DD88CF] border border-black text-white font-semibold">
                             Instant Trial Plan
                           </div>
 
-                          <div className="w-27 text-center ml-85 absolute rounded-md text-[15px] h-8 -mt-4 bg-[#DD88CF] border border-black text-white  font-semibold">
+                          <div className="w-27 text-center ml-106 absolute rounded-md text-[15px] h-8 -mt-4 bg-[#DD88CF] border border-black text-white  font-semibold">
                             Most Popular
                           </div>
+
                           <div className="grid grid-cols-4">
-      {basePlans.map((plan) => {
-        const price = plan.price[validity]; // Plan price
-        const gstAmount = Math.round(price * 0.18); // 18% GST calculation
-        const totalAmount = price + gstAmount; // Total cost including GST
+                            {basePlans.map((plan) => {
+                              const price = plan.price[validity]; // Plan price
+                              const gstAmount = Math.round(price * 0.18); // 18% GST calculation
+                              const totalAmount = price + gstAmount; // Total cost including GST
 
-        return (
-          <div
-            key={plan.name}
-            className={`p-4 text-center cursor-pointer w-38 h-110 ${
-              selectedPlan === plan.name ? "bg-[#8F87F1]" : "bg-[#2a1035]"
-            }`}
-            onClick={() => {
-              setSelectedPlan(plan.name);
-              setPlanSelected(true);
-            }}
-          >
-            {/* Selection Indicator */}
-            <div className="border-white rounded-full border w-5 h-5 ml-15 mt-6 flex justify-center items-center">
-              {selectedPlan === plan.name && (
-                <img src={done} alt="" className="w-5 h-5" />
-              )}
-            </div>
+                              return (
+                                <div
+                                  key={plan.name}
+                                  className={`p-4 text-center cursor-pointer w-38 h-115 ${
+                                    selectedPlan === plan.name
+                                      ? "bg-[#8F87F1]"
+                                      : "bg-[#2a1035]"
+                                  }`}
+                                  onClick={() => {
+                                    setSelectedPlan(plan.name);
+                                    setPlanSelected(true);
+                                  }}
+                                >
+                                  {/* Selection Indicator */}
+                                  <div className="border-white rounded-full border w-5 h-5 ml-15 mt-6 flex justify-center items-center ">
+                                    {selectedPlan === plan.name && (
+                                      <img
+                                        src={done}
+                                        alt=""
+                                        className="w-5 h-5"
+                                      />
+                                    )}
+                                  </div>
 
-            <div className="rounded-full w-12 mt-5 ml-12">{plan.image1}</div>
-            <h3 className="text-lg font-bold mt-2 text-white">{plan.name}</h3>
-            <p className="text-white mt-2 text-2xl">{plan.brokerage}</p>
-            <p className="text-white mt-3 ml-1">{plan.iconone}</p>
-            <p className="text-white mt-3 ml-1">{plan.icontwo}</p>
-            <p className="text-white mt-3 ml-1">{plan.iconthree}</p>
-            <p className="text-xl font-bold text-white">₹{price}</p>
-            <p className="text-gray-300 line-through">₹{plan.oldPrice[validity]}</p>
+                                  <div className="rounded-full w-[53px] h-[53px] mt-5 ml-12">
+                                    {plan.image1}
+                                  </div>
+                                  <h3 className="text-[22px] font-bold mt-2 text-white">
+                                    {plan.name}
+                                  </h3>
+                                  <p className="text-white mt-2 text-2xl">
+                                    {plan.brokerage}
+                                  </p>
+                                  <p className="text-white mt-3 ml-1 w-[22px]">
+                                    {plan.iconone}
+                                  </p>
+                                  <p className="text-white mt-3 ml-1">
+                                    {plan.icontwo}
+                                  </p>
+                                  <p className="text-white mt-3 ml-1">
+                                    {plan.iconthree}
+                                  </p>
 
-            {/* GST Tooltip */}
-            <div
-              className="relative flex justify-center items-center"
-              onMouseEnter={() => setHoveredPlan(plan.name)}
-              onMouseLeave={() => setHoveredPlan(null)}
-            >
-              <p className="text-gray-300 mt-2">{plan.gst}</p>
-              <CiCircleAlert className="mt-3 ml-1 cursor-pointer text-white" size={22} />
+                                  {/* Display Different Text for Sachet Plan */}
+                                  {plan.name === "Sachet" ? (
+                                    <>
+                                      <p className="text-[26px] font-bold text-white">
+                                        ₹599
+                                      </p>
+                                      <p className="text-gray-300 line-through text-[20px]">
+                                        ₹1199
+                                      </p>
+                                      <div className="flex">
+                                        <p className="text-gray-300 mt-2 ">
+                                          +18% GST
+                                        </p>
+                                        <CiCircleAlert
+                                          className="text-white mt-2 ml-1"
+                                          size={22}
+                                        />
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <p className="text-xl font-bold text-white text-[26px]">
+                                        ₹{price}
+                                      </p>
+                                      <p className="text-gray-300 line-through text-[20px]">
+                                        ₹{plan.oldPrice[validity]}
+                                      </p>
+                                    </>
+                                  )}
 
-              {/* Tooltip - Show only if hovered */}
-              {hoveredPlan === plan.name && (
-                <div className="absolute bottom-5 left-0 bg-[#8F87F1] text-black p-2 rounded-lg shadow-lg w-35 ml-3">
-                  <div className="flex">
-                    <p className="font-semibold text-[12px] mr-7 ml-2 text-white">Price</p>
-                    <p className="font-semibold text-[12px] text-white mr-5">₹ {price}</p>
-                  </div>
-                  <div className="flex">
-                  <p className="font-semibold text-[12px] text-white ml-2" >GST</p>
-                  <p className="font-semibold text-[12px] text-white ml-8" >₹ {gstAmount}</p>
-                  </div>
-                 
-                  <hr className="my-1 text-white" />
-                  <div className="flex">
-                  <p className="font-bold text-white text-[12px] ml-2">Total</p>
-                  <p className="font-bold text-white text-[12px] ml-7">₹ {totalAmount}</p>
-                  </div>
-                 
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
+                                  {/* GST Tooltip */}
+                                  {plan.name !== "Sachet" && (
+                                    <div
+                                      className="relative flex justify-center items-center"
+                                      onMouseEnter={() =>
+                                        setHoveredPlan(plan.name)
+                                      }
+                                      onMouseLeave={() => setHoveredPlan(null)}
+                                    >
+                                      <p className="text-gray-300 mt-2">
+                                        {plan.gst}
+                                      </p>
+                                      <CiCircleAlert
+                                        className="mt-3 ml-1 cursor-pointer text-white"
+                                        size={22}
+                                      />
+
+                                      {/* Tooltip - Show only if hovered */}
+                                      {hoveredPlan === plan.name && (
+                                        <div className="absolute bottom-5 left-0 bg-[#8F87F1] text-black p-2 rounded-lg shadow-lg w-35 ml-3">
+                                          <div className="flex">
+                                            <p className="font-semibold text-[12px] mr-7 ml-2 text-white">
+                                              Price
+                                            </p>
+                                            <p className="font-semibold text-[12px] text-white mr-5">
+                                              ₹ {price}
+                                            </p>
+                                          </div>
+                                          <div className="flex">
+                                            <p className="font-semibold text-[12px] text-white ml-2">
+                                              GST
+                                            </p>
+                                            <p className="font-semibold text-[12px] text-white ml-8">
+                                              ₹ {gstAmount}
+                                            </p>
+                                          </div>
+
+                                          <hr className="my-1 text-white" />
+                                          <div className="flex">
+                                            <p className="font-bold text-white text-[12px] ml-2">
+                                              Total
+                                            </p>
+                                            <p className="font-bold text-white text-[12px] ml-7">
+                                              ₹ {totalAmount}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     <div id="pai">
                       {" "}
-                      <div className="pop    w-20 ml-26   rounded-md h-10  ">
+                      <div className="pop    w-20 ml-29   rounded-md h-10  ">
                         <div className="flex" id="pai">
                           <div className="see" id="sai">
                             <div className="">
                               {" "}
-                              <div className="  bg-[#2a1035] p-4  flex items-center justify-between   w-160">
-                                <div className="flex items-center space-x-2 w-150">
-                                  <MdOutlineSmartToy className="text-pink-400 text-2xl" />
-                                  <span className="text-white">
+                              <div className="   rounded-tr-md rounded-tl-md  p-4  flex items-center justify-between   w-155 h-30  ">
+                                <div className="flex items-center space-x-2 w-150 h-50">
+                                  <MdOutlineSmartToy
+                                    className="text-pink-400 text-2xl"
+                                    size={35}
+                                  />
+                                  <span className="text-white text-[18px] ">
                                     Get 'AI Recommended Properties' at just ₹199
                                   </span>
-                                  <CiCircleAlert className="text-gray-400" />
+                                  <CiCircleAlert
+                                    className="text-white "
+                                    size={25}
+                                  />
                                 </div>
 
                                 <button
-                                  className={`w-6 h-6 flex items-center justify-center rounded-md transition-colors ${
-                                    selected ? "bg-orange-500" : "bg-gray-500"
+                                  className={`w-6 h-6 flex items-center justify-center rounded-md transition-colors ml-20 cursor-pointer ${
+                                    selected ? "bg-[#8F87F1]" : "bg-gray-500"
                                   }`}
                                   onClick={handleCheckbox}
                                 >
                                   {selected && (
-                                    <FaCheck className="text-white" />
+                                    <FaCheck className="text-white " />
                                   )}
                                 </button>
 
@@ -906,17 +1019,18 @@ export default function PremiumSubscription() {
                                 periodically
                               </span>
                             </div>
-
-                           
                           </div>
                           <div className="flex   rounded-full h-7 ml-5 mt-3 w-80 items-center">
-                              <MdOutlineSmartToy className="text-white  w-22 ml-2 " size={30} />
+                            <MdOutlineSmartToy
+                              className="text-white  w-22 ml-2 "
+                              size={30}
+                            />
 
-                              <span className="  text-[15px] ml-3 mt-8">
-                                Curated Properties AI driven curated set of
-                                properties on your App dashboard
-                              </span>
-                            </div>
+                            <span className="  text-[15px] ml-3 mt-8">
+                              Curated Properties AI driven curated set of
+                              properties on your App dashboard
+                            </span>
+                          </div>
                           <div className="grid ml-9   mt-12  py-3">
                             <div className="grid ">
                               <div className="flex">
@@ -936,57 +1050,66 @@ export default function PremiumSubscription() {
 
                     {/* Buy Button */}
                     <div className="relative">
-                      
                       {/* Buy Button */}
                       <div>
-      {/* Buy Button */}
-      <button
-        className="bg-[#8F87F1] py-3 rounded-md cursor-pointer hover:text-black text-white font-bold w-160 border mt-2 ml-26"
-        onClick={handleBuyClick}
-      >
-        Buy {selectedPlan} <br />
-        ₹ 
-        {selectedPlan
-          ? basePlans.find((plan) => plan.name === selectedPlan)?.price[validity] +
-            Math.round(
-              basePlans.find((plan) => plan.name === selectedPlan)?.price[validity] * 0.18
-            ) +
-            total
-          : 0}
-        + 18% GST
-      </button>
+                        {/* Buy Button */}
+                        <button
+                          className="bg-[#8F87F1] py-3 rounded-md cursor-pointer hover:text-black text-white font-bold w-160  mt-4 ml-26"
+                          onClick={handleBuyClick}
+                        >
+                          Buy {selectedPlan} <br />₹
+                          {selectedPlan
+                            ? basePlans.find(
+                                (plan) => plan.name === selectedPlan
+                              )?.price[validity] +
+                              Math.round(
+                                basePlans.find(
+                                  (plan) => plan.name === selectedPlan
+                                )?.price[validity] * 0.18
+                              ) +
+                              total
+                            : 0}
+                          + 18% GST
+                        </button>
+                        {isModalOpen && (
+                          <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-[#8F87F1] bg-opacity-50">
+                            <div className="bg-white p-6 rounded-lg w-96">
+                              <h2 className="text-lg font-bold text-center text-white">
+                                Please update your details
+                              </h2>
+                              <input
+                                type="text"
+                                placeholder="Name"
+                                className=" w-full p-2 my-2"
+                              />
+                              <input
+                                type="email"
+                                placeholder="Email"
+                                className="w-full p-2 my-2"
+                              />
+                              <div>
+                                <label className="font-bold">Phone</label>
+                                <p className="text-lg">6268923703</p>
+                              </div>
 
-      Modal Popup - Show only when isModalOpen is true
-      {isModalOpen && (
-        <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-[#8F87F1] bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg w-96">
-            <h2 className="text-lg font-bold text-center text-white">Please update your details</h2>
-            <input type="text" placeholder="Name" className=" w-full p-2 my-2" />
-            <input type="email" placeholder="Email" className="w-full p-2 my-2" />
-            <div>
-              <label className="font-bold">Phone</label>
-              <p className="text-lg">6268923703</p>
-            </div>
+                              <button
+                                className="bg-gray-400 text-white py-2 px-4 w-full mt-4 cursor-not-allowed"
+                                disabled
+                              >
+                                Continue
+                              </button>
 
-            <button
-              className="bg-gray-400 text-white py-2 px-4 w-full mt-4 cursor-not-allowed"
-              disabled
-            >
-              Continue
-            </button>
-
-            {/* Close Button */}
-            <button
-              className="mt-3 text-red-500 w-full text-center"
-              onClick={() => setIsModalOpen(false)}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-
+                              {/* Close Button */}
+                              <button
+                                className="mt-3 text-red-500 w-full text-center"
+                                onClick={() => setIsModalOpen(false)}
+                              >
+                                Close
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
 
                       {/* Popup Modal */}
                       {showPopup && (
@@ -1035,17 +1158,17 @@ export default function PremiumSubscription() {
               {/* Testimonials Section */}
 
               <div className="">
-                <div className="mt-10 w-400 ml-10 text-white">
+                <div className="mt-10 w-300 ml-8 text-white">
                   {" "}
-                             --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-                              </div>
-                <div className="w-330 mx-auto p-6 bg-[#2a1035]  mt-3 relative  ">
-                  <h2 className="text-xl text-pink-400 mb-4 mt-4 ">
+                  ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                </div>
+                <div className="w-300 mx-auto p-6 bg-[#2a1035]  mt-1 relative  ">
+                  <h2 className="text-[25px] text-pink-400 mb-4 mt-4 font-bold ">
                     Testimonial
                   </h2>
 
                   {/* Slider Container */}
-                  <div className="flex items-center justify-center w-full overflow-hidden relative ">
+                  <div className="flex items-center justify-center w-full overflow-hidden relative mt-15 ">
                     {/* Left Button */}
                     <button
                       className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black text-white p-2 rounded-full z-20 "
@@ -1062,13 +1185,13 @@ export default function PremiumSubscription() {
 
                     {/* Sliding Cards */}
                     <div
-                      className="flex transition-transform duration-1000 ease-in-out gap-6 h-80"
+                      className="flex transition-transform duration-1000 ease-in-out gap-6 h-90 "
                       style={{ transform: `translateX(-${index * 30}%)` }}
                     >
                       {testimonials.map((testimonial, i) => (
                         <div
                           key={i}
-                          className="w-[500px] p-6 bg-[#341544] rounded-lg shadow-md flex-shrink-0"
+                          className="w-[550px] p-6 bg-[#341544] rounded-2xl shadow-md flex-shrink-0"
                         >
                           {/* Star Ratings */}
                           <div className="flex text-yellow-400 mb-2">
@@ -1076,7 +1199,7 @@ export default function PremiumSubscription() {
                           </div>
 
                           {/* Testimonial Text */}
-                          <p className="text-lg text-white">
+                          <p className="text-[16px] text-white">
                             "{testimonial.text}"
                           </p>
 
@@ -1085,10 +1208,10 @@ export default function PremiumSubscription() {
                             <img
                               src={testimonial.image}
                               alt="User"
-                              className="w-12 h-12 rounded-full border-2 border-white"
+                              className="w-15 h-15 rounded-full border-2 border-white"
                             />
                             <div className="text-left">
-                              <p className="text-white font-semibold">
+                              <p className="text-white font-semibold text-[22px]">
                                 {testimonial.name}
                               </p>
                               <p className="text-gray-400 text-sm">
@@ -1098,14 +1221,14 @@ export default function PremiumSubscription() {
                           </div>
 
                           {/* RM & Plan Details */}
-                          <div className="mt-4 flex justify-between text-gray-300 text-sm">
-                            <span className="bg-[#45234e] px-3 py-1 rounded-lg">
+                          <div className="mt-15 flex justify-between text-gray-300 text-sm ">
+                            <span className="bg-[#45234e] px-3 py-1 rounded-lg text-[20px]">
                               Assisted RM:{" "}
                               <span className="text-white">
                                 {testimonial.rm}
                               </span>
                             </span>
-                            <span className="bg-[#45234e] px-3 py-1 rounded-lg">
+                            <span className="bg-[#45234e] px-3 py-1 rounded-lg text-[20px]">
                               Plan:{" "}
                               <span className="text-white">
                                 {testimonial.plan}
@@ -1131,12 +1254,11 @@ export default function PremiumSubscription() {
 
               {/* Extra Slider */}
               <div className=" ">
-                <div className="bg-[#2a1035] w-284 h-[400px]  mb-20 mt-1 relative">
-                  <h2 className="text-xl text-pink-400 mb-4 ml-9 py-10 ">
+                <div className="bg-[#2a1035] w-290 h-[290px]    relative ">
+                  <h2 className="text-[25px] text-pink-400 mb-4 ml-9 py-2 font-bold">
                     Featured In
                   </h2>
-
-                  <div className="flex items-center justify-center w-310 mx-auto overflow-hidden relative ml-10">
+                  <div className="relative w-[1140px] h-56   overflow-hidden mx-auto ml-13">
                     {/* Left Button */}
                     <button
                       className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black text-white p-2 rounded-full z-20 "
@@ -1154,15 +1276,22 @@ export default function PremiumSubscription() {
                     {/* Slider Content */}
                     <div
                       className="flex transition-transform duration-500 ease-in-out gap-6 "
-                      style={{ transform: `translateX(-${extraIndex * 20}%)` }}
+                      style={{
+                        transform: `translateX(-${extraIndex * 500}px)`,
+                      }} // FIXED CALCULATION
                     >
                       {extraSliderItems.map((item, i) => (
                         <div
                           key={i}
-                          className="w-[500px] p-10 bg-[#341544] rounded-lg h-70 flex-shrink-0 "
+                          className="w-[400px] p-6 bg-[#341544] rounded-2xl shadow-md flex-shrink-0"
                         >
-                          <p className="text-lg text-white">"{item.text}"</p>
-                          <p className="mt-2 text-pink-400">- {item.name}</p>
+                          <img src={fe} className="w-20 h-10" alt="" />
+                          <p className="text-[16px] text-white">
+                            "{item.text}"
+                          </p>
+                          <p className="mt-2 text-pink-400 text-[22px]">
+                            - {item.name}
+                          </p>
                         </div>
                       ))}
                     </div>
@@ -1183,11 +1312,11 @@ export default function PremiumSubscription() {
               </div>
               {/* right close */}
             </div>
-       
+          </div>
+          {/* second main div closed */}
         </div>
-        {/* second main div closed */}
+        {/* first main div closed */}
       </div>
-      {/* first main div closed */}
     </>
   );
 }

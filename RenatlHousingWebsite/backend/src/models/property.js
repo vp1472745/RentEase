@@ -43,6 +43,11 @@ const propertySchema = new mongoose.Schema({
   availableFrom: { type: Date, required: true },
   securityDeposit: { type: Number, required: true },
   rentalDurationMonths: { type: Number, required: true }, // in months
+
+  nearby: { 
+    type: [String], 
+    required: true 
+  },
 });
 
 const Property = mongoose.model("Property", propertySchema);

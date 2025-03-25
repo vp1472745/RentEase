@@ -49,7 +49,7 @@
     position: absolute;
     display: none;
     border: 2px solid black;
-    top: -320px; /* Adjusted so it appears below #see */
+    top: -288px; /* Adjusted so it appears below #see */
  margin-left: 350px;
     transform: translateX(-50%);
     background-color:puprle; /* Make it visible */

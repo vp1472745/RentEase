@@ -5,7 +5,7 @@ const OtpVerification = () => {
   const [emailOrPhone, setEmailOrPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
-
+// kjj
   const sendOtp = async () => {
     try {
       await axios.post("http://localhost:5000/api/send-otp", { 

@@ -15,7 +15,20 @@ import Profile from "./pages/profile.jsx";
 import AddProperty from "./pages/addproperty.jsx";
 import Properties from "./pages/property.jsx";
 import Premium from "../src/pages/Premium.jsx"; // ✅ Premium page import kiya
-// import Discount from "../src/pages/discounttiming.jsx"
+import PropertyPage from "../src/component/horizontalproperty.jsx"// import Discount from "../src/pages/discounttiming.jsx"
+const propertyData = {
+  title: "1 RK Flat for rent in Palda",
+  price: "4,000",
+  size: "150",
+  furnishing: "Fully Furnished",
+  amenities: "Parking",
+  owner: "Shubham Sharma",
+  images: [
+    "https://via.placeholder.com/400x250",
+    "https://via.placeholder.com/400x250?text=Image+2",
+    "https://via.placeholder.com/400x250?text=Image+3",
+  ],
+};
 
 function App() {
   return (
@@ -88,22 +101,21 @@ function AppContent() {
       </header>
 
       <main>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/receipted" element={<Receipt />} />
-          <Route path="/comming" element={<ComingSoon />} />
-          <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/verify-otp" element={<VerifyOTP />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/signup" element={<Signup setIsOtpModalOpen={setIsOtpModalOpen} />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/add-property" element={<AddProperty />} />
-          <Route path="/properties" element={<Properties />} />
-          <Route path="/premium" element={<Premium />} /> {/* ✅ Premium route add kiya */}
-          {/* <Route path="/discount" element={<Discount />} /> */}
-           {/* ✅ Premium route add kiya */}
-        </Routes>
+      <Routes>
+  <Route path="/" element={<Home />} />
+  <Route path="/receipted" element={<Receipt />} />
+  <Route path="/comming" element={<ComingSoon />} />
+  <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
+  <Route path="/forgot-password" element={<ForgotPassword />} />
+  <Route path="/verify-otp" element={<VerifyOTP />} />
+  <Route path="/reset-password" element={<ResetPassword />} />
+  <Route path="/signup" element={<Signup setIsOtpModalOpen={setIsOtpModalOpen} />} />
+  <Route path="/profile" element={<Profile />} />
+  <Route path="/add-property" element={<AddProperty />} />
+  <Route path="/property" element={<PropertyPage />} />  {/* ✅ सही किया */}
+  <Route path="/properties" element={<Properties />} />
+  <Route path="/premium" element={<Premium />} /> {/* ✅ Premium route add किया */}
+</Routes>
       </main>
 
       <OtpModal

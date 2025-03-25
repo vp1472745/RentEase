@@ -680,6 +680,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
     )}
   </div>
 </nav>
+
   );
 }
 export default Navbar;

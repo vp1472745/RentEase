@@ -9,6 +9,7 @@ import SearchBar from "../pages/search.jsx";
 import secondbanner from "../assets/secondbanner.jpg"
 import housingbanner from "../assets/bn.jpg"
 import hotel from "../assets/hotel.jpg"
+import Hp from "../component/horizontalproperty.jsx"
 
 import {
   CreditCard,
@@ -227,6 +228,7 @@ function Home() {
       </div>
 
       <Footer />
+      <Hp/>
     </div>
   );
 }
