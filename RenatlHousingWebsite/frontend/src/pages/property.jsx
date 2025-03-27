@@ -10,6 +10,7 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiX,
+  FiPhone,
 } from "react-icons/fi";
 
 function Properties() {
@@ -58,9 +59,9 @@ function Properties() {
   }, [location.search]);
 
   const toggleFavorite = (propertyId) => {
-    setFavorites(prev => ({
+    setFavorites((prev) => ({
       ...prev,
-      [propertyId]: !prev[propertyId]
+      [propertyId]: !prev[propertyId],
     }));
   };
 
@@ -68,12 +69,12 @@ function Properties() {
     setCurrentProperty(property);
     setCurrentImageIndex(index);
     setIsGalleryOpen(true);
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
   };
 
   const closeGallery = () => {
     setIsGalleryOpen(false);
-    document.body.style.overflow = 'auto';
+    document.body.style.overflow = "auto";
   };
 
   const goToPrevImage = () => {
@@ -89,24 +90,37 @@ function Properties() {
   };
 
   const shareOnWhatsApp = (property) => {
-    const message = `Check out this property: ${property.title}\n\n` +
-                   `📍 Location: ${property.city}, ${property.state}\n` +
-                   `💰 Price: ₹${property.monthlyRent}/month\n` +
-                   `📏 Area: ${property.area} sq.ft\n\n` +
-                   `More details: ${window.location.origin}/property/${property._id}`;
-    
+    const message =
+      `Check out this property: ${property.title}\n\n` +
+      `📍 Location: ${property.city}, ${property.state}\n` +
+      `Nearby : ${property.nearby}\n` +
+      `💰 Price: ₹${property.monthlyRent}/month\n` +
+      `Owner Name: ${property.ownerName}\n` +
+      `Rent : ${property.monthlyRent}\n` +
+      `Desposit: ${property.securityDeposit}\n` +
+      ` Size: ${property.area} sq.ft\n` +
+      `More details: ${window.location.origin}/property/${property._id}`;
+
     const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+    window.open(`https://wa.me/?text=${encodedMessage}`, "_blank");
+  };
+
+  const contactOwner = (phoneNumber) => {
+    if (!phoneNumber) {
+      alert("Owner phone number not available");
+      return;
+    }
+    window.open(`tel:${phoneNumber}`);
   };
 
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Hero Section */}
       <div
-        className="relative flex flex-col items-center justify-center bg-cover bg-center text-center text-white h-[90vh]"
+        className="relative flex flex-col items-center justify-center bg-cover bg-center text-center text-white h-[90vh] px-4"
         style={{ backgroundImage: `url(${hotel})` }}
       >
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+        <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">
           Find Your Perfect Home
         </h1>
         <p className="text-lg md:text-2xl font-bold text-white mb-8">
@@ -117,7 +131,7 @@ function Properties() {
 
       {/* Property Listings */}
       <div className="container mx-auto px-4 py-8 bg-white">
-        <h2 className="text-3xl font-bold text-black mb-8 text-center">
+        <h2 className="text-2xl md:text-3xl font-bold text-black mb-8 text-center">
           Available Properties
         </h2>
 
@@ -126,15 +140,15 @@ function Properties() {
             <p className="text-center text-gray-600">Loading properties...</p>
           </div>
         ) : properties.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 md:gap-8 w-[1100px] ml-45">
+          <div className="grid grid-cols-1 gap-6 md:gap-8 mx-auto max-w-5xl">
             {properties.map((property) => (
               <div
                 key={property._id}
-                className="bg-yellow-400 rounded-md shadow-lg overflow-hidden hover:shadow-lg transition-shadow duration-300 h-[350px]"
+                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
               >
-                <div className="flex flex-col md:flex-row bg-red-500 h-[349px] rounded-lg">
+                <div className="flex flex-col md:flex-row">
                   {/* Property Image */}
-                  <div className="relative md:w-1/3 lg:w-2/5">
+                  <div className="relative md:w-1/2 lg:w-2/5">
                     <img
                       src={property.images[0]}
                       alt={property.title}
@@ -142,22 +156,27 @@ function Properties() {
                       onClick={() => openGallery(property, 0)}
                     />
 
-                    {/* heart button */}
-                    <div className="absolute top-4 right-4 flex space-x-2 bg-yellow-600">
-                      <button 
-                        className={`p-2 rounded-full shadow-md transition   cursor-pointer ${favorites[property._id] ? 'text-red-500 bg-white' : 'bg-white text-gray-700'}`}
+                    {/* heart and share buttons */}
+                    <div className="absolute top-4 right-4 flex space-x-2">
+                      <button
+                        className={`p-2 rounded-full shadow-md transition cursor-pointer ${
+                          favorites[property._id]
+                            ? "text-red-500 bg-white"
+                            : "bg-white text-gray-700"
+                        }`}
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleFavorite(property._id);
                         }}
                       >
-                        <FiHeart className={`${favorites[property._id] ? 'fill-current' : ''}`} />
+                        <FiHeart
+                          className={`${
+                            favorites[property._id] ? "fill-current" : ""
+                          }`}
+                        />
                       </button>
 
-
-
-                      {/* share button  */}
-                      <button 
+                      <button
                         className="bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition cursor-pointer"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -170,45 +189,118 @@ function Properties() {
                   </div>
 
                   {/* Property Details */}
-                  <div className="p-4 md:p-6 md:w-2/3 lg:w-3/5 bg-red-400">
-                    <h3 className="text-xl md:text-2xl font-semibold text-gray-900 mb-2">
-                      Title: {property.title}
+                  <div className="p-4 md:p-6 md:w-1/2 lg:w-3/5">
+                    <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">
+                      <span className="font-bold">
+                        {property.bhkType} {property.propertyType}
+                      </span>{" "}
+                      for rent in {property.popularLocality}
                     </h3>
-                    <p className="text-gray-600 mb-4">
-                      Description: {property.description}
-                    </p>
-                    <p className="text-gray-600 mb-4">
-                      City: {property.city}, State: {property.state}
-                    </p>
 
-                    <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                      <div className="flex items-center space-x-4">
-                        <span className="text-xl font-bold text-indigo-700">
-                          ₹{property.monthlyRent}/month
-                        </span>
-                        <span className="text-gray-600">{property.area} sq.ft</span>
+                    <div className="flex flex-wrap gap-4 mb-3">
+                      <div className="min-w-[120px]">
+                        <p className="text-gray-600 text-sm font-bold">City</p>
+                        <p className="text-black font-semibold">
+                          {property.city}
+                        </p>
                       </div>
-                      {property.popularLocality && (
-                        <span className="text-blue-600 font-semibold">
-                          📍 {property.popularLocality}
-                        </span>
-                      )}
+                      <div className="min-w-[120px]">
+                        <p className="text-gray-600 text-sm font-bold">
+                          Nearby
+                        </p>
+                        <p className="text-black font-semibold">
+                          {property.nearby}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-3 mt-6">
-                      <button
-                        onClick={() => navigate(`/property/${property._id}`)}
-                        className="flex-1 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-                      >
-                        View Details
-                      </button>
-                      <button
-                        onClick={() => openGallery(property, 0)}
-                        className="flex-1 border border-gray-300 text-blue-600 px-4 py-2 rounded hover:bg-gray-50 transition"
-                      >
-                        View Photos
-                      </button>
+                    <div className="flex flex-wrap gap-4 mb-3">
+                      <div className="min-w-[120px]">
+                        <p className="text-gray-600 text-sm font-bold">Rent</p>
+                        <p className="text-black font-semibold">
+                          ₹{property.monthlyRent}
+                        </p>
+                      </div>
+                      <div className="min-w-[120px]">
+                        <p className="text-gray-600 text-sm font-bold">
+                          Deposit
+                        </p>
+                        <p className="text-black font-semibold">
+                          ₹{property.securityDeposit}
+                        </p>
+                      </div>
+                      <div className="min-w-[120px]">
+                        <p className="text-gray-600 text-sm font-bold">Size</p>
+                        <p className="text-black font-semibold">
+                          {property.area} sq.ft
+                        </p>
+                      </div>
                     </div>
+
+                    <div className="flex flex-wrap gap-4 mb-3">
+                      <div className="min-w-[120px]">
+                        <p className="text-gray-600 text-sm font-bold">
+                          Furnishing
+                        </p>
+                        <p className="text-black font-semibold">
+                          {property.furnishType}
+                        </p>
+                      </div>
+                      <div className="min-w-[120px]">
+                        <p className="text-gray-600 text-sm font-bold">
+                          Gender
+                        </p>
+                        <p className="text-black font-semibold">
+                          {property.Gender || "Any"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {property.facilities && (
+                      <div className="mb-3">
+                        <p className="text-gray-600 text-sm mb-1 font-bold">
+                          Facilities
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {Array.isArray(property.facilities) ? (
+                            property.facilities.map((facility, index) => (
+                              <span
+                                key={index}
+                                className="text-black bg-gray-200 px-3 py-1 rounded-full text-sm whitespace-nowrap font-semibold"
+                              >
+                                {facility}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-black bg-gray-200 px-3 py-1 rounded-full text-sm">
+                              {property.facilities}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mb-3">
+                      <p className="text-gray-600 font-bold inline">Owner: </p>
+                      <span className="text-black font-semibold">
+                        {property.ownerName}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-3 mt-4">
+  <button
+    onClick={() => navigate(`/property/${property._id}`)}
+    className="w-[400px] bg-blue-600 text-white py-2 rounded-[10px] hover:bg-blue-700 transition text-sm md:text-base cursor-pointer"
+  >
+    View Details
+  </button>
+  <button
+    onClick={() => contactOwner(property.ownerphone)}
+    className="w-[400px] flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded-[10px] hover:bg-green-700 transition text-sm md:text-base cursor-pointer"
+  >
+    <FiPhone /> Contact Owner
+  </button>
+</div>
                   </div>
                 </div>
               </div>
@@ -263,13 +355,17 @@ function Properties() {
           </div>
 
           {/* Thumbnail navigation */}
-          <div className="flex gap-2 mt-4 overflow-x-auto max-w-full py-2">
+          <div className="flex gap-2 mt-4 overflow-x-auto max-w-full py-2 px-4">
             {currentProperty.images.map((img, index) => (
               <img
                 key={index}
                 src={img}
                 alt={`Thumbnail ${index + 1}`}
-                className={`w-16 h-16 object-cover rounded cursor-pointer ${currentImageIndex === index ? 'ring-2 ring-blue-500' : 'opacity-70'}`}
+                className={`w-16 h-16 object-cover rounded cursor-pointer ${
+                  currentImageIndex === index
+                    ? "ring-2 ring-blue-500"
+                    : "opacity-70"
+                }`}
                 onClick={() => setCurrentImageIndex(index)}
               />
             ))}

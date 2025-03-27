@@ -29,7 +29,8 @@ export const addProperty = async (req, res) => {
       popularLocality, // ✅ New Field
       ownerphone,
       nearby,
-      Geneder,
+      ownerName,
+      Gender,
     } = req.body;
 
     const newProperty = new Property({
@@ -52,8 +53,9 @@ export const addProperty = async (req, res) => {
       rentalDurationMonths,
       popularLocality, // ✅ Store Popular Locality
       ownerphone,
+      ownerName,
       nearby,
-      Geneder,
+      Gender,
     });
 
     await newProperty.save();

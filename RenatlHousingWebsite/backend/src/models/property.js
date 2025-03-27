@@ -48,6 +48,9 @@ const propertySchema = new mongoose.Schema({
     type: [String], 
     required: true 
   },
+  Gender: { type: String, enum: ["Male", "Female", "Unisex"] }, // ✅ Added
+  ownerphone: { type: String, required: true }, // ✅ Added
+  ownerName : {type:[String], required: true}, // added
 });
 
 const Property = mongoose.model("Property", propertySchema);
