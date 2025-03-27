@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import discount from "../assets/discount.png";
+import discount from "../assets/hurry.png";
+
 const CountdownTimer = () => {
   const totalTime = 30 * 60; // 1 hour (in seconds)
   const [timeLeft, setTimeLeft] = useState(totalTime);
@@ -53,27 +54,27 @@ const CountdownTimer = () => {
   };
 
   return (
-    <div className="p-4 text-white text-center rounded-lg w-[460px] mx-auto ml-6">
-      <div className="relative p-2 h-20">
-        <p className="flex items-center justify-center space-x-2">
+    <div className="p-4 text-white  rounded-lg w-[495px] mx-auto ">
+      <div className="relative h-20">
+        <p className="flex items-center justify-center ">
           {offerExpired ? (
             <div className="text-[15px] font-semibold py-2 flex items-center">
               Oops. You missed our 50% discount offer!
             </div>
           ) : (
             <>
-              <div className="text-[15px] font-semibold py-2  flex">
-                <img src={discount} alt="" className="w-6 h-6  mt-1" />
-                <span className="ml-2 text-[15px] ">
+              <div className="text-[15px] font-semibold py-2  flex  mt-3 w-[600px]" >
+                <img src={discount} alt="" className="w-4 h-4  mt-2 mr-2" />
+                <span className=" text-[16px] mr-5">
                   {" "}
-                  Hurry! Purchase a plan before your exclusive discount
+                  Hurry. Purchase a plan before your exclusive discount
                 </span>
               </div>
-              <div className="mt-15 mr-72 absolute text-[15px] font-semibold ">
-                expires!
+              <div className="mt-14 mr-90 absolute text-[16px] font-semibold ">
+              expires!
               </div>
               <div
-                className="px-2 rounded-lg text-sm mt-15 mr-40 absolute"
+                className="px-2 rounded-lg text-sm mt-15 mr-62 absolute"
                 style={{
                   background: "#16a34a",
                   color: "black",
@@ -88,17 +89,17 @@ const CountdownTimer = () => {
       </div>
 
       <div className="relative  w-full ">
-        <div className="relative h-8 flex items-center justify-center">
-          <div className="absolute left-0 h-2 w-full bg-gray-300 rounded-lg"></div>
+        <div className="relative h-8 flex items-center justify-center ml-1">
+          <div className="absolute left-0 h-2 w-full bg-gray-300 rounded-lg "></div>
           <div
-            className="absolute left-0 h-2 rounded-lg"
+            className="absolute left-0 h-2 rounded-lg "
             style={{
               width: `${percentageLeft}%`,
               background: getProgressColor(),
               transition: "width 0.5s ease-in-out, background 0.5s ease-in-out",
             }}
           ></div>
-          <div className="absolute flex w-full justify-between items-center">
+          <div className="absolute flex w-full justify-between items-center  ">
             {buttons.map(({ discount, width, height, range }, index) => {
               const fill = getButtonFill(range);
               let buttonBg = "gray";
@@ -136,7 +137,7 @@ const CountdownTimer = () => {
               return (
                 <div
                   key={discount}
-                  className="text-white font-bold rounded-md border-2 border-white relative overflow-hidden flex items-center justify-center"
+                  className="text-white font-bold rounded-md   border-white relative overflow-hidden flex items-center justify-center"
                   style={{
                     width: width,
                     height: height,
@@ -148,7 +149,7 @@ const CountdownTimer = () => {
                       "background 0.5s ease-in-out, opacity 0.5s ease-in-out",
                   }}
                 >
-                  <span className="relative z-10">{discount}</span>
+                  <span className="relative z-10 ">{discount}</span>
                 </div>
               );
             })}

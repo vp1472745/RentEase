@@ -14,26 +14,15 @@ import ResetPassword from "./pages/Resetpassword.jsx";
 import Profile from "./pages/profile.jsx";
 import AddProperty from "./pages/addproperty.jsx";
 import Properties from "./pages/property.jsx";
-import Premium from "../src/pages/Premium.jsx"; // ✅ Premium page import kiya
-import PropertyPage from "../src/component/horizontalproperty.jsx"// import Discount from "../src/pages/discounttiming.jsx"
-const propertyData = {
-  title: "1 RK Flat for rent in Palda",
-  price: "4,000",
-  size: "150",
-  furnishing: "Fully Furnished",
-  amenities: "Parking",
-  owner: "Shubham Sharma",
-  images: [
-    "https://via.placeholder.com/400x250",
-    "https://via.placeholder.com/400x250?text=Image+2",
-    "https://via.placeholder.com/400x250?text=Image+3",
-  ],
-};
+import Premium from "./pages/Premium.jsx"; // ✅ Fixed Import Path
+import PropertyPage from "./component/horizontalproperty.jsx";
+import ScrollToTop from "./pages/scrolltop.jsx";
 
 function App() {
   return (
     <GoogleOAuthProvider clientId="385746889631-oepj52hiaskkn8oqbp3244r888uupr2d.apps.googleusercontent.com">
       <Router>
+        <ScrollToTop /> {/* ✅ ScrollToTop ko Routes ke bahar rakha */}
         <AppContent />
       </Router>
     </GoogleOAuthProvider>
@@ -45,7 +34,7 @@ function AppContent() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
-  const location = useLocation(); // ✅ Now useLocation() is inside <Router>
+  const location = useLocation(); 
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -101,21 +90,21 @@ function AppContent() {
       </header>
 
       <main>
-      <Routes>
-  <Route path="/" element={<Home />} />
-  <Route path="/receipted" element={<Receipt />} />
-  <Route path="/comming" element={<ComingSoon />} />
-  <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
-  <Route path="/forgot-password" element={<ForgotPassword />} />
-  <Route path="/verify-otp" element={<VerifyOTP />} />
-  <Route path="/reset-password" element={<ResetPassword />} />
-  <Route path="/signup" element={<Signup setIsOtpModalOpen={setIsOtpModalOpen} />} />
-  <Route path="/profile" element={<Profile />} />
-  <Route path="/add-property" element={<AddProperty />} />
-  <Route path="/property" element={<PropertyPage />} />  {/* ✅ सही किया */}
-  <Route path="/properties" element={<Properties />} />
-  <Route path="/premium" element={<Premium />} /> {/* ✅ Premium route add किया */}
-</Routes>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/receipted" element={<Receipt />} />
+          <Route path="/comming" element={<ComingSoon />} />
+          <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/signup" element={<Signup setIsOtpModalOpen={setIsOtpModalOpen} />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/add-property" element={<AddProperty />} />
+          <Route path="/property" element={<PropertyPage />} />  
+          <Route path="/properties" element={<Properties />} />
+          <Route path="/premium" element={<Premium />} /> 
+        </Routes>
       </main>
 
       <OtpModal

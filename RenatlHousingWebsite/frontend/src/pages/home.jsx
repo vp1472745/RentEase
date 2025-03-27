@@ -10,6 +10,7 @@ import secondbanner from "../assets/secondbanner.jpg"
 import housingbanner from "../assets/bn.jpg"
 import hotel from "../assets/hotel.jpg"
 import Hp from "../component/horizontalproperty.jsx"
+import { useLocation } from "react-router-dom";
 
 import {
   CreditCard,
@@ -80,7 +81,7 @@ const features = [
 function Home() {
   const [properties, setProperties] = useState([]);
   const navigate = useNavigate();
-
+  const location = useLocation();
   useEffect(() => {
     const fetchProperties = async () => {
       try {
@@ -94,6 +95,14 @@ function Home() {
     fetchProperties();
   }, []);
 
+
+  useEffect(() => {
+    // Sirf tab reload ho jab user "/" (first page) par aaye aur pehle reload na hua ho
+    if (location.pathname === "/" && !sessionStorage.getItem("reloaded")) {
+      sessionStorage.setItem("reloaded", "true"); // Ek bar reload ho chuka hai
+      window.location.reload();
+    }
+  }, [location.pathname]);
   return (
     <div className="w-full h-auto bg-white">
       {/* Hero Section */}
@@ -229,7 +238,9 @@ function Home() {
 
       <Footer />
       <Hp/>
+      
     </div>
+
   );
 }
 

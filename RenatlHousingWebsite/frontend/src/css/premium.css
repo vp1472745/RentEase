@@ -5,21 +5,21 @@
 
 #see {
   
-    cursor: pointer;
+ 
    
 }
 
 #details {
-    width: 350px;
-    height: 244px;
+    width: 340px;
+    height: 235px;
     position: absolute;
     display: none;
     border: 2px solid black;
-    top: -150px; /* Adjusted so it appears below #see */
+    top: -165px; /* Adjusted so it appears below #see */
     left: 0;
     padding: 10px;
     z-index: 10; /* Prevents overlapping issues */
-    cursor: pointer;
+
 }
 
 #pop:hover #details {
@@ -31,6 +31,7 @@
 #pai {
     position: relative;
     display: inline-block; /* Ensures it wraps around the content */
+ 
    
 
 }
@@ -38,21 +39,21 @@
 #sai {
     color:white;
     cursor: pointer;
-    border-bottom: 2px solid white;
+
+
     
 
 }
 
 #dai {
-    width: 400px;
-    height: 350px;
+    width: 360px;
+    height: 375px;
     position: absolute;
     display: none;
     border: 2px solid black;
-    top: -288px; /* Adjusted so it appears below #see */
- margin-left: 350px;
+    top: -375px; /* Adjusted so it appears below #see */
+ margin-left: 280px;
     transform: translateX(-50%);
-    background-color:puprle; /* Make it visible */
     padding: 10px;
     z-index: 10; /* Prevents overlapping issues */
     color: white;
