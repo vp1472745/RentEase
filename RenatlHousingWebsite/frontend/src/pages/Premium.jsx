@@ -594,7 +594,7 @@ export default function PremiumSubscription() {
                     </div>
                     <div className="main div ml-10">
                       <div className="flex mt-9">
-                        <div className="relative w-[500px] bg-[#565284]  h-9 flex items-center mt-[0.5px] px-3">
+                        <div className="relative w-[500px] bg-[#381d44]  h-9 flex items-center mt-[0.5px] px-3 ">
                           {/* Background Overlay */}
                           <div className="absolute inset-0 opacity-50 z-0"></div>
 
@@ -625,7 +625,7 @@ export default function PremiumSubscription() {
                         </p>
                       </div>
 
-                      <div className="relative w-[500px] bg-[#565284]  h-9 flex items-center mt-[0.5px] px-3 ">
+                      <div className="relative w-[500px] bg-[#381d44]  h-9 flex items-center mt-[0.5px] px-3 ">
                         <div className="absolute inset-0 opacity-50 z-0"></div>
 
                         <img
@@ -951,7 +951,7 @@ export default function PremiumSubscription() {
                                   {selectedPlan === plan.name && (
                                     <>
                                       {" "}
-                                      <div className="absolute inset-0 bg-[#8F87F1] opacity-20 h-113 w-32 top-0 ml-6 z-12"></div>
+                                      <div className="absolute inset-0 bg-[#381d44] opacity-35 h-113 w-32 top-0 ml-6 z-12"></div>
                                       <div
                                         className="absolute h-7 w-28 top-93 left-10 z-12"
                                         onMouseEnter={() =>
@@ -996,12 +996,14 @@ export default function PremiumSubscription() {
                                     </h3>
 
                                     {/* Brokerage */}
-                                    <div className="w-38  bg-[#565284] h-9 flex items-center justify-center">
-                                      <p className="z-10 text-white text-[22px] font-bold ml-3">
+                                    <div className="w-38  bg-[#381d44] h-9 flex justify-center">
+                                      <p className="z-2 text-white text-[22px] font-bold bg-[#381e43] ">
                                         {plan.brokerage}
                                       </p>
-                                      <div className="absolute inset-0   z-2"></div>
+                                      {/* <div className="absolute inset-0 bg-[#42215080] h-10 mt-35   z-2"></div> */}
+
                                     </div>
+
 
                                     {/* Plan Icons */}
                                     <div className="relative w-40  h-9 flex items-center justify-center">
@@ -1010,8 +1012,8 @@ export default function PremiumSubscription() {
                                       </p>
                                     </div>
 
-                                    <div className="relative w-38   bg-[#565284] h-9 flex items-center justify-center mt-[0.5px]">
-                                      <p className="relative z-10 text-[22px] font-bold ml-3">
+                                    <div className="relative w-38   bg-[#381d44] h-9 flex items-center justify-center mt-[0.5px]">
+                                      <p className="relative z-10 text-[22px] font-bold ml-3 bg-[#381d44]">
                                         {plan.icontwo}
                                       </p>
                                       <div className="absolute inset-0  z-2"></div>

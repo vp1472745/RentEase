@@ -43,7 +43,7 @@ const MyProperties = () => {
           throw new Error("Invalid property ID format");
         }
 
-        const res = await axios.get(`/api/properties/${id}`);
+        const res = await axios.get(`http://localhost:5000/api/properties/${id}`);
         
         if (!res.data) {
           throw new Error("Property not found");
