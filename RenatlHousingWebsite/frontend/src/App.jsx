@@ -14,15 +14,16 @@ import ResetPassword from "./pages/Resetpassword.jsx";
 import Profile from "./pages/profile.jsx";
 import AddProperty from "./pages/addproperty.jsx";
 import Properties from "./pages/property.jsx";
-import Premium from "./pages/Premium.jsx"; // ✅ Fixed Import Path
+import Premium from "./pages/Premium.jsx";
 import PropertyPage from "./component/horizontalproperty.jsx";
 import ScrollToTop from "./pages/scrolltop.jsx";
+import MyProperties from "./pages/myProperty.jsx"; // ✅ MyProperties को इम्पोर्ट किया
 
 function App() {
   return (
     <GoogleOAuthProvider clientId="385746889631-oepj52hiaskkn8oqbp3244r888uupr2d.apps.googleusercontent.com">
       <Router>
-        <ScrollToTop /> {/* ✅ ScrollToTop ko Routes ke bahar rakha */}
+        <ScrollToTop />
         <AppContent />
       </Router>
     </GoogleOAuthProvider>
@@ -104,6 +105,7 @@ function AppContent() {
           <Route path="/property" element={<PropertyPage />} />  
           <Route path="/properties" element={<Properties />} />
           <Route path="/premium" element={<Premium />} /> 
+          <Route path="/my-properties" element={<MyProperties />} /> {/* ✅ नया Route */}
         </Routes>
       </main>
 

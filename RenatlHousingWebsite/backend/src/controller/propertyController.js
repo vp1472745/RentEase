@@ -15,7 +15,6 @@ export const addProperty = async (req, res) => {
       address,
       city,
       state,
-      price,
       images,
       propertyType,
       bhkType,
@@ -26,12 +25,43 @@ export const addProperty = async (req, res) => {
       availableFrom,
       securityDeposit,
       rentalDurationMonths,
-      popularLocality, // ✅ New Field
+      popularLocality,
       ownerphone,
       nearby,
       ownerName,
       Gender,
+      // New fields from React form
+      floorNumber,
+      totalFloors,
+      ageOfProperty,
+      facingDirection,
+      maintenanceCharges,
+      parking,
+      waterSupply,
+      electricityBackup,
+      balcony,
+      petsAllowed,
+      nonVegAllowed,
+      smokingAllowed,
+      bachelorAllowed
     } = req.body;
+
+    // ✅ Convert bhkType to uppercase, propertyType & furnishType to lowercase
+    const formattedBhkType = Array.isArray(bhkType)
+      ? bhkType.map(item => item.toUpperCase())
+      : [bhkType.toUpperCase()];
+
+    const formattedPropertyType = Array.isArray(propertyType)
+      ? propertyType.map(item => item.toLowerCase())
+      : [propertyType.toLowerCase()];
+
+    const formattedFurnishType = Array.isArray(furnishType)
+      ? furnishType.map(item => item.toLowerCase())
+      : [furnishType.toLowerCase()];
+
+    const formattedFacilities = Array.isArray(facilities)
+      ? facilities.map(item => item.toLowerCase())
+      : [facilities.toLowerCase()];
 
     const newProperty = new Property({
       title,
@@ -39,23 +69,36 @@ export const addProperty = async (req, res) => {
       address,
       city,
       state,
-      price,
       images,
       owner: req.user._id,
-      propertyType,
-      bhkType,
+      propertyType: formattedPropertyType,
+      bhkType: formattedBhkType,
       area,
-      furnishType,
-      facilities,
+      furnishType: formattedFurnishType,
+      facilities: formattedFacilities,
       monthlyRent,
       availableFrom,
       securityDeposit,
       rentalDurationMonths,
-      popularLocality, // ✅ Store Popular Locality
+      popularLocality,
       ownerphone,
       ownerName,
       nearby,
       Gender,
+      // New fields
+      floorNumber,
+      totalFloors,
+      ageOfProperty,
+      facingDirection,
+      maintenanceCharges,
+      parking,
+      waterSupply,
+      electricityBackup,
+      balcony,
+      petsAllowed,
+      nonVegAllowed,
+      smokingAllowed,
+      bachelorAllowed
     });
 
     await newProperty.save();
@@ -69,7 +112,9 @@ export const addProperty = async (req, res) => {
 // ✅ Get All Properties
 export const getAllProperties = async (req, res) => {
   try {
-    const properties = await Property.find().populate("owner", "name email");
+    const properties = await Property.find()
+      .populate("owner", "name email")
+      .sort({ createdAt: -1 });
 
     if (!properties || properties.length === 0) {
       return res.status(404).json({ message: "No Properties Found" });
@@ -85,7 +130,9 @@ export const getAllProperties = async (req, res) => {
 // ✅ Get Single Property by ID
 export const getPropertyById = async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id).populate("owner", "name email phone");
+    const property = await Property.findById(req.params.id)
+      .populate("owner", "name email phone");
+      
     if (!property) return res.status(404).json({ message: "Property not found" });
 
     res.json(property);
@@ -95,42 +142,115 @@ export const getPropertyById = async (req, res) => {
   }
 };
 
-// ✅ Search Properties with Popular Localities
+// ✅ Search Properties with Advanced Filters
 export const searchProperties = async (req, res) => {
   try {
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 
-    const { city, address, propertyType, bhkType, furnishType, facilities, monthlyRent, securityDeposit, rentalDurationMonths, popularLocality } = req.query;
+    const { 
+      city, 
+      address, 
+      propertyType, 
+      bhkType, 
+      furnishType, 
+      facilities, 
+      minRent, 
+      maxRent,
+      minDeposit,
+      maxDeposit,
+      rentalDurationMonths, 
+      popularLocality,
+      // New search filters
+      minArea,
+      maxArea,
+      floorNumber,
+      totalFloors,
+      ageOfProperty,
+      facingDirection,
+      parking,
+      waterSupply,
+      electricityBackup,
+      balcony,
+      petsAllowed,
+      nonVegAllowed,
+      smokingAllowed,
+      bachelorAllowed
+    } = req.query;
     
     let filter = {};
     
+    // Basic filters
     if (city) filter.city = new RegExp(city, "i");
-    if (propertyType) filter.propertyType = new RegExp(propertyType, "i"); 
-    if (bhkType) filter.bhkType = bhkType;
-    if (furnishType) filter.furnishType = furnishType;
+    if (propertyType) filter.propertyType = { $in: propertyType.split(",").map(pt => pt.toLowerCase()) };
+    if (bhkType) filter.bhkType = { $in: bhkType.split(",").map(bhk => bhk.toUpperCase()) };
+    if (furnishType) filter.furnishType = { $in: furnishType.split(",").map(ft => ft.toLowerCase()) };
     
+    // Rent range filter
+    if (minRent || maxRent) {
+      filter.monthlyRent = {};
+      if (minRent) filter.monthlyRent.$gte = parseInt(minRent);
+      if (maxRent) filter.monthlyRent.$lte = parseInt(maxRent);
+    }
+
+    // Deposit range filter
+    if (minDeposit || maxDeposit) {
+      filter.securityDeposit = {};
+      if (minDeposit) filter.securityDeposit.$gte = parseInt(minDeposit);
+      if (maxDeposit) filter.securityDeposit.$lte = parseInt(maxDeposit);
+    }
+
+    // Area range filter
+    if (minArea || maxArea) {
+      filter.area = {};
+      if (minArea) filter.area.$gte = parseInt(minArea);
+      if (maxArea) filter.area.$lte = parseInt(maxArea);
+    }
+
+    // Facilities filter
     if (facilities) {
-      const facilitiesArray = facilities.split(",").filter(f => f);
+      const facilitiesArray = facilities.split(",").filter(f => f).map(f => f.toLowerCase());
       if (facilitiesArray.length > 0) filter.facilities = { $all: facilitiesArray };
     }
 
-    if (monthlyRent) filter.monthlyRent = { $lte: parseInt(monthlyRent) };
-    if (securityDeposit) filter.securityDeposit = { $lte: parseInt(securityDeposit) };
-    if (rentalDurationMonths) filter.rentalDurationMonths = { $gte: parseInt(rentalDurationMonths) };
-
-    if (address) {
-      const addressRegex = new RegExp(address.split(",").map(part => part.trim()).join("|"), "i");
-      filter.address = addressRegex;
+    // Rental duration filter
+    if (rentalDurationMonths) {
+      filter.rentalDurationMonths = { $lte: parseInt(rentalDurationMonths) };
     }
 
-    // ✅ Popular Localities Search
+    // Address search
+    if (address) {
+      const addressRegex = new RegExp(address.split(",").map(part => part.trim()).join("|"), "i");
+      filter.$or = [
+        { address: addressRegex },
+        { popularLocality: addressRegex },
+        { city: addressRegex }
+      ];
+    }
+
+    // Popular locality search
     if (popularLocality) {
       filter.popularLocality = new RegExp(popularLocality, "i");
     }
 
+    // New property features filters
+    if (floorNumber) filter.floorNumber = parseInt(floorNumber);
+    if (totalFloors) filter.totalFloors = parseInt(totalFloors);
+    if (ageOfProperty) filter.ageOfProperty = parseInt(ageOfProperty);
+    if (facingDirection) filter.facingDirection = facingDirection;
+    if (parking) filter.parking = parking;
+    if (waterSupply) filter.waterSupply = waterSupply;
+    if (electricityBackup) filter.electricityBackup = electricityBackup;
+    if (balcony) filter.balcony = balcony === 'true';
+    if (petsAllowed) filter.petsAllowed = petsAllowed === 'true';
+    if (nonVegAllowed) filter.nonVegAllowed = nonVegAllowed === 'true';
+    if (smokingAllowed) filter.smokingAllowed = smokingAllowed === 'true';
+    if (bachelorAllowed) filter.bachelorAllowed = bachelorAllowed === 'true';
+
     console.log("🔍 Search Filters:", filter);
 
-    const properties = await Property.find(filter).populate("owner", "name email phone");
+    const properties = await Property.find(filter)
+      .populate("owner", "name email phone")
+      .sort({ createdAt: -1 });
 
     if (!properties.length) {
       return res.status(404).json({ message: "No Properties Found" });
@@ -154,8 +274,41 @@ export const updateProperty = async (req, res) => {
       return res.status(403).json({ message: "Not authorized to update this property" });
     }
 
-    const updatedProperty = await Property.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.status(200).json({ message: "Property Updated Successfully", property: updatedProperty });
+    // Handle format conversions for updated fields
+    if (req.body.bhkType) {
+      req.body.bhkType = Array.isArray(req.body.bhkType)
+        ? req.body.bhkType.map(item => item.toUpperCase())
+        : [req.body.bhkType.toUpperCase()];
+    }
+
+    if (req.body.propertyType) {
+      req.body.propertyType = Array.isArray(req.body.propertyType)
+        ? req.body.propertyType.map(item => item.toLowerCase())
+        : [req.body.propertyType.toLowerCase()];
+    }
+
+    if (req.body.furnishType) {
+      req.body.furnishType = Array.isArray(req.body.furnishType)
+        ? req.body.furnishType.map(item => item.toLowerCase())
+        : [req.body.furnishType.toLowerCase()];
+    }
+
+    if (req.body.facilities) {
+      req.body.facilities = Array.isArray(req.body.facilities)
+        ? req.body.facilities.map(item => item.toLowerCase())
+        : [req.body.facilities.toLowerCase()];
+    }
+
+    const updatedProperty = await Property.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+    
+    res.status(200).json({ 
+      message: "Property Updated Successfully", 
+      property: updatedProperty 
+    });
   } catch (error) {
     console.error("❌ Update Property Error:", error.message);
     res.status(500).json({ message: "Server Error" });
@@ -173,7 +326,7 @@ export const deleteProperty = async (req, res) => {
       return res.status(403).json({ message: "Not authorized to delete this property" });
     }
 
-    await property.remove();
+    await Property.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: "Property Deleted Successfully" });
   } catch (error) {
     console.error("❌ Delete Property Error:", error.message);

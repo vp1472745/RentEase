@@ -199,7 +199,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
           {/* Image Source Changes Based on Scroll */}
          
           <Link
-            to="/"
+            to="/add-property"
             className={` text-[20px] flex items-center  transition ${
               isScrolled ? "text-purple-800  hover:text-purple-400" : "text-white font-bold  hover:text-gray-200"
             }`}

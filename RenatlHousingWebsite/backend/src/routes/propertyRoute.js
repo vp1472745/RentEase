@@ -1,10 +1,10 @@
 import express from "express";
+import mongoose from "mongoose";
 import {
   addProperty,
   getAllProperties,
-  getPropertyById,
   updateProperty,
-  deleteProperty
+  deleteProperty,
 } from "../controller/propertyController.js";
 import { authMiddleware, ownerOnly } from "../middleware/authMiddleware.js";
 import uploadMiddleware from "../middleware/multerMiddleware.js";
@@ -13,21 +13,23 @@ import { readFile } from "fs/promises";
 
 const router = express.Router();
 
-// ✅ JSON से Popular Localities लोड करें
+// ✅ Load Popular Localities JSON
 let popularLocalitiesData = {};
-try {
-  const data = await readFile(new URL("../data/popularLocalities.json", import.meta.url));
-  popularLocalitiesData = JSON.parse(data);
-  console.log("✅ Popular Localities JSON Loaded");
-} catch (error) {
-  console.error("❌ Error loading JSON:", error);
-}
+(async () => {
+  try {
+    const data = await readFile(new URL("../data/popularLocalities.json", import.meta.url));
+    popularLocalitiesData = JSON.parse(data);
+    console.log("✅ Popular Localities JSON Loaded");
+  } catch (error) {
+    console.error("❌ Error loading JSON:", error);
+  }
+})();
 
 // ✅ Add New Property (Only Owner)
 router.post("/add", authMiddleware, ownerOnly, addProperty);
 
 // ✅ Search Properties Route
-router.get("/search", async (req, res) => { 
+router.get("/search", async (req, res) => {
   try {
     const { city, propertyType, locality, address, popularLocality } = req.query;
     let filter = {};
@@ -39,16 +41,16 @@ router.get("/search", async (req, res) => {
     if (locality) conditions.push({ address: new RegExp(locality, "i") });
     if (address) conditions.push({ address: new RegExp(address, "i") });
 
-    // ✅ Popular Locality Check in JSON + Property Match in DB
+    // ✅ Popular Locality Check
     if (popularLocality) {
-      const matchedLocalities = Object.values(popularLocalitiesData).flat(); // सभी शहरों की localities को flatten करो
+      const matchedLocalities = Object.values(popularLocalitiesData).flat();
       if (matchedLocalities.includes(popularLocality)) {
         conditions.push({ popularLocality: new RegExp(`^${popularLocality}$`, "i") });
       }
     }
 
     if (conditions.length > 0) {
-      filter.$and = conditions; // ✅ `AND` से ensure करो कि सही properties ही आएं।
+      filter.$and = conditions;
     }
 
     console.log("🔍 Applied Filters:", filter);
@@ -66,52 +68,67 @@ router.get("/search", async (req, res) => {
   }
 });
 
-
-// ✅ Get Localities by City (NEW ROUTE)
-// router.get("/localities", async (req, res) => {
-//   try {
-//     const { city } = req.query;
-
-//     if (!city) {
-//       return res.status(400).json({ message: "City is required" });
-//     }
-
-//     const properties = await Property.find({ city: new RegExp(`^${city}$`, "i") });
-
-//     if (!properties.length) {
-//       return res.status(404).json({ message: "No localities found for this city" });
-//     }
-
-//     // ✅ Get Unique Localities
-//     const uniqueLocalities = [...new Set(properties.map(p => p.popularLocality))];
-
-//     res.json(uniqueLocalities);
-//   } catch (error) {
-//     console.error("❌ Localities Fetch Error:", error);
-//     res.status(500).json({ message: "Server Error" });
-//   }
-// });
-
 // ✅ Get All Properties
 router.get("/", getAllProperties);
 
-// ✅ Get Property By ID
+// ✅ Get Property By ID (Improved Error Handling)
 router.get("/:id", async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id);
+    // Validate ID
+    if (!req.params.id || req.params.id === "undefined") {
+      return res.status(400).json({ message: "Property ID is required" });
+    }
+
+    // Check if it's a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid property ID format" });
+    }
+
+    // Fetch Property
+    const property = await Property.findById(req.params.id).populate("owner", "name email phone");
+
     if (!property) {
       return res.status(404).json({ message: "Property not found" });
     }
+
     res.json(property);
   } catch (error) {
     console.error("❌ Get Property by ID Error:", error);
-    res.status(500).json({ error: "Invalid property ID" });
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 });
 
-// ✅ Update & Delete Property (Only Owner)
-router.put("/:id", authMiddleware, ownerOnly, updateProperty);
-router.delete("/:id", authMiddleware, ownerOnly, deleteProperty);
+// ✅ Update Property (Only Owner)
+router.put("/:id", authMiddleware, ownerOnly, async (req, res) => {
+  try {
+    const property = await Property.findByIdAndUpdate(req.params.id, req.body, { new: true });
+
+    if (!property) {
+      return res.status(404).json({ message: "Property not found" });
+    }
+
+    res.json(property);
+  } catch (error) {
+    console.error("❌ Update Property Error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+});
+
+// ✅ Delete Property (Only Owner)
+router.delete("/:id", authMiddleware, ownerOnly, async (req, res) => {
+  try {
+    const property = await Property.findByIdAndDelete(req.params.id);
+
+    if (!property) {
+      return res.status(404).json({ message: "Property not found" });
+    }
+
+    res.json({ message: "Property deleted successfully" });
+  } catch (error) {
+    console.error("❌ Delete Property Error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+});
 
 // ✅ Image Upload Route
 router.post("/upload", uploadMiddleware.array("images", 10), (req, res) => {
@@ -119,10 +136,11 @@ router.post("/upload", uploadMiddleware.array("images", 10), (req, res) => {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: "No files uploaded" });
     }
+
     const imageUrls = req.files.map((file) => file.path);
     res.status(200).json({ imageUrls });
   } catch (error) {
-    console.error("Upload Error:", error);
+    console.error("❌ Upload Error:", error);
     res.status(500).json({ message: "Image upload failed", error });
   }
 });
