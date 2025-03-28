@@ -285,7 +285,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
         {/* My Activity Section - Keep all original content */}
         <div className="bg-white p-4 rounded-lg" onClick={(e) => e.stopPropagation()}>
           <h2 className="font-semibold mb-4">My Activity</h2>
-          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar text-[12px]">
+          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar text-[12px] ">
             {[
               {
                 id: "Contacted",
@@ -296,25 +296,25 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
               {
                 id: "Seen",
                 label: "Seen\nProperties",
-                icon: <img src={seen} alt="Contacted" className="w-7 h-7 mt-2" />,
+                icon: <img src={seen} alt="Contacted" className="w-6 h-6 mt-2" />,
                 count: 0,
               },
               {
                 id: "Saved",
                 label: "Saved\nProperties",
-                icon: <Heart size={23} className="mt-2"/>,
+                icon: <Heart size={26} className="mt-1"/>,
                 count: 0,
               },
               {
                 id: "Recent",
                 label: "Recent\nSearches",
-                icon: <MdOutlineWatchLater size={23} className="mt-2"/>,
+                icon: <MdOutlineWatchLater size={26} className="mt-1"/>,
                 count: 0,
               },
             ].map((tab) => (
               <div
                 key={tab.id}
-                className={`flex flex-col items-center border-2 rounded-lg px-6 shadow-md w-[72px] h-[90px] relative cursor-pointer ${
+                className={`flex flex-col items-center border-2 rounded-lg px-6 shadow-md w-[80px] h-[100px] relative cursor-pointer ${
                   selectedTab === tab.id
                     ? "bg-purple-50 border-purple-800 border-2 text-purple-800 hover:text-black"
                     : "bg-white shadow-lg hover:border-purple-800 border-3"
@@ -328,7 +328,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                 <p className="text-center whitespace-pre-line">
                   {tab.label}
                 </p>
-                <div className={`px-3 rounded-full text-sm mb-2 ${
+                <div className={`px-3 rounded-full text-sm mb-2 mt-[0.5] ${
                   selectedTab === tab.id
                     ? "bg-purple-50 text-purple-800"
                     : "bg-gray-200 text-purple-800"

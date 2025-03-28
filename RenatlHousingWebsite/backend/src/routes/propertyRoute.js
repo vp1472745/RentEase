@@ -72,29 +72,16 @@ router.get("/search", async (req, res) => {
 router.get("/", getAllProperties);
 
 // ✅ Get Property By ID (Improved Error Handling)
-router.get("/:id", async (req, res) => {
+// Get single property by ID
+router.get('/:id', async (req, res) => {
   try {
-    // Validate ID
-    if (!req.params.id || req.params.id === "undefined") {
-      return res.status(400).json({ message: "Property ID is required" });
-    }
-
-    // Check if it's a valid MongoDB ObjectId
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ message: "Invalid property ID format" });
-    }
-
-    // Fetch Property
-    const property = await Property.findById(req.params.id).populate("owner", "name email phone");
-
+    const property = await Property.findById(req.params.id);
     if (!property) {
-      return res.status(404).json({ message: "Property not found" });
+      return res.status(404).json({ message: 'Property not found' });
     }
-
     res.json(property);
-  } catch (error) {
-    console.error("❌ Get Property by ID Error:", error);
-    res.status(500).json({ message: "Server Error", error: error.message });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 

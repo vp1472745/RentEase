@@ -190,7 +190,7 @@ const AddProperty = () => {
       setUploading(true);
       setError(null);
       const token = localStorage.getItem("token");
-      const res = await axios.post("http://localhost:5000/api/properties/upload", uploadData, {
+      const res = await axios.post("http://localhost:9000/api/properties/upload", uploadData, {
         headers: { 
           "Content-Type": "multipart/form-data",
           "Authorization": `Bearer ${token}`
@@ -246,7 +246,7 @@ const AddProperty = () => {
       console.log("Submitting data:", submitData);
 
       const response = await axios.post(
-        "http://localhost:5000/api/properties/add",
+        "http://localhost:9000/api/properties/add",
         submitData,
         {
           headers: {
@@ -366,581 +366,584 @@ const AddProperty = () => {
   }
 
   return (
-    <div className="flex flex-col md:flex-row items-start justify-center min-h-[90vh] p-4 md:p-6 bg-gray-100 mt-20">
-      {/* Progress Sidebar */}
-      <div className="hidden md:block w-64 mr-8 bg-white p-6 rounded-lg shadow-md sticky top-24">
-        <div className="flex justify-center mb-6">
-          <div className="w-32 h-32">
-            <CircularProgressbar
-              value={progress}
-              text={`${Math.round(progress)}%`}
-              styles={buildStyles({
-                textColor: "#1D4ED8",
-                pathColor: "#1D4ED8",
-                trailColor: "#D1D5DB",
-                textSize: '24px'
-              })}
-            />
-          </div>
-        </div>
-        
-        <div className="space-y-4">
-          {[1, 2, 3, 4].map((stepNumber) => (
-            <div 
-              key={stepNumber}
-              className={`flex items-center p-3 rounded-lg cursor-pointer ${step === stepNumber ? 'bg-blue-50 border-l-4 border-blue-500' : ''}`}
-              onClick={() => setStep(stepNumber)}
-            >
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${step >= stepNumber ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}>
-                {step > stepNumber ? <FaCheck size={14} /> : stepNumber}
-              </div>
-              <div>
-                <h3 className="font-medium">Step {stepNumber}</h3>
-                <p className="text-sm text-gray-600">
-                  {stepNumber === 1 && "Basic Information"}
-                  {stepNumber === 2 && "Property Details"}
-                  {stepNumber === 3 && "Rent & Facilities"}
-                  {stepNumber === 4 && "Upload Images"}
-                </p>
-              </div>
+    <>
+      <div className="bg-purple-800 w-[100%] h-15"></div>
+      <div className="flex flex-col md:flex-row items-start justify-center min-h-[90vh] p-4 md:p-6 h-[90vh] bg-white w-[100%]">
+        {/* Progress Sidebar */} 
+        <div className="hidden md:block w-64 mr-8 p-6 rounded-lg shadow-md sticky top-2 h-150 border-2 border-purple-800">
+          <div className="flex justify-center mb-6">
+            <div className="w-32 h-32 text-bold">
+              <CircularProgressbar
+                value={progress} 
+                text={`${Math.round(progress)}%`}
+                styles={buildStyles({
+                  textColor: "#000000",
+                  pathColor: "#6B21A8",
+                  trailColor: "#D1D5DB",
+                  textSize: '24px text-bold'
+                })}
+              />
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Mobile Progress Indicator */}
-      <div className="md:hidden w-full mb-4 bg-white p-4 rounded-lg shadow">
-        <div className="flex items-center justify-between">
-          <div className="w-16 h-16">
-            <CircularProgressbar
-              value={progress}
-              text={`${Math.round(progress)}%`}
-              styles={buildStyles({
-                textColor: "#1D4ED8",
-                pathColor: "#1D4ED8",
-                trailColor: "#D1D5DB",
-                textSize: '16px'
-              })}
-            />
           </div>
-          <div className="flex-1 ml-4">
-            <div className="flex justify-between mb-1">
-              {[1, 2, 3, 4].map((stepNumber) => (
-                <div 
-                  key={stepNumber}
-                  className={`w-6 h-6 rounded-full flex items-center justify-center ${step >= stepNumber ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-                >
-                  {step > stepNumber ? <FaCheck size={10} /> : stepNumber}
-                </div>
-              ))}
-            </div>
-            <p className="text-sm font-medium">
-              {step === 1 && "Basic Information"}
-              {step === 2 && "Property Details"}
-              {step === 3 && "Rent & Facilities"}
-              {step === 4 && "Upload Images"}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Form */}
-      <div className="w-full md:w-2/3 bg-white p-6 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-semibold text-center mb-6">Add Property - Step {step}</h2>
-        
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded flex justify-between items-center">
-            <span>{error}</span>
-            {error.includes("login") && (
-              <button 
-                onClick={() => navigate('/login')}
-                className="ml-2 underline font-medium"
+          
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map((stepNumber) => (
+              <div 
+                key={stepNumber}
+                className={`flex items-center p-3 rounded-lg cursor-pointer ${step === stepNumber ? 'bg-purple-200 border-l-4 border-purple-800' : ''}`}
+                onClick={() => setStep(stepNumber)}
               >
-                Login Now
-              </button>
-            )}
-          </div>
-        )}
-        
-        {success && (
-          <div className="mb-4 p-3 bg-green-100 text-green-700 rounded flex items-center">
-            <FaCheck className="mr-2" />
-            Property added successfully! Redirecting...
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          {/* Step 1: Basic Info */}
-          {step === 1 && (
-            <div className="space-y-4">
-              {[
-                { field: "title", label: "Property Title", type: "text", required: true },
-                { field: "description", label: "Description", type: "textarea", required: true },
-                { field: "address", label: "Full Address", type: "text", required: true },
-                { field: "city", label: "City", type: "text", required: true },
-                { field: "state", label: "State", type: "text", required: true },
-                { field: "popularLocality", label: "Popular Locality", type: "text" },
-                { field: "ownerName", label: "Owner Name", type: "text", required: true },
-                { field: "ownerphone", label: "Owner Phone", type: "tel", required: true }
-              ].map(({ field, label, type, required }) => (
-                <div key={field}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {label} {required && <span className="text-red-500">*</span>}
-                  </label>
-                  {type === "textarea" ? (
-                    <textarea
-                      name={field}
-                      value={formData[field]}
-                      onChange={handleChange}
-                      className="mt-1 p-3 w-full border border-gray-300 rounded-md focus:ring focus:ring-blue-300"
-                      required={required}
-                      rows={4}
-                    />
-                  ) : (
-                    <input
-                      type={type}
-                      name={field}
-                      value={formData[field]}
-                      onChange={handleChange}
-                      className="mt-1 p-3 w-full border border-gray-300 rounded-md focus:ring focus:ring-blue-300"
-                      required={required}
-                      minLength={field === "ownerphone" ? 10 : 3}
-                      maxLength={field === "ownerphone" ? 15 : undefined}
-                    />
-                  )}
-                  {validationErrors[field] && (
-                    <p className="mt-1 text-sm text-red-600">{validationErrors[field]}</p>
-                  )}
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${step >= stepNumber ? 'bg-purple-800 text-white text-bold' : 'bg-gray-200'}`}>
+                  {step > stepNumber ? <FaCheck size={14} /> : stepNumber}
                 </div>
-              ))}
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Gender <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="Gender"
-                  value={formData.Gender}
-                  onChange={handleChange}
-                  className="mt-1 p-3 w-full border border-gray-300 rounded-md"
-                  required
-                >
-                  <option value="">Select Gender</option>
-                  {genderOptions.map(option => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-                {validationErrors.Gender && (
-                  <p className="mt-1 text-sm text-red-600">{validationErrors.Gender}</p>
-                )}
+                <div>
+                  <h3 className="text-purple-800 font-bold">Step {stepNumber}</h3>
+                  <p className="text-sm text-purple-800 text-semibold">
+                    {stepNumber === 1 && "Basic Information"}
+                    {stepNumber === 2 && "Property Details"}
+                    {stepNumber === 3 && "Rent & Facilities"}
+                    {stepNumber === 4 && "Upload Images"}
+                  </p>
+                </div>
               </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile Progress Indicator */}
+        <div className="md:hidden w-full mb-4 bg-white p-4 rounded-lg shadow">
+          <div className="flex items-center justify-between">
+            <div className="w-16 h-16">
+              <CircularProgressbar
+                value={progress}
+                text={`${Math.round(progress)}%`}
+                styles={buildStyles({
+                  textColor: "#1D4ED8",
+                  pathColor: "#1D4ED8",
+                  trailColor: "#D1D5DB",
+                  textSize: '16px'
+                })}
+              />
             </div>
-          )}
-
-          {/* Step 2: Property Details */}
-          {step === 2 && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Area (sq. ft) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  name="area"
-                  value={formData.area}
-                  onChange={handleChange}
-                  className="mt-1 p-3 w-full border border-gray-300 rounded-md"
-                  required
-                  min="50"
-                  max="10000"
-                />
-                {validationErrors.area && (
-                  <p className="mt-1 text-sm text-red-600">{validationErrors.area}</p>
-                )}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nearby Places (comma separated)</label>
-                <input
-                  type="text"
-                  name="nearby"
-                  value={formData.nearby.join(", ")}
-                  onChange={(e) => {
-                    const values = e.target.value.split(",").map(item => item.trim());
-                    setFormData({...formData, nearby: values});
-                  }}
-                  className="mt-1 p-3 w-full border border-gray-300 rounded-md"
-                  placeholder="e.g. Metro station, Mall, Hospital"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Floor Number
-                  </label>
-                  <input
-                    type="number"
-                    name="floorNumber"
-                    value={formData.floorNumber}
-                    onChange={handleChange}
-                    className="mt-1 p-3 w-full border border-gray-300 rounded-md"
-                    min="0"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Total Floors
-                  </label>
-                  <input
-                    type="number"
-                    name="totalFloors"
-                    value={formData.totalFloors}
-                    onChange={handleChange}
-                    className="mt-1 p-3 w-full border border-gray-300 rounded-md"
-                    min="1"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Age of Property (years)
-                  </label>
-                  <input
-                    type="number"
-                    name="ageOfProperty"
-                    value={formData.ageOfProperty}
-                    onChange={handleChange}
-                    className="mt-1 p-3 w-full border border-gray-300 rounded-md"
-                    min="0"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Facing Direction
-                  </label>
-                  <select
-                    name="facingDirection"
-                    value={formData.facingDirection}
-                    onChange={handleChange}
-                    className="mt-1 p-3 w-full border border-gray-300 rounded-md"
+            <div className="flex-1 ml-4">
+              <div className="flex justify-between mb-1">
+                {[1, 2, 3, 4].map((stepNumber) => (
+                  <div 
+                    key={stepNumber}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center ${step >= stepNumber ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
                   >
-                    <option value="">Select Direction</option>
-                    {facingDirections.map(option => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {[
-                { label: "Property Type", field: "propertyType", options: propertyOptions, required: true },
-                { label: "BHK Type", field: "bhkType", options: bhkOptions, required: true },
-                { label: "Furnish Type", field: "furnishType", options: furnishOptions, required: true },
-              ].map(({ label, field, options, required }) => (
-                <div key={field} className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {label} {required && <span className="text-red-500">*</span>}
-                  </label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {options.map((option) => (
-                      <label key={option.value} className="inline-flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={formData[field].includes(option.value)}
-                          onChange={() => handleMultiSelect(field, option.value)}
-                          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">{option.display}</span>
-                      </label>
-                    ))}
+                    {step > stepNumber ? <FaCheck size={10} /> : stepNumber}
                   </div>
-                  {validationErrors[field] && (
-                    <p className="mt-1 text-sm text-red-600">{validationErrors[field]}</p>
-                  )}
-                </div>
-              ))}
-
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Additional Features</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-                  {[
-                    { field: "balcony", label: "Balcony" },
-                    { field: "petsAllowed", label: "Pets Allowed" },
-                    { field: "nonVegAllowed", label: "Non-Veg Allowed" },
-                    { field: "smokingAllowed", label: "Smoking Allowed" },
-                    { field: "bachelorAllowed", label: "Bachelor Allowed" }
-                  ].map(({ field, label }) => (
-                    <label key={field} className="inline-flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={formData[field]}
-                        onChange={handleChange}
-                        name={field}
-                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">{label}</span>
-                    </label>
-                  ))}
-                </div>
+                ))}
               </div>
+              <p className="text-sm font-medium">
+                {step === 1 && "Basic Information"}
+                {step === 2 && "Property Details"}
+                {step === 3 && "Rent & Facilities"}
+                {step === 4 && "Upload Images"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Form */}
+        <div className="w-full md:w-2/3 bg-white p-6 rounded-lg h-150 overflow-y-auto shadow-2xl border-2 border-purple-800">
+          <h2 className="text-2xl font-bold text-center mb-6 text-purple-800">Add Property - Step {step}</h2>
+          
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded flex justify-between items-center">
+              <span>{error}</span>
+              {error.includes("login") && (
+                <button 
+                  onClick={() => navigate('/login')}
+                  className="ml-2 underline font-medium"
+                >
+                  Login Now
+                </button>
+              )}
+            </div>
+          )}
+          
+          {success && (
+            <div className="mb-4 p-3 bg-green-100 text-green-700 rounded flex items-center">
+              <FaCheck className="mr-2" />
+              Property added successfully! Redirecting...
             </div>
           )}
 
-          {/* Step 3: Facilities & Rent */}
-          {step === 3 && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Facilities</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-                  {facilityOptions.map((option) => (
-                    <label key={option.value} className="inline-flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={formData.facilities.includes(option.value)}
-                        onChange={() => handleMultiSelect("facilities", option.value)}
-                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">{option.display}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit}>
+            {/* Step 1: Basic Info */}
+            {step === 1 && (
+              <div className="space-y-4 text-bold border-purple-800 outline-none">
                 {[
-                  { field: "monthlyRent", label: "Monthly Rent (₹)", required: true },
-                  { field: "securityDeposit", label: "Security Deposit (₹)", required: true },
-                  { field: "rentalDurationMonths", label: "Minimum Stay (months)" },
-                  { field: "maintenanceCharges", label: "Maintenance Charges (₹/month)" },
-                ].map(({ field, label, required }) => (
+                  { field: "title", label: "Property Title", type: "text", required: true },
+                  { field: "description", label: "Description", type: "textarea", required: true },
+                  { field: "address", label: "Full Address", type: "text", required: true },
+                  { field: "city", label: "City", type: "text", required: true },
+                  { field: "state", label: "State", type: "text", required: true },
+                  { field: "popularLocality", label: "Popular Locality", type: "text" },
+                  { field: "ownerName", label: "Owner Name", type: "text", required: true },
+                  { field: "ownerphone", label: "Owner Phone", type: "tel", required: true }
+                ].map(({ field, label, type, required }) => (
                   <div key={field}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {label} {required && <span className="text-red-500">*</span>}
+                    <label className="font-bold text-sm text-purple-800 outline-none mb-1">
+                      {label} {required && <span className="text-purple-800">*</span>}
                     </label>
-                    <input
-                      type="number"
-                      name={field}
-                      value={formData[field]}
-                      onChange={handleChange}
-                      className="mt-1 p-3 w-full border border-gray-300 rounded-md"
-                      required={required}
-                      min="0"
-                      step={field.includes("Rent") ? "1000" : "100"}
-                    />
+                    {type === "textarea" ? (
+                      <textarea
+                        name={field}
+                        value={formData[field]}
+                        onChange={handleChange}
+                        className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md focus:ring focus:ring-blue-300"
+                        required={required}
+                        rows={4}
+                      />
+                    ) : (
+                      <input
+                        type={type}
+                        name={field}
+                        value={formData[field]}
+                        onChange={handleChange}
+                        className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md focus:ring focus:ring-blue-300"
+                        required={required}
+                        minLength={field === "ownerphone" ? 10 : 3}
+                        maxLength={field === "ownerphone" ? 15 : undefined}
+                      />
+                    )}
                     {validationErrors[field] && (
                       <p className="mt-1 text-sm text-red-600">{validationErrors[field]}</p>
                     )}
                   </div>
                 ))}
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Available From <span className="text-red-500">*</span>
+                  <label className="block text-sm font-bold text-purple-800 mb-1">
+                    Gender <span className="text-purple-800">*</span>
+                  </label>
+                  <select
+                    name="Gender"
+                    value={formData.Gender}
+                    onChange={handleChange}
+                    className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md text-purple-800"
+                    required
+                  >
+                    <option value="">Select Gender</option>
+                    {genderOptions.map(option => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
+                  {validationErrors.Gender && (
+                    <p className="mt-1 text-sm text-purple-800">{validationErrors.Gender}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Property Details */}
+            {step === 2 && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-purple-800 mb-1">
+                    Area (sq. ft) <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="date"
-                    name="availableFrom"
-                    value={formData.availableFrom}
+                    type="number"
+                    name="area"
+                    value={formData.area}
                     onChange={handleChange}
-                    className="mt-1 p-3 w-full border border-gray-300 rounded-md"
+                    className="mt-1 p-3 w-full border border-purple-800 rounded-md outline-none"
                     required
-                    min={new Date().toISOString().split('T')[0]}
+                    min="50"
+                    max="10000"
                   />
-                  {validationErrors.availableFrom && (
-                    <p className="mt-1 text-sm text-red-600">{validationErrors.availableFrom}</p>
+                  {validationErrors.area && (
+                    <p className="mt-1 text-sm text-red-600">{validationErrors.area}</p>
                   )}
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Parking
-                  </label>
-                  <select
-                    name="parking"
-                    value={formData.parking}
-                    onChange={handleChange}
-                    className="mt-1 p-3 w-full border border-gray-300 rounded-md"
-                  >
-                    <option value="">Select Parking Type</option>
-                    <option value="None">None</option>
-                    <option value="Street">Street Parking</option>
-                    <option value="Allocated">Allocated Parking</option>
-                    <option value="Garage">Garage</option>
-                  </select>
+                  <label className="block text-sm font-bold text-purple-800 mb-1">Nearby Places</label>
+                  <input
+                    type="text"
+                    name="nearby"
+                    value={formData.nearby.join(", ")}
+                    onChange={(e) => {
+                      const values = e.target.value.split(",").map(item => item.trim());
+                      setFormData({...formData, nearby: values});
+                    }}
+                    className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md text-purple-800"
+                    placeholder="e.g. Metro station, Mall, Hospital"
+                  />
                 </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Water Supply
-                  </label>
-                  <select
-                    name="waterSupply"
-                    value={formData.waterSupply}
-                    onChange={handleChange}
-                    className="mt-1 p-3 w-full border border-gray-300 rounded-md"
-                  >
-                    <option value="">Select Water Supply</option>
-                    <option value="Corporation">Corporation Water</option>
-                    <option value="Borewell">Borewell</option>
-                    <option value="Both">Both</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Electricity Backup
-                  </label>
-                  <select
-                    name="electricityBackup"
-                    value={formData.electricityBackup}
-                    onChange={handleChange}
-                    className="mt-1 p-3 w-full border border-gray-300 rounded-md"
-                  >
-                    <option value="">Select Backup</option>
-                    <option value="None">None</option>
-                    <option value="Inverter">Inverter</option>
-                    <option value="Generator">Generator</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          )}
 
-          {/* Step 4: Upload Images */}
-          {step === 4 && (
-            <div className="space-y-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Upload Images (Max 10) <span className="text-red-500">*</span>
-              </label>
-              
-              <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition">
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  disabled={uploading}
-                />
-                <div className="flex flex-col items-center justify-center">
-                  <FaCamera className="text-gray-400 text-3xl mb-2" />
-                  <p className="text-sm text-gray-600">
-                    {uploading ? "Uploading..." : "Click to browse or drag and drop images"}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    JPEG, PNG (Max 5MB each)
-                  </p>
-                </div>
-              </div>
-              
-              {validationErrors.images && (
-                <p className="text-sm text-red-600">{validationErrors.images}</p>
-              )}
-              
-              {uploading && (
-                <div className="text-blue-600 flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Uploading images...
-                </div>
-              )}
-              
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-4">
-                {previewImages.map((src, index) => (
-                  <div key={index} className="relative group">
-                    <img 
-                      src={src} 
-                      alt="preview" 
-                      className="w-full h-32 object-cover rounded-md border border-gray-300"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-purple-800 mb-1">
+                      Floor Number
+                    </label>
+                    <input
+                      type="number"
+                      name="floorNumber"
+                      value={formData.floorNumber}
+                      onChange={handleChange}
+                      className="mt-1 p-3 w-full border-purple-800 outline-none border rounded-md"
+                      min="0"
                     />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPreviewImages(prev => prev.filter((_, i) => i !== index));
-                        setFormData(prev => ({
-                          ...prev,
-                          images: prev.images.filter((_, i) => i !== index)
-                        }));
-                      }}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
-                      title="Remove image"
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-bold text-purple-800 mb-1">
+                      Total Floors
+                    </label>
+                    <input
+                      type="number"
+                      name="totalFloors"
+                      value={formData.totalFloors}
+                      onChange={handleChange}
+                      className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md"
+                      min="1"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-purple-800 mb-1">
+                      Age of Property (years)
+                    </label>
+                    <input
+                      type="number"
+                      name="ageOfProperty"
+                      value={formData.ageOfProperty}
+                      onChange={handleChange}
+                      className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md"
+                      min="0"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-bold text-purple-800 mb-1">
+                      Facing Direction
+                    </label>
+                    <select
+                      name="facingDirection"
+                      value={formData.facingDirection}
+                      onChange={handleChange}
+                      className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md text-purple-800"
                     >
-                      <FaTrash size={10} />
-                    </button>
+                      <option value="">Select Direction</option>
+                      {facingDirections.map(option => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {[
+                  { label: "Property Type", field: "propertyType", options: propertyOptions, required: true },
+                  { label: "BHK Type", field: "bhkType", options: bhkOptions, required: true },
+                  { label: "Furnish Type", field: "furnishType", options: furnishOptions, required: true },
+                ].map(({ label, field, options, required }) => (
+                  <div key={field} className="mt-4">
+                    <label className="block text-sm font-bold text-purple-800 mb-1">
+                      {label} {required && <span className="text-red-500">*</span>}
+                    </label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {options.map((option) => (
+                        <label key={option.value} className="inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData[field].includes(option.value)}
+                            onChange={() => handleMultiSelect(field, option.value)}
+                            className="h-4 w-4 text-purple-800 border-purple-800 rounded focus:ring-purple-800 cursor-pointer checked:bg-purple-800"
+                          />
+                          <span className="ml-2 text-sm text-purple-800">{option.display}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {validationErrors[field] && (
+                      <p className="mt-1 text-sm text-red-600">{validationErrors[field]}</p>
+                    )}
                   </div>
                 ))}
-              </div>
-              
-              <div className="text-sm text-gray-500 mt-2">
-                {previewImages.length} of 10 images uploaded
-              </div>
-            </div>
-          )}
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8 pt-4 border-t border-gray-200">
-            {step > 1 ? (
-              <button
-                type="button"
-                onClick={prevStep}
-                className="flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition"
-              >
-                <FaArrowLeft className="mr-2" />
-                Back
-              </button>
-            ) : (
-              <div></div>
+                <div className="mt-4">
+                  <label className="block text-sm font-bold text-purple-800 mb-1">Additional Features</label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                    {[
+                      { field: "balcony", label: "Balcony" },
+                      { field: "petsAllowed", label: "Pets Allowed" },
+                      { field: "nonVegAllowed", label: "Non-Veg Allowed" },
+                      { field: "smokingAllowed", label: "Smoking Allowed" },
+                      { field: "bachelorAllowed", label: "Bachelor Allowed" }
+                    ].map(({ field, label }) => (
+                      <label key={field} className="inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData[field]}
+                          onChange={handleChange}
+                          name={field}
+                          className="h-4 w-4 text-purple-800 border-purple-800 rounded focus:ring-purple-800 cursor-pointer checked:bg-purple-800"
+                        />
+                        <span className="ml-2 text-sm text-purple-800">{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
             )}
-            
-            {step < 4 ? (
-              <button
-                type="button"
-                onClick={nextStep}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-                disabled={Object.keys(validationErrors).length > 0}
-              >
-                Next
-                <FaArrowRight className="ml-2" />
-              </button>
-            ) : (
-              <button
-                type="submit"
-                className={`flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition ${
-                  uploading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-                disabled={uploading || formData.images.length === 0}
-              >
-                {uploading ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+
+            {/* Step 3: Facilities & Rent */}
+            {step === 3 && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-purple-800 mb-1">Facilities</label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                    {facilityOptions.map((option) => (
+                      <label key={option.value} className="inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.facilities.includes(option.value)}
+                          onChange={() => handleMultiSelect("facilities", option.value)}
+                          className="h-4 w-4 text-purple-800 border-purple-800 rounded focus:ring-purple-800 cursor-pointer checked:bg-purple-800"
+                        />
+                        <span className="ml-2 text-sm text-purple-800">{option.display}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    { field: "monthlyRent", label: "Monthly Rent (₹)", required: true },
+                    { field: "securityDeposit", label: "Security Deposit (₹)", required: true },
+                    { field: "rentalDurationMonths", label: "Minimum Stay (months)" },
+                    { field: "maintenanceCharges", label: "Maintenance Charges (₹/month)" },
+                  ].map(({ field, label, required }) => (
+                    <div key={field}>
+                      <label className="block text-sm font-bold text-purple-800 mb-1">
+                        {label} {required && <span className="text-red-500">*</span>}
+                      </label>
+                      <input
+                        type="number"
+                        name={field}
+                        value={formData[field]}
+                        onChange={handleChange}
+                        className="mt-1 p-3 w-full border border-purple-800 rounded-md"
+                        required={required}
+                        min="0"
+                        step={field.includes("Rent") ? "1000" : "100"}
+                      />
+                      {validationErrors[field] && (
+                        <p className="mt-1 text-sm text-red-600">{validationErrors[field]}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-purple-800 mb-1">
+                      Available From <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      name="availableFrom"
+                      value={formData.availableFrom}
+                      onChange={handleChange}
+                      className="mt-1 p-3 w-full border border-purple-800 rounded-md"
+                      required
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                    {validationErrors.availableFrom && (
+                      <p className="mt-1 text-sm text-red-600">{validationErrors.availableFrom}</p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-bold text-purple-800 mb-1">
+                      Parking
+                    </label>
+                    <select
+                      name="parking"
+                      value={formData.parking}
+                      onChange={handleChange}
+                      className="mt-1 p-3 w-full border border-purple-800 rounded-md"
+                    >
+                      <option value="">Select Parking Type</option>
+                      <option value="None">None</option>
+                      <option value="Street">Street Parking</option>
+                      <option value="Allocated">Allocated Parking</option>
+                      <option value="Garage">Garage</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-purple-800 mb-1">
+                      Water Supply
+                    </label>
+                    <select
+                      name="waterSupply"
+                      value={formData.waterSupply}
+                      onChange={handleChange}
+                      className="mt-1 p-3 w-full border border-purple-800 rounded-md"
+                    >
+                      <option value="">Select Water Supply</option>
+                      <option value="Corporation">Corporation Water</option>
+                      <option value="Borewell">Borewell</option>
+                      <option value="Both">Both</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-bold text-purple-800 mb-1">
+                      Electricity Backup
+                    </label>
+                    <select
+                      name="electricityBackup"
+                      value={formData.electricityBackup}
+                      onChange={handleChange}
+                      className="mt-1 p-3 w-full border border-purple-800 rounded-md"
+                    >
+                      <option value="">Select Backup</option>
+                      <option value="None">None</option>
+                      <option value="Inverter">Inverter</option>
+                      <option value="Generator">Generator</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Upload Images */}
+            {step === 4 && (
+              <div className="space-y-4">
+                <label className="block text-sm font-bold text-purple-800 mb-1">
+                  Upload Images (Max 10) <span className="text-red-500">*</span>
+                </label>
+                
+                <div className="relative border-2 border-dashed border-purple-800 rounded-lg p-6 text-center hover:border-purple-600 transition cursor-pointer">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    disabled={uploading}
+                  />
+                  <div className="flex flex-col items-center justify-center">
+                    <FaCamera className="text-purple-800 text-3xl mb-2" />
+                    <p className="text-sm text-purple-800">
+                      {uploading ? "Uploading..." : "Click to browse or drag and drop images"}
+                    </p>
+                    <p className="text-xs text-purple-600 mt-1">
+                      JPEG, PNG (Max 5MB each)
+                    </p>
+                  </div>
+                </div>
+                
+                {validationErrors.images && (
+                  <p className="text-sm text-red-600">{validationErrors.images}</p>
+                )}
+                
+                {uploading && (
+                  <div className="text-purple-800 flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-purple-800" xmlns="http://www.w3.org/3000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <FaCheck className="mr-2" />
-                    Submit Property
-                  </>
+                    Uploading images...
+                  </div>
                 )}
-              </button>
+                
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-4">
+                  {previewImages.map((src, index) => (
+                    <div key={index} className="relative group">
+                      <img 
+                        src={src} 
+                        alt="preview" 
+                        className="w-full h-32 object-cover rounded-md border border-purple-800"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreviewImages(prev => prev.filter((_, i) => i !== index));
+                          setFormData(prev => ({
+                            ...prev,
+                            images: prev.images.filter((_, i) => i !== index)
+                          }));
+                        }}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                        title="Remove image"
+                      >
+                        <FaTrash size={10} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="text-sm text-purple-800 mt-2">
+                  {previewImages.length} of 10 images uploaded
+                </div>
+              </div>
             )}
-          </div>
-        </form>
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between mt-8 pt-4 border-t border-purple-800">
+              {step > 1 ? (
+                <button
+                  type="button"
+                  onClick={prevStep}
+                  className="flex items-center px-4 py-2 bg-gray-200 text-purple-800 rounded-md hover:bg-gray-300 transition cursor-pointer"
+                >
+                  <FaArrowLeft className="mr-2" />
+                  Back
+                </button>
+              ) : (
+                <div></div>
+              )}
+              
+              {step < 4 ? (
+                <button
+                  type="button"
+                  onClick={nextStep}
+                  className="flex items-center px-4 py-2 bg-purple-800 text-white rounded-md hover:bg-purple-700 transition cursor-pointer"
+                  disabled={Object.keys(validationErrors).length > 0}
+                >
+                  Next
+                  <FaArrowRight className="ml-2" />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className={`flex items-center px-4 py-2 bg-purple-800 text-white rounded-md hover:bg-green-700 transition cursor-pointer ${
+                    uploading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                  disabled={uploading || formData.images.length === 0}
+                >
+                  {uploading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <FaCheck className="mr-2" />
+                      Submit Property
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

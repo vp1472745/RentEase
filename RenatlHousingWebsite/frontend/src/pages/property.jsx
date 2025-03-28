@@ -3,6 +3,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import hotel from "../assets/hotel.jpg";
 import SearchBar from "../pages/search.jsx";
+import { FaGooglePlay, FaApple } from "react-icons/fa";
+import { IoMdSend } from "react-icons/io";
+
 import {
   FiHeart,
   FiShare2,
@@ -21,8 +24,21 @@ function Properties() {
   const [currentProperty, setCurrentProperty] = useState(null);
   const [favorites, setFavorites] = useState({});
   const navigate = useNavigate();
+  const [timeLeft, setTimeLeft] = useState(215)
   const location = useLocation();
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m : ${secs}s`;
+  };
   useEffect(() => {
     const fetchProperties = async () => {
       try {
@@ -113,10 +129,14 @@ function Properties() {
     window.open(`tel:${phoneNumber}`);
   };
 
+
+
   return (
+ 
     <div className="min-h-screen bg-gray-100">
       {/* Hero Section */}
-      <div
+      <div className="bg-purple-800 w-[100%] h-15"></div>
+      {/* <div
         className="relative flex flex-col items-center justify-center bg-cover bg-center text-center text-white h-[90vh] px-4"
         style={{ backgroundImage: `url(${hotel})` }}
       >
@@ -127,10 +147,11 @@ function Properties() {
           Rent hassle-free homes across the city.
         </p>
         <SearchBar />
-      </div>
+      </div> */}
 
       {/* Property Listings */}
-      <div className="container mx-auto px-4 py-8 bg-white">
+      <div className="flex">
+      <div className="container mx-auto px-4 py-8  overflow-auto h-180 fixed  w-270 ">
         <h2 className="text-2xl md:text-3xl font-bold text-black mb-8 text-center">
           Available Properties
         </h2>
@@ -140,11 +161,11 @@ function Properties() {
             <p className="text-center text-gray-600">Loading properties...</p>
           </div>
         ) : properties.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 md:gap-8 mx-auto max-w-5xl">
+          <div className="grid grid-cols-1 gap-6 md:gap-8 max-w-5xl ml-1 mb-15">
             {properties.map((property) => (
               <div
                 key={property._id}
-                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+                className="bg-white rounded-lg shadow-md overflow-hidden   hover:shadow-lg transition-shadow duration-300"
               >
                 <div className="flex flex-col md:flex-row">
                   {/* Property Image */}
@@ -288,19 +309,19 @@ function Properties() {
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3 mt-4">
-  <button
-    onClick={() => navigate(`/property/${property._id}`)}
-    className="w-[400px] bg-blue-600 text-white py-2 rounded-[10px] hover:bg-blue-700 transition text-sm md:text-base cursor-pointer"
-  >
-    View Details
-  </button>
-  <button
-    onClick={() => contactOwner(property.ownerphone)}
-    className="w-[400px] flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded-[10px] hover:bg-green-700 transition text-sm md:text-base cursor-pointer"
-  >
-    <FiPhone /> Contact Owner
-  </button>
-</div>
+                      <button
+                        onClick={() => navigate(`/property/${property._id}`)}
+                        className="w-[400px] bg-purple-800 text-purple-100 py-2 rounded-lg hover:bg-purple-900 transition cursor-pointer"
+                      >
+                        View Details
+                      </button>
+                      <button
+                        onClick={() => contactOwner(property.ownerphone)}
+                        className="w-[400px] flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded-[10px] hover:bg-green-700 transition text-sm md:text-base cursor-pointer"
+                      >
+                        <FiPhone /> Contact Owner
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -312,6 +333,44 @@ function Properties() {
           </div>
         )}
       </div>
+
+
+
+      <div className="flex flex-col items-center space-y-4 p-6 bg-gray-100 min-h-screen ml-270 fixed  mt-10 absolute">
+      <div className="bg-purple-200 p-4 rounded-lg text-center w-full max-w-md">
+        <p className="text-gray-700 font-semibold">Get Zero Brokerage properties with <span className="text-pink-600 font-bold">💎 Premium</span></p>
+        <p className="text-gray-600">50% Off expiring in <span className="bg-purple-300 px-2 py-1 rounded text-sm font-bold">{formatTime(timeLeft)}</span></p>
+      </div>
+      
+      <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md ">
+        <h2 className="text-lg font-semibold">Get our Free App  <br /><span className="text-green-500">⭐ 4.6</span> <span className="text-gray-500">200 downloads</span></h2>
+        <div className="my-4 flex justify-center">
+          <img src="/qr-code-placeholder.png" alt="QR Code" className="w-32 h-32" />
+        </div>
+        <p className="text-gray-500">Scan the QR code to Download the App</p>
+        <div className="mt-4">
+          <p className="text-gray-600">Get App Download Links via SMS</p>
+          <div className="flex items-center mt-2 border border-gray-300 rounded-lg overflow-hidden">
+            <input
+              type="text"
+              placeholder="Enter your Mobile Number"
+              className="flex-1 px-3 py-2 outline-none"
+            />
+            <button className="bg-gray-200 px-3 py-2">
+              <IoMdSend className="text-gray-600" />
+            </button>
+          </div>
+        </div>
+        <div className="flex justify-around mt-4">
+          <button className="flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-lg">
+            <FaGooglePlay /> <span>Google Play</span>
+          </button>
+          <button className="flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-lg">
+            <FaApple /> <span>App Store</span>
+          </button>
+        </div>
+      </div>
+    </div>
 
       {/* Image Gallery Modal */}
       {isGalleryOpen && currentProperty && (
@@ -371,8 +430,20 @@ function Properties() {
             ))}
           </div>
         </div>
+
+        
       )}
+
+
+     
     </div>
+
+
+  
+
+
+    </div>
+    
   );
 }
 

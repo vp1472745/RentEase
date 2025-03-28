@@ -72,9 +72,56 @@ const SearchBar = () => {
     const params = new URLSearchParams();
   
     if (city) params.append("city", city);
-    if (locality) params.append("address", locality);  // Address से भी search होगा
-    if (selectedCategory) params.append("propertyType", selectedCategory); // Property Type भी add किया
+    if (locality) {
+      params.append("address", locality);  // Exact address search
+      params.append("popularLocality", locality); // Popular locality search
+      params.append("nearby", locality); // Nearby places search
+    }
+    if (selectedCategory) params.append("propertyType", selectedCategory);
   
+    navigate(`/properties?${params.toString()}`);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  const handleCategorySelect = (category) => {
+    setSelectedCategory(category);
+    // Trigger search immediately when category is selected
+    const params = new URLSearchParams();
+    params.append("city", city);
+    params.append("propertyType", category);
+    if (locality) {
+      params.append("address", locality);
+      params.append("popularLocality", locality);
+    }
+    navigate(`/properties?${params.toString()}`);
+  };
+
+  const handleCitySelect = (cityName) => {
+    setCity(cityName);
+    setIsModalOpen(false);
+    // Trigger search immediately when city is selected
+    const params = new URLSearchParams();
+    params.append("city", cityName);
+    if (selectedCategory) params.append("propertyType", selectedCategory);
+    if (locality) {
+      params.append("address", locality);
+      params.append("popularLocality", locality);
+    }
+    navigate(`/properties?${params.toString()}`);
+  };
+
+  const handlePopularLocalitySelect = (loc) => {
+    setLocality(loc);
+    // Trigger search immediately when locality is selected
+    const params = new URLSearchParams();
+    params.append("city", city);
+    params.append("popularLocality", loc);
+    if (selectedCategory) params.append("propertyType", selectedCategory);
     navigate(`/properties?${params.toString()}`);
   };
   
