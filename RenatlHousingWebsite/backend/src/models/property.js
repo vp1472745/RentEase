@@ -42,7 +42,7 @@ propertyType: {
 bhkType: { 
   type: [String], 
   required: true,
-  enum: ['1RK', '1BHK', '1.5BHK', '2BHK', '3+BHK'],
+  enum: ['1RK',  '2BHK', '3BHK', '4+BHK'],
   validate: {
     validator: function(v) {
       return v.length > 0;

@@ -34,6 +34,7 @@ app.use(
   })
 );
 app.use(passport.initialize());
+app.use(express.urlencoded({ extended: true }));
 
 // ✅ Serve Uploaded Images as Static Files
 app.use("/uploads", express.static("uploads"));

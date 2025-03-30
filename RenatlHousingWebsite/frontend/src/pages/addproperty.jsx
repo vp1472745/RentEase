@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "../axios";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import { useNavigate } from "react-router-dom";
@@ -56,7 +56,7 @@ const AddProperty = () => {
     const token = localStorage.getItem("token");
     if (!token) {
       setError("Please login to add a property");
-      const timer = setTimeout(() => navigate('/login'), 2000);
+      const timer = setTimeout(() => navigate('/login'), 10000);
       return () => clearTimeout(timer);
     }
     setIsAuthenticated(true);
@@ -72,10 +72,10 @@ const AddProperty = () => {
 
   const bhkOptions = [
     { display: "1RK", value: "1RK" },
-    { display: "1BHK", value: "1BHK" },
-    { display: "1.5BHK", value: "1.5BHK" },
     { display: "2BHK", value: "2BHK" },
-    { display: "3+BHK", value: "3+BHK" }
+    { display: "3BHK", value: "3BHK" },
+    { display: "4+BHK", value: "4+BHK" },
+   
   ];
 
   const furnishOptions = [
@@ -190,7 +190,7 @@ const AddProperty = () => {
       setUploading(true);
       setError(null);
       const token = localStorage.getItem("token");
-      const res = await axios.post("http://localhost:9000/api/properties/upload", uploadData, {
+      const res = await axios.post("http://localhost:5000/api/properties/upload", uploadData, {
         headers: { 
           "Content-Type": "multipart/form-data",
           "Authorization": `Bearer ${token}`
@@ -229,7 +229,8 @@ const AddProperty = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        throw new Error("Authentication required. Please login.");
+        // <div clas></div>
+        throw new Error(`required. Please login.` );
       }
 
       // Prepare data with lowercase enum values for backend
@@ -246,7 +247,7 @@ const AddProperty = () => {
       console.log("Submitting data:", submitData);
 
       const response = await axios.post(
-        "http://localhost:9000/api/properties/add",
+        "http://localhost:5000/api/properties/add",
         submitData,
         {
           headers: {
@@ -494,7 +495,7 @@ const AddProperty = () => {
                         name={field}
                         value={formData[field]}
                         onChange={handleChange}
-                        className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md focus:ring focus:ring-blue-300"
+                        className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md focus:ring focus:ring-blue-300 cursor-pointer"
                         required={required}
                         rows={4}
                       />
@@ -504,7 +505,7 @@ const AddProperty = () => {
                         name={field}
                         value={formData[field]}
                         onChange={handleChange}
-                        className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md focus:ring focus:ring-blue-300"
+                        className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md focus:ring focus:ring-blue-300 cursor-pointer"
                         required={required}
                         minLength={field === "ownerphone" ? 10 : 3}
                         maxLength={field === "ownerphone" ? 15 : undefined}
@@ -518,13 +519,13 @@ const AddProperty = () => {
                 
                 <div>
                   <label className="block text-sm font-bold text-purple-800 mb-1">
-                    Gender <span className="text-purple-800">*</span>
+                  Preferred Tenant <span className="text-purple-800">*</span>
                   </label>
                   <select
                     name="Gender"
                     value={formData.Gender}
                     onChange={handleChange}
-                    className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md text-purple-800"
+                    className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md text-purple-800  cursor-pointer"
                     required
                   >
                     <option value="">Select Gender</option>
@@ -551,7 +552,7 @@ const AddProperty = () => {
                     name="area"
                     value={formData.area}
                     onChange={handleChange}
-                    className="mt-1 p-3 w-full border border-purple-800 rounded-md outline-none"
+                    className="mt-1 p-3 w-full border border-purple-800 rounded-md outline-none cursor-pointer"
                     required
                     min="50"
                     max="10000"
@@ -571,7 +572,7 @@ const AddProperty = () => {
                       const values = e.target.value.split(",").map(item => item.trim());
                       setFormData({...formData, nearby: values});
                     }}
-                    className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md text-purple-800"
+                    className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md text-purple-800 cursor-pointer"
                     placeholder="e.g. Metro station, Mall, Hospital"
                   />
                 </div>
@@ -586,7 +587,7 @@ const AddProperty = () => {
                       name="floorNumber"
                       value={formData.floorNumber}
                       onChange={handleChange}
-                      className="mt-1 p-3 w-full border-purple-800 outline-none border rounded-md"
+                      className="mt-1 p-3 w-full border-purple-800 outline-none border rounded-md cursor-pointer"
                       min="0"
                     />
                   </div>
@@ -600,7 +601,7 @@ const AddProperty = () => {
                       name="totalFloors"
                       value={formData.totalFloors}
                       onChange={handleChange}
-                      className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md"
+                      className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md cursor-pointer"
                       min="1"
                     />
                   </div>
@@ -616,7 +617,7 @@ const AddProperty = () => {
                       name="ageOfProperty"
                       value={formData.ageOfProperty}
                       onChange={handleChange}
-                      className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md"
+                      className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md cursor-pointer"
                       min="0"
                     />
                   </div>
@@ -629,7 +630,7 @@ const AddProperty = () => {
                       name="facingDirection"
                       value={formData.facingDirection}
                       onChange={handleChange}
-                      className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md text-purple-800"
+                      className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md text-purple-800 cursor-pointer"
                     >
                       <option value="">Select Direction</option>
                       {facingDirections.map(option => (
@@ -729,7 +730,7 @@ const AddProperty = () => {
                         name={field}
                         value={formData[field]}
                         onChange={handleChange}
-                        className="mt-1 p-3 w-full border border-purple-800 rounded-md"
+                        className="mt-1 p-3 w-full border border-purple-800 rounded-md cursor-pointer"
                         required={required}
                         min="0"
                         step={field.includes("Rent") ? "1000" : "100"}
@@ -751,7 +752,7 @@ const AddProperty = () => {
                       name="availableFrom"
                       value={formData.availableFrom}
                       onChange={handleChange}
-                      className="mt-1 p-3 w-full border border-purple-800 rounded-md"
+                      className="mt-1 p-3 w-full border border-purple-800 rounded-md cursor-pointer"
                       required
                       min={new Date().toISOString().split('T')[0]}
                     />
@@ -768,7 +769,7 @@ const AddProperty = () => {
                       name="parking"
                       value={formData.parking}
                       onChange={handleChange}
-                      className="mt-1 p-3 w-full border border-purple-800 rounded-md"
+                      className="mt-1 p-3 w-full border border-purple-800 rounded-md cursor-pointer"
                     >
                       <option value="">Select Parking Type</option>
                       <option value="None">None</option>
@@ -788,7 +789,7 @@ const AddProperty = () => {
                       name="waterSupply"
                       value={formData.waterSupply}
                       onChange={handleChange}
-                      className="mt-1 p-3 w-full border border-purple-800 rounded-md"
+                      className="mt-1 p-3 w-full border border-purple-800 rounded-md cursor-pointer"
                     >
                       <option value="">Select Water Supply</option>
                       <option value="Corporation">Corporation Water</option>
@@ -805,7 +806,7 @@ const AddProperty = () => {
                       name="electricityBackup"
                       value={formData.electricityBackup}
                       onChange={handleChange}
-                      className="mt-1 p-3 w-full border border-purple-800 rounded-md"
+                      className="mt-1 p-3 w-full border border-purple-800 rounded-md cursor-pointer"
                     >
                       <option value="">Select Backup</option>
                       <option value="None">None</option>

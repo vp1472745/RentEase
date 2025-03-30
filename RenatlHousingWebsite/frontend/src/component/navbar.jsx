@@ -11,8 +11,10 @@ import users from "../assets/users.png";
 import { PiDetective } from "react-icons/pi";
 import { HiOutlineQuestionMarkCircle } from "react-icons/hi2";
 import { MdOutlineWatchLater } from "react-icons/md";
+import FP from "../assets/FP.png"
+import FW from "../assets/FW.png"
 import { FaRegHeart } from "react-icons/fa";
-import wwheart from "../assets/wwheart.png"
+import wwheart from "../assets/HW.png"
 
 import news from "../assets/new.png";
 import blackfree from "../assets/blackfree.png"
@@ -22,7 +24,7 @@ import {
 
   IoBusinessOutline,
 } from "react-icons/io5";
-import pheart from "../assets/pheart.png"
+import pheart from "../assets/HP.png"
 import { CiBellOn } from "react-icons/ci";
 import free from "../assets/free.png";
 import house from "../assets/house.png";
@@ -119,7 +121,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
     setIsAuthenticated(false);
     setUser(null);
 
-    navigate("/login");
+    navigate("/");
   };
 
   useEffect(() => {
@@ -182,29 +184,33 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
       {/* Image Source Changes Based on Scroll */}
       <img
         src={isScrolled ? pheart : wwheart}
-        className="w-5 h-4 object-contain transition-all duration-300"
+        className="w-5 h-5 object-contain transition-all duration-300 mr-1 mt-[3px]"
         alt="Save"
       />
       <Link
         to="/"
-        className={` text-[20px] flex items-center  transition ${
+        className={` text-[20px] flex items-center  transition cursor-pointer ${
           isScrolled ? "text-purple-800  hover:text-purple-400" : "text-white font-bold hover:text-gray-200"
         }`}
       >
         Save
       </Link>
     </div>
-        {isAuthenticated && user && (
+        {/* {isAuthenticated && user && ( */}
           <div className="flex items-center">
           {/* Image Source Changes Based on Scroll */}
-         
+          <img
+        src={isScrolled ? FP : FW}
+        className="w-6 h-6 object-contain transition-all duration-300 mr-1 mt-[3px]"
+        alt="Save"
+      />
           <Link
             to="/add-property"
             className={` text-[20px] flex items-center  transition ${
               isScrolled ? "text-purple-800  hover:text-purple-400" : "text-white font-bold  hover:text-gray-200"
             }`}
           >
-            Add Property
+           List Property
           </Link>
           {/* <img
             src={isScrolled ? pfree : wfree}
@@ -212,7 +218,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
             alt="Save"
           /> */}
         </div>
-        )}
+        
     
   
     {isAuthenticated && user ? (
@@ -222,7 +228,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
         e.stopPropagation();
         setIsProfileOpen(!isProfileOpen);
       }}
-      className="relative w-10 cursor-pointer h-10 flex ml-20 items-center justify-center rounded-full overflow-hidden border-2 border-white"
+      className="relative w-10 cursor-pointer h-10 flex  items-center justify-center rounded-full overflow-hidden border-2 border-white"
     >
       <img
         src={users}
@@ -682,6 +688,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
           <RiArrowRightSLine className="mt-1 ml-30" size={19} />
         </button>
 
+
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -693,6 +700,8 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
           <LogOut size={16} className="mr-2 text-purple-800" /> Logout
           <RiArrowRightSLine className="mr-1 ml-48" size={19} />
         </button>
+
+     
 
         {/* App Download Section - Original content */}
         <div className="bg-white p-4 md:p-6 rounded-xl w-full max-w-md mx-auto" onClick={(e) => e.stopPropagation()}>
@@ -743,7 +752,9 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
         e.stopPropagation();
         setIsAuthMenuOpen(!isAuthMenuOpen);
       }}
-      className="text-white font-semibold text-2xl"
+      className={` text-[20px] flex items-center  transition cursor-pointer ${
+        isScrolled ? "text-purple-800  hover:text-purple-400" : "text-white font-bold  hover:text-gray-200"
+      }`}
     >
       Create Account
     </button>
