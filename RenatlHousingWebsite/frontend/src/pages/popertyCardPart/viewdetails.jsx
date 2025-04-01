@@ -238,7 +238,7 @@ const Viewdetails = () => {
   return (
     <>
       <div className='bg-[#2a1035] h-16 w-full'></div>
-      <div className="min-h-screen bg-gray-50 ">
+      <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
           {/* Back button */}
           <button 
@@ -249,7 +249,7 @@ const Viewdetails = () => {
           </button>
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 w-300 mx-auto gap-8 ">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Property Images and Details */}
             <div className="lg:col-span-2">
               {/* Image Gallery with Slider */}
@@ -258,9 +258,9 @@ const Viewdetails = () => {
                   {/* Left Side - Main Image */}
                   <div className="col-span-1 relative">
                     <img
-                      src={property.images?.[0] || 'https://via.placeholder.com/800x600?text=Image+Not+Available'}
+                      src={property.images?.[0]?.url || property.images?.[0] || 'https://via.placeholder.com/800x600?text=Image+Not+Available'}
                       alt={property.title || 'Property Image'}
-                      className="w-500 h-142 object-cover cursor-pointer"
+                      className="w-full h-96 object-cover cursor-pointer"
                       onClick={() => openImageModal(0)}
                       onError={(e) => {
                         e.target.onerror = null;
@@ -269,7 +269,11 @@ const Viewdetails = () => {
                     />
                     
                     {/* Room Type Overlay */}
-                    
+                    {property.images?.[0]?.type && (
+                      <div className="absolute bottom-4 left-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded-full text-sm">
+                        {property.images[0].type}
+                      </div>
+                    )}
                   </div>
                   
                   {/* Right Side - Secondary Images */}
@@ -277,9 +281,9 @@ const Viewdetails = () => {
                     {/* Top Right Image */}
                     <div className="relative">
                       <img
-                        src={property.images?.[1] || 'https://via.placeholder.com/800x600?text=Image+Not+Available'}
+                        src={property.images?.[1]?.url || property.images?.[1] || 'https://via.placeholder.com/800x600?text=Image+Not+Available'}
                         alt={property.title || 'Property Image'}
-                        className="w-150 h-70 object-cover cursor-pointer"
+                        className="w-full h-48 object-cover cursor-pointer"
                         onClick={() => openImageModal(1)}
                         onError={(e) => {
                           e.target.onerror = null;
@@ -287,25 +291,37 @@ const Viewdetails = () => {
                         }}
                       />
                       
-                     
+                      {/* Room Type Overlay */}
+                      {property.images?.[1]?.type && (
+                        <div className="absolute bottom-4 left-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded-full text-sm">
+                          {property.images[1].type}
+                        </div>
+                      )}
                     </div>
                     
                     {/* Bottom Right Image */}
                     <div className="relative">
                       <img
-                        src={property.images?.[2] || 'https://via.placeholder.com/800x600?text=Image+Not+Available'}
+                        src={property.images?.[2]?.url || property.images?.[2] || 'https://via.placeholder.com/800x600?text=Image+Not+Available'}
                         alt={property.title || 'Property Image'}
-                        className="w-150 h-70 object-cover cursor-pointer"
+                        className="w-full h-48 object-cover cursor-pointer"
                         onClick={() => openImageModal(2)}
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Available';
                         }}
                       />
-                      {/* Watermark */}
-                       {/* Image Count Overlay */}
-                       {property.images?.length > 2 && (
-                        <div className="absolute left-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded-full text-sm bottom-30 ml-60">
+                      
+                      {/* Room Type Overlay */}
+                      {property.images?.[2]?.type && (
+                        <div className="absolute bottom-4 left-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded-full text-sm">
+                          {property.images[2].type}
+                        </div>
+                      )}
+                      
+                      {/* Image Count Overlay */}
+                      {property.images?.length > 2 && (
+                        <div className="absolute bottom-4 right-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded-full text-sm">
                           +{property.images.length - 2} more
                         </div>
                       )}
@@ -338,8 +354,7 @@ const Viewdetails = () => {
               </div>
 
               {/* Property Header */}
-              <div className='flex'>
-              <div className="bg-white rounded-xl shadow-md p-6 mb-6 w-202">
+              <div className="bg-white rounded-xl shadow-md p-6 mb-6">
                 <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-4">
                   <div className="mb-4 md:mb-0">
                     <h1 className="text-2xl md:text-3xl font-bold text-purple-800 mb-2">
@@ -356,7 +371,7 @@ const Viewdetails = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mb-6 ">
+                <div className="flex flex-wrap gap-2 mb-6">
                   <span className="bg-purple-200 text-purple-800 font-semibold px-3 py-1 rounded-full text-sm">
                     {property.furnishType?.join(', ') || 'Furnishing not specified'}
                   </span>
@@ -522,14 +537,14 @@ const Viewdetails = () => {
                   {activeTab === 'amenities' && (
                     <div>
                       <h3 className="text-lg font-bold text-purple-800">Facilities & Amenities</h3>
-                      <div className="flex flex-wrap mb-6">
+                      <div className="flex flex-wrap gap-4 mb-6">
                         {property.facilities?.map((facility, index) => (
-                          <span
-                            key={index}
-                            className="text-purple-800 font-semibold py-2 rounded-full text-sm capitalize"
-                          >
-                            {facility}
-                          </span>
+                          <div key={index} className="flex items-center">
+                            <div className="w-2 h-2 rounded-full bg-purple-800 mr-2"></div>
+                            <span className="text-purple-800 font-semibold text-sm capitalize">
+                              {facility}
+                            </span>
+                          </div>
                         )) || <p className="text-purple-800 font-semibold">No amenities listed</p>}
                       </div>
                       
@@ -579,9 +594,11 @@ const Viewdetails = () => {
                   )}
                 </div>
               </div>
+            </div>
+
             {/* Right Column - Owner Contact Card and Sidebar */}
             <div className="lg:col-span-1 space-y-6">
-              <div className="bg-white rounded-xl shadow-md p-6 sticky top-6 w-120 h-137">
+              <div className="bg-white rounded-xl shadow-md p-6 sticky top-6">
                 <h2 className="text-xl font-bold mb-4 text-purple-800">Contact Owner</h2>
                 <div className="space-y-4">
                   <div className="flex items-center">
@@ -609,7 +626,7 @@ const Viewdetails = () => {
                 {property.ownerphone && (
                   <button
                     onClick={contactOwner}
-                    className="w-full mt-6 flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-md  cursor-pointer transition"
+                    className="w-full mt-6 flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-md cursor-pointer transition"
                   >
                     <FiPhone /> Call Owner
                   </button>
@@ -645,7 +662,7 @@ const Viewdetails = () => {
               </div>
 
               {/* Sidebar */}
-              {/* <div className="bg-white rounded-xl shadow-md p-6">
+              <div className="bg-white rounded-xl shadow-md p-6">
                 <div className="bg-purple-200 p-4 rounded-lg text-center w-full mb-4">
                   <p className="text-purple-800 font-semibold">Get Zero Brokerage properties with <span className="text-pink-600 font-bold">💎 Premium</span></p>
                   <p className="text-purple-800">50% Off expiring in <span className="bg-purple-300 px-2 py-1 rounded text-sm font-bold">{formatTime(timeLeft)}</span></p>
@@ -679,93 +696,96 @@ const Viewdetails = () => {
                     </button>
                   </div>
                 </div>
-              </div> */}
-            </div>
-
-
-
               </div>
             </div>
-
-
           </div>
         </div>
       </div>
 
       {/* Image Slider Modal */}
       {isImageModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4  ">
-          <div className="relative w-250 h-80 mb-80  flex flex-col">
-            {/* Modal Header */}
-            <div className="flex justify-between items-center px-4 py-3 bg-black/50 rounded-t-lg h-1 mb-5">
-              <h3 className="text-white font-medium">
-                {modalImageIndex + 1} / {property.images?.length || 0}
-              </h3>
-              <button 
-                onClick={closeImageModal}
-                className="text-white hover:text-gray-300 transition p-2 cursor-pointer"
-                aria-label="Close modal"
-              >
-                <FiX size={24} />
-              </button>
-            </div>
+  <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+    <div className="relative w-full max-w-4xl h-full max-h-[80vh] flex flex-col">
+      {/* Modal Header */}
+      <div className="flex justify-between items-center px-4 py-3 bg-black/50 rounded-t-lg">
+        <h3 className="text-white font-medium">
+          {modalImageIndex + 1} / {property.images?.length || 0} - 
+          {property.images?.[modalImageIndex]?.type || 'Property Image'}
+        </h3>
+        <button 
+          onClick={closeImageModal}
+          className="text-white hover:text-gray-300 transition p-2 cursor-pointer"
+          aria-label="Close modal"
+        >
+          <FiX size={24} />
+        </button>
+      </div>
 
-            {/* Main Image Content */}
-            <div className="relative flex-1 flex items-center justify-center">
-              <button
-                onClick={goToPrevImage}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition z-10 cursor-pointer"
-                aria-label="Previous image"
-              >
-                <FiChevronLeftIcon size={24} />
-              </button>
+      {/* Main Image Content */}
+      <div className="relative flex-1 flex flex-col items-center justify-center">
+        <button
+          onClick={goToPrevImage}
+          className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition z-10 cursor-pointer"
+          aria-label="Previous image"
+        >
+          <FiChevronLeft size={24} />
+        </button>
 
-              <div className="h-full w-full flex items-center justify-center">
-                <img
-                  src={property.images?.[modalImageIndex] || 'https://via.placeholder.com/800x600?text=Image+Not+Available'}
-                  alt={`Property Image ${modalImageIndex + 1}`}
-                  className="max-w-full max-h-full object-contain"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Available';
-                  }}
-                />
-              </div>
-
-              <button
-                onClick={goToNextImage}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition z-10 cursor-pointer"
-                aria-label="Next image"
-              >
-                <FiChevronRight size={24} />
-              </button>
-            </div>
-
-            {/* Thumbnail Navigation */}
-            <div className="px-4 py-3 bg-black/50 rounded-b-lg">
-              <div className="flex overflow-x-auto space-x-2 justify-center py-2">
-                {property.images?.map((img, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setModalImageIndex(index)}
-                    className={`flex-shrink-0 w-12 h-12 rounded-md overflow-hidden transition-all ${
-                      index === modalImageIndex 
-                        ? 'ring-2 ring-white scale-110' 
-                        : 'opacity-70 hover:opacity-100'
-                    }`}
-                  >
-                    <img
-                      src={img}
-                      alt={`Thumbnail ${index}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+        <div className="h-full w-full flex items-center justify-center">
+          <img
+            src={property.images?.[modalImageIndex]?.url || property.images?.[modalImageIndex] || 'https://via.placeholder.com/800x600?text=Image+Not+Available'}
+            alt={`Property Image ${modalImageIndex + 1}`}
+            className="max-w-[80%] max-h-[70%] object-contain"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Available';
+            }}
+          />
         </div>
-      )}
+
+        {/* Room Type Display */}
+        <p className="text-white text-center mt-2 text-sm">
+          {property.images?.[modalImageIndex]?.roomType || 'Room Type Not Available'}
+        </p>
+
+        <button
+          onClick={goToNextImage}
+          className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition z-10 cursor-pointer"
+          aria-label="Next image"
+        >
+          <FiChevronRight size={24} />
+        </button>
+      </div>
+
+      {/* Thumbnail Navigation */}
+      <div className="px-4 py-3 bg-black/50 rounded-b-lg">
+        <div className="flex overflow-x-auto space-x-2 justify-center py-2">
+          {property.images?.map((img, index) => (
+            <button
+              key={index}
+              onClick={() => setModalImageIndex(index)}
+              className={`flex-shrink-0 w-12 h-12 rounded-md overflow-hidden transition-all ${
+                index === modalImageIndex 
+                  ? 'ring-2 ring-white scale-110' 
+                  : 'opacity-70 hover:opacity-100'
+              }`}
+            >
+              <img
+                src={img?.url || img}
+                alt={`Thumbnail ${index}`}
+                className="w-full h-full object-cover"
+              />
+              <div className="text-white text-xs text-center mt-1 truncate">
+                {img?.type || "Image"}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
     </>
   );
 };

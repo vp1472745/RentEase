@@ -9,11 +9,13 @@ import twilio from "twilio";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { GoogleGenerativeAI } from "@google/generative-ai"; // नया इम्पोर्ट
 
 import authRoutes from "./src/routes/authRoutes.js";
 import googleAuthRoutes from "./src/routes/Oauth-google.js";
 import propertyRoutes from "./src/routes/propertyRoute.js";
 import profileRoutes from "./src/routes/profileRoutes.js";
+
 
 dotenv.config();
 
@@ -58,6 +60,33 @@ connectDB();
 // ✅ Twilio OTP Setup
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 let phoneOtpDatabase = {};
+
+// ✅ Google Generative AI Setup
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+// 🔹 Gemini AI Text Generation Route
+app.post("/api/generate-text", async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    
+    if (!prompt) {
+      return res.status(400).json({ error: "Prompt is required" });
+    }
+
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    res.json({ generatedText: text });
+  } catch (error) {
+    console.error("AI Error:", error);
+    res.status(500).json({ 
+      error: "AI generation failed",
+      details: error.message 
+    });
+  }
+});
 
 // 🔹 Route to Send OTP
 app.post("/api/auth/send-phone-otp", async (req, res) => {
@@ -124,6 +153,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/auth/google", googleAuthRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/profile", profileRoutes);
+
 
 // ✅ Default Route
 app.get("/", (req, res) => {

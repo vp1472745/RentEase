@@ -10,8 +10,12 @@ import { authMiddleware, ownerOnly } from "../middleware/authMiddleware.js";
 import uploadMiddleware from "../middleware/multerMiddleware.js";
 import Property from "../models/property.js";
 import { readFile } from "fs/promises";
+import { GoogleGenerativeAI } from "@google/generative-ai"; // OpenAI की जगह Google Generative AI
 
 const router = express.Router();
+
+// ✅ Google Gemini AI Initialization (FREE)
+const genAI = new GoogleGenerativeAI("AIzaSyBlKO3DyscHHPdEE2Sp9qYaXrGNUj7wRjs");
 
 // ✅ Load Popular Localities JSON
 let popularLocalitiesData = {};
@@ -24,6 +28,50 @@ let popularLocalitiesData = {};
     console.error("❌ Error loading JSON:", error);
   }
 })();
+
+// ✅ AI Text Formatting Endpoint (Now using Google Gemini)
+router.post("/format-description", authMiddleware, async (req, res) => {
+  try {
+    const { text } = req.body;
+    
+    if (!text || typeof text !== "string") {
+      return res.status(400).json({ 
+        error: "Invalid input: Please provide a text description" 
+      });
+    }
+
+    const prompt = `Convert this informal property description into a well-structured, professional real estate listing in Hindi:
+    
+    Original: ${text}
+    
+    Formatted:
+    - Convert abbreviations to full words
+    - Fix grammar and punctuation
+    - Organize into logical paragraphs
+    - Highlight key features with bullet points
+    - Keep language professional but friendly
+    - Preserve all original information
+    - Use proper real estate terminology`;
+
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const formattedText = response.text();
+    
+    res.json({
+      success: true,
+      originalText: text,
+      formattedText: formattedText
+    });
+  } catch (error) {
+    console.error("AI formatting error:", error);
+    
+    res.status(500).json({ 
+      error: "Failed to format description",
+      details: error.message 
+    });
+  }
+});
 
 // ✅ Add New Property (Only Owner)
 router.post("/add", authMiddleware, ownerOnly, addProperty);
@@ -72,7 +120,6 @@ router.get("/search", async (req, res) => {
 router.get("/", getAllProperties);
 
 // ✅ Get Property By ID (Improved Error Handling)
-// Get single property by ID
 router.get('/:id', async (req, res) => {
   try {
     const property = await Property.findById(req.params.id);
