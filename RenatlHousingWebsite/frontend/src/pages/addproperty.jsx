@@ -8,6 +8,7 @@ import {
   FaArrowLeft,
   FaArrowRight,
   FaCheck,
+  FaVideo,
 } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { BsFillMicFill, BsStopFill } from "react-icons/bs";
@@ -21,6 +22,7 @@ const AddProperty = () => {
     city: "",
     state: "",
     images: [],
+    videos: [],
     propertyType: [],
     bhkType: [],
     furnishType: [],
@@ -52,7 +54,9 @@ const AddProperty = () => {
   });
 
   const [previewImages, setPreviewImages] = useState([]);
+  const [previewVideos, setPreviewVideos] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadingVideos, setUploadingVideos] = useState(false);
   const [step, setStep] = useState(1);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -224,10 +228,12 @@ const AddProperty = () => {
     }
 
     if (step === 4) {
-      if (formData.images.length === 0)
-        errors.images = "At least one image is required";
+      if (formData.images.length === 0 && formData.videos.length === 0)
+        errors.media = "At least one image or video is required";
       if (formData.images.length > 10)
         errors.images = "Maximum 10 images allowed";
+      if (formData.videos.length > 3)
+        errors.videos = "Maximum 3 videos allowed";
     }
 
     setValidationErrors(errors);
@@ -299,7 +305,10 @@ const AddProperty = () => {
       const newImageUrls = res.data.imageUrls || [];
       setFormData((prev) => ({
         ...prev,
-        images: [...prev.images, ...newImageUrls],
+        images: [
+          ...prev.images,
+          ...newImageUrls.map((url) => ({ url, type: "" })),
+        ],
       }));
       setPreviewImages((prev) => [...prev, ...newImageUrls]);
     } catch (error) {
@@ -316,6 +325,58 @@ const AddProperty = () => {
       }
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleVideoUpload = async (event) => {
+    const files = Array.from(event.target.files);
+    if (!files || files.length === 0) return;
+
+    if (formData.videos.length + files.length > 3) {
+      setError("Maximum 3 videos allowed");
+      return;
+    }
+
+    const uploadData = new FormData();
+    files.forEach((file) => {
+      uploadData.append("videos", file);
+    });
+
+    try {
+      setUploadingVideos(true);
+      setError(null);
+      const token = localStorage.getItem("token");
+      const res = await axios.post(
+        "/api/properties/upload-videos",
+        uploadData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const newVideoUrls = res.data.videoUrls || [];
+      setFormData((prev) => ({
+        ...prev,
+        videos: [...prev.videos, ...newVideoUrls],
+      }));
+      setPreviewVideos((prev) => [...prev, ...newVideoUrls]);
+    } catch (error) {
+      console.error("Video upload failed:", error);
+      if (error.response?.status === 401) {
+        setError("Session expired. Please login again.");
+        localStorage.removeItem("token");
+        setTimeout(() => navigate("/login"), 1500);
+      } else {
+        setError(
+          error.response?.data?.message ||
+            "Failed to upload videos. Please try again."
+        );
+      }
+    } finally {
+      setUploadingVideos(false);
     }
   };
 
@@ -345,6 +406,7 @@ const AddProperty = () => {
           (item) => `${item.name} (${item.distance} ${item.unit})`
         ),
         images: formData.images,
+        videos: formData.videos,
       };
 
       const response = await axios.post("/api/properties/add", submitData, {
@@ -363,6 +425,7 @@ const AddProperty = () => {
           city: "",
           state: "",
           images: [],
+          videos: [],
           propertyType: [],
           bhkType: [],
           furnishType: [],
@@ -393,6 +456,7 @@ const AddProperty = () => {
           bachelorAllowed: false,
         });
         setPreviewImages([]);
+        setPreviewVideos([]);
         navigate("/my-properties");
       }, 2000);
     } catch (error) {
@@ -435,7 +499,7 @@ const AddProperty = () => {
       ],
       2: ["area", "propertyType", "bhkType", "furnishType"],
       3: ["monthlyRent", "securityDeposit", "availableFrom"],
-      4: ["images"],
+      4: ["images", "videos"],
     };
 
     const currentStepFields = requiredFieldsByStep[step];
@@ -520,7 +584,7 @@ const AddProperty = () => {
                     {stepNumber === 1 && "Basic Information"}
                     {stepNumber === 2 && "Property Details"}
                     {stepNumber === 3 && "Rent & Facilities"}
-                    {stepNumber === 4 && "Upload Images"}
+                    {stepNumber === 4 && "Upload Media"}
                   </p>
                 </div>
               </div>
@@ -562,7 +626,7 @@ const AddProperty = () => {
                 {step === 1 && "Basic Information"}
                 {step === 2 && "Property Details"}
                 {step === 3 && "Rent & Facilities"}
-                {step === 4 && "Upload Images"}
+                {step === 4 && "Upload Media"}
               </p>
             </div>
           </div>
@@ -1104,53 +1168,61 @@ const AddProperty = () => {
             {step === 3 && (
               <div className="space-y-4">
                 <div>
-    <label className="block text-sm font-bold text-purple-800 mb-1">
-      Facilities
-    </label>
-    
-    {/* Select All checkbox */}
-    <label className="inline-flex items-center cursor-pointer mb-2">
-      <input
-        type="checkbox"
-        checked={formData.facilities.length === facilityOptions.length}
-        onChange={() => {
-          if (formData.facilities.length === facilityOptions.length) {
-            // If all are selected, deselect all
-            setFormData(prev => ({ ...prev, facilities: [] }));
-          } else {
-            // If not all selected, select all
-            setFormData(prev => ({
-              ...prev,
-              facilities: facilityOptions.map(option => option.value)
-            }));
-          }
-        }}
-        className="h-4 w-4 text-purple-800 border-purple-800 rounded focus:ring-purple-800 cursor-pointer checked:bg-purple-800"
-      />
-      <span className="ml-2 text-sm font-bold text-purple-800">Select All</span>
-    </label>
+                  <label className="block text-sm font-bold text-purple-800 mb-1">
+                    Facilities
+                  </label>
 
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-      {facilityOptions.map((option) => (
-        <label
-          key={option.value}
-          className="inline-flex items-center cursor-pointer"
-        >
-          <input
-            type="checkbox"
-            checked={formData.facilities.includes(option.value)}
-            onChange={() =>
-              handleMultiSelect("facilities", option.value)
-            }
-            className="h-4 w-4 text-purple-800 border-purple-800 rounded focus:ring-purple-800 cursor-pointer checked:bg-purple-800"
-          />
-          <span className="ml-2 text-sm text-purple-800">
-            {option.display}
-          </span>
-        </label>
-      ))}
-    </div>
-  </div>
+                  {/* Select All checkbox */}
+                  <label className="inline-flex items-center cursor-pointer mb-2">
+                    <input
+                      type="checkbox"
+                      checked={
+                        formData.facilities.length === facilityOptions.length
+                      }
+                      onChange={() => {
+                        if (
+                          formData.facilities.length === facilityOptions.length
+                        ) {
+                          // If all are selected, deselect all
+                          setFormData((prev) => ({ ...prev, facilities: [] }));
+                        } else {
+                          // If not all selected, select all
+                          setFormData((prev) => ({
+                            ...prev,
+                            facilities: facilityOptions.map(
+                              (option) => option.value
+                            ),
+                          }));
+                        }
+                      }}
+                      className="h-4 w-4 text-purple-800 border-purple-800 rounded focus:ring-purple-800 cursor-pointer checked:bg-purple-800"
+                    />
+                    <span className="ml-2 text-sm font-bold text-purple-800">
+                      Select All
+                    </span>
+                  </label>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                    {facilityOptions.map((option) => (
+                      <label
+                        key={option.value}
+                        className="inline-flex items-center cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={formData.facilities.includes(option.value)}
+                          onChange={() =>
+                            handleMultiSelect("facilities", option.value)
+                          }
+                          className="h-4 w-4 text-purple-800 border-purple-800 rounded focus:ring-purple-800 cursor-pointer checked:bg-purple-800"
+                        />
+                        <span className="ml-2 text-sm text-purple-800">
+                          {option.display}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
                     {
@@ -1274,118 +1346,239 @@ const AddProperty = () => {
               </div>
             )}
 
-            {/* Step 4: Upload Images */}
+            {/* Step 4: Upload Media */}
             {step === 4 && (
               <div className="space-y-4">
-                <label className="block text-sm font-bold text-purple-800 mb-1">
-                  Upload Images (Max 10) <span className="text-red-500">*</span>
-                </label>
+                {/* Images Section */}
+                <div>
+                  <label className="block text-sm font-bold text-purple-800 mb-1">
+                    Upload Images (Max 10)
+                  </label>
 
-                <div className="relative border-2 border-dashed border-purple-800 rounded-lg p-6 text-center hover:border-purple-600 transition cursor-pointer">
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    disabled={uploading}
-                  />
-                  <div className="flex flex-col items-center justify-center">
-                    <FaCamera className="text-purple-800 text-3xl mb-2" />
-                    <p className="text-sm text-purple-800">
-                      {uploading
-                        ? "Uploading..."
-                        : "Click to browse or drag and drop images"}
+                  <div className="relative border-2 border-dashed border-purple-800 rounded-lg p-6 text-center hover:border-purple-600 transition cursor-pointer mb-4">
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      disabled={uploading}
+                    />
+                    <div className="flex flex-col items-center justify-center">
+                      <FaCamera className="text-purple-800 text-3xl mb-2" />
+                      <p className="text-sm text-purple-800">
+                        {uploading
+                          ? "Uploading..."
+                          : "Click to browse or drag and drop images"}
+                      </p>
+                      <p className="text-xs text-purple-600 mt-1">
+                        JPEG, PNG (Max 5MB each)
+                      </p>
+                    </div>
+                  </div>
+
+                  {validationErrors.images && (
+                    <p className="text-sm text-red-600">
+                      {validationErrors.images}
                     </p>
-                    <p className="text-xs text-purple-600 mt-1">
-                      JPEG, PNG (Max 5MB each)
-                    </p>
+                  )}
+
+                  {uploading && (
+                    <div className="text-purple-800 flex items-center mb-4">
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-purple-800"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Uploading images...
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-4">
+                    {previewImages.map((src, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={src}
+                          alt="preview"
+                          className="w-full h-32 object-cover rounded-md border border-purple-800"
+                        />
+
+                        {/* Dropdown for selecting image category */}
+                        <select
+                          className="w-full mt-2 p-1 border border-purple-800 rounded-md text-sm"
+                          value={formData.images[index]?.type || ""}
+                          onChange={(e) => {
+                            const newImages = [...formData.images];
+                            newImages[index] = {
+                              url: src,
+                              type: e.target.value,
+                            };
+                            setFormData((prev) => ({
+                              ...prev,
+                              images: newImages,
+                            }));
+                          }}
+                        >
+                          <option value="bedroom">Bedroom</option>
+                          <option value="master-bedroom">Master Bedroom</option>
+                          <option value="guest-bedroom">Guest Bedroom</option>
+                          <option value="kids-bedroom">Kids Bedroom</option>
+                          <option value="kitchen">Kitchen</option>
+                          <option value="drawing-room">Drawing Room</option>
+                          <option value="living-room">Living Room</option>
+                          <option value="dining-room">Dining Room</option>
+                          <option value="bathroom">Bathroom</option>
+                          <option value="toilet">Toilet</option>
+                          <option value="balcony">Balcony</option>
+                          <option value="study-room">Study Room</option>
+                          <option value="puja-room">Puja Room</option>
+                          <option value="store-room">Store Room</option>
+                        </select>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPreviewImages((prev) =>
+                              prev.filter((_, i) => i !== index)
+                            );
+                            setFormData((prev) => ({
+                              ...prev,
+                              images: prev.images.filter((_, i) => i !== index),
+                            }));
+                          }}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                          title="Remove image"
+                        >
+                          <FaTrash size={10} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="text-sm text-purple-800 mt-2">
+                    {previewImages.length} of 10 images uploaded
                   </div>
                 </div>
 
-                {validationErrors.images && (
-                  <p className="text-sm text-red-600">
-                    {validationErrors.images}
+                {/* Videos Section */}
+                <div className="mt-8">
+                  <label className="block text-sm font-bold text-purple-800 mb-1">
+                    Upload Videos (Max 3)
+                  </label>
+
+                  <div className="relative border-2 border-dashed border-purple-800 rounded-lg p-6 text-center hover:border-purple-600 transition cursor-pointer">
+                    <input
+                      type="file"
+                      multiple
+                      accept="video/*"
+                      onChange={handleVideoUpload}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      disabled={uploadingVideos}
+                    />
+                    <div className="flex flex-col items-center justify-center">
+                      <FaVideo className="text-purple-800 text-3xl mb-2" />
+                      <p className="text-sm text-purple-800">
+                        {uploadingVideos
+                          ? "Uploading..."
+                          : "Click to browse or drag and drop videos"}
+                      </p>
+                      <p className="text-xs text-purple-600 mt-1">
+                        MP4, MOV (Max 20MB each)
+                      </p>
+                    </div>
+                  </div>
+
+                  {validationErrors.videos && (
+                    <p className="text-sm text-red-600">
+                      {validationErrors.videos}
+                    </p>
+                  )}
+
+                  {uploadingVideos && (
+                    <div className="text-purple-800 flex items-center mt-2">
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-purple-800"
+                        xmlns="http://www.w3.org/3000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Uploading videos...
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                    {previewVideos.map((src, index) => (
+                      <div key={index} className="relative group">
+                        <div className="w-full h-48 bg-gray-100 rounded-md border border-purple-800 overflow-hidden">
+                          <video
+                            src={src}
+                            controls
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPreviewVideos((prev) =>
+                              prev.filter((_, i) => i !== index)
+                            );
+                            setFormData((prev) => ({
+                              ...prev,
+                              videos: prev.videos.filter((_, i) => i !== index),
+                            }));
+                          }}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                          title="Remove video"
+                        >
+                          <FaTrash size={10} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="text-sm text-purple-800 mt-2">
+                    {previewVideos.length} of 3 videos uploaded
+                  </div>
+                </div>
+
+                {(validationErrors.media ||
+                  validationErrors.images ||
+                  validationErrors.videos) && (
+                  <p className="text-sm text-red-600 mt-2">
+                    {validationErrors.media ||
+                      validationErrors.images ||
+                      validationErrors.videos}
                   </p>
                 )}
-
-                {uploading && (
-                  <div className="text-purple-800 flex items-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-purple-800"
-                      xmlns="http://www.w3.org/3000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Uploading images...
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-4">
-                  {previewImages.map((src, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={src}
-                        alt="preview"
-                        className="w-full h-32 object-cover rounded-md border border-purple-800"
-                      />
-
-                      {/* Dropdown for selecting image category */}
-                      <select
-                        className="w-full mt-2 p-1 border border-purple-800 rounded-md text-sm"
-                        value={formData.images[index]?.type || ""}
-                        onChange={(e) => {
-                          const newImages = [...formData.images];
-                          newImages[index] = { url: src, type: e.target.value };
-                          setFormData((prev) => ({
-                            ...prev,
-                            images: newImages,
-                          }));
-                        }}
-                      >
-                        <option value="">Select Room Type</option>
-                        <option value="bedroom">Bedroom</option>
-                        <option value="kitchen">Kitchen</option>
-                        <option value="drawing-room">Drawing Room</option>
-                      </select>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPreviewImages((prev) =>
-                            prev.filter((_, i) => i !== index)
-                          );
-                          setFormData((prev) => ({
-                            ...prev,
-                            images: prev.images.filter((_, i) => i !== index),
-                          }));
-                        }}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
-                        title="Remove image"
-                      >
-                        <FaTrash size={10} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="text-sm text-purple-800 mt-2">
-                  {previewImages.length} of 10 images uploaded
-                </div>
               </div>
             )}
 
@@ -1418,11 +1611,18 @@ const AddProperty = () => {
                 <button
                   type="submit"
                   className={`flex items-center px-4 py-2 bg-purple-800 text-white rounded-md hover:bg-green-700 transition cursor-pointer ${
-                    uploading ? "opacity-50 cursor-not-allowed" : ""
+                    uploading || uploadingVideos
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
                   }`}
-                  disabled={uploading || formData.images.length === 0}
+                  disabled={
+                    uploading ||
+                    uploadingVideos ||
+                    (formData.images.length === 0 &&
+                      formData.videos.length === 0)
+                  }
                 >
-                  {uploading ? (
+                  {uploading || uploadingVideos ? (
                     <>
                       <svg
                         className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
