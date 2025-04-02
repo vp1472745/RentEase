@@ -328,58 +328,53 @@ const AddProperty = () => {
     }
   };
 
-  const handleVideoUpload = async (event) => {
-    const files = Array.from(event.target.files);
-    if (!files || files.length === 0) return;
-
-    if (formData.videos.length + files.length > 3) {
-      setError("Maximum 3 videos allowed");
+  const handleVideoUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    
+    // वैलिडेशन
+    if (files.length > 3 || formData.videos.length + files.length > 3) {
+      setValidationErrors({...validationErrors, videos: "Maximum 3 videos allowed"});
       return;
     }
-
-    const uploadData = new FormData();
-    files.forEach((file) => {
-      uploadData.append("videos", file);
-    });
-
+  
+    setUploadingVideos(true);
+  
     try {
-      setUploadingVideos(true);
-      setError(null);
-      const token = localStorage.getItem("token");
-      const res = await axios.post(
-        "/api/properties/upload-videos",
-        uploadData,
-        {
+      const uploadPromises = files.map(async (file) => {
+        const formData = new FormData();
+        formData.append('video', file);
+        
+        const response = await axios.post('/api/videos/upload', formData, {
           headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const newVideoUrls = res.data.videoUrls || [];
-      setFormData((prev) => ({
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        return response.data.videoUrl; // बैकएंड से मिले URL का उपयोग करें
+      });
+  
+      const uploadedUrls = await Promise.all(uploadPromises);
+      
+      // स्टेट अपडेट करें
+      setFormData(prev => ({
         ...prev,
-        videos: [...prev.videos, ...newVideoUrls],
+        videos: [...prev.videos, ...uploadedUrls]
       }));
-      setPreviewVideos((prev) => [...prev, ...newVideoUrls]);
+      
+      // प्रीव्यू के लिए (अस्थायी URL)
+      const previewUrls = files.map(file => URL.createObjectURL(file));
+      setPreviewVideos(prev => [...prev, ...previewUrls]);
+  
     } catch (error) {
-      console.error("Video upload failed:", error);
-      if (error.response?.status === 401) {
-        setError("Session expired. Please login again.");
-        localStorage.removeItem("token");
-        setTimeout(() => navigate("/login"), 1500);
-      } else {
-        setError(
-          error.response?.data?.message ||
-            "Failed to upload videos. Please try again."
-        );
-      }
+      console.error("Upload error:", error);
+      setValidationErrors({
+        ...validationErrors, 
+        videos: error.response?.data?.message || "Video upload failed"
+      });
     } finally {
       setUploadingVideos(false);
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);

@@ -1,64 +1,91 @@
-const Video = require('../models/videosModel');
-const fs = require('fs');
-const path = require('path');
-const ffmpeg = require('fluent-ffmpeg');
+import Video from "../models/videoModel.js";
+import fs from "fs/promises";
+import path from "path";
 
-exports.uploadVideo = async (req, res) => {
+// 🎥 Upload Video
+export const uploadVideo = async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ error: 'No video uploaded' });
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: "No video file uploaded" });
+    }
 
-    const { originalname, filename, path: filePath, size, mimetype } = req.file;
-    
-    // Generate thumbnail
-    const thumbnailPath = path.join('uploads', 'thumbnails', `${filename}.jpg`);
-    await new Promise((resolve) => {
-      ffmpeg(filePath)
-        .screenshots({ count: 1, folder: path.dirname(thumbnailPath), filename: path.basename(thumbnailPath) })
-        .on('end', resolve);
-    });
+    const videoData = {
+      title: req.body.title || path.parse(req.file.originalname).name,
+      filename: req.file.filename,
+      url: `/uploads/videos/${req.file.filename}`,
+      mimetype: req.file.mimetype,
+      size: req.file.size
+    };
 
-    const video = new Video({
-      title: originalname,
-      filename,
-      path: filePath,
-      size,
-      mimetype,
-      thumbnail: thumbnailPath,
-      owner: req.user._id
-    });
-    await video.save();
+    const video = await Video.create(videoData);
+    return res.status(201).json({ success: true, data: video });
 
-    res.status(201).json(video);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error("Upload error:", error);
+    return res.status(500).json({ success: false, error: "Failed to upload video" });
   }
 };
 
-exports.streamVideo = async (req, res) => {
+// 🎥 Stream Video
+export const streamVideo = async (req, res) => {
   try {
     const video = await Video.findById(req.params.id);
-    if (!video) return res.status(404).json({ error: 'Video not found' });
+    if (!video) return res.status(404).json({ success: false, error: "Video not found" });
 
+    const videoPath = path.resolve(`uploads/videos/${video.filename}`);
+    await fs.access(videoPath);
+
+    const { size } = await fs.stat(videoPath);
     const range = req.headers.range;
-    if (!range) return res.status(400).json({ error: 'Requires Range header' });
 
-    const videoPath = video.path;
-    const videoSize = fs.statSync(videoPath).size;
-    const chunkSize = 10 ** 6; // 1MB
-    const start = Number(range.replace(/\D/g, ''));
-    const end = Math.min(start + chunkSize, videoSize - 1);
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : size - 1;
+      const chunkSize = end - start + 1;
 
-    res.writeHead(206, {
-      'Content-Range': `bytes ${start}-${end}/${videoSize}`,
-      'Accept-Ranges': 'bytes',
-      'Content-Length': end - start + 1,
-      'Content-Type': video.mimetype
-    });
+      res.writeHead(206, {
+        "Content-Range": `bytes ${start}-${end}/${size}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": chunkSize,
+        "Content-Type": video.mimetype
+      });
 
-    fs.createReadStream(videoPath, { start, end }).pipe(res);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+      fs.createReadStream(videoPath, { start, end }).pipe(res);
+    } else {
+      res.writeHead(200, { "Content-Length": size, "Content-Type": video.mimetype });
+      fs.createReadStream(videoPath).pipe(res);
+    }
+  } catch (error) {
+    console.error("Streaming error:", error);
+    return res.status(500).json({ success: false, error: "Failed to stream video" });
   }
 };
 
-// Add other CRUD operations as needed
+// 📜 Get Video Details
+export const getVideoDetails = async (req, res) => {
+  try {
+    const video = await Video.findById(req.params.id);
+    if (!video) return res.status(404).json({ success: false, error: "Video not found" });
+
+    return res.json({ success: true, data: video });
+  } catch (error) {
+    console.error("Details error:", error);
+    return res.status(500).json({ success: false, error: "Failed to fetch video details" });
+  }
+};
+
+// ❌ Delete Video
+export const deleteVideo = async (req, res) => {
+  try {
+    const video = await Video.findByIdAndDelete(req.params.id);
+    if (!video) return res.status(404).json({ success: false, error: "Video not found" });
+
+    await fs.unlink(`uploads/videos/${video.filename}`).catch(err => console.error("Delete error:", err));
+
+    return res.json({ success: true, message: "Video deleted successfully" });
+  } catch (error) {
+    console.error("Delete error:", error);
+    return res.status(500).json({ success: false, error: "Failed to delete video" });
+  }
+};

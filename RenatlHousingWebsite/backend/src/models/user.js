@@ -8,7 +8,9 @@ const UserSchema = new mongoose.Schema({
   isVerified: { type: Boolean, default: false },  // OTP verification status
   otp: { type: String, default: "" },  // Store OTP temporarily for verification
   otpExpiration: { type: Date },  // Expiration time for OTP
+  
   profileImage: { type: String, default: "" },  // ✅ Profile image field (URL of the uploaded image)
+  isActive: { type: Boolean, default: true } // 👈 ये field add करो
 });
 
 const User = mongoose.model("User", UserSchema);

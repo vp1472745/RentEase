@@ -50,8 +50,9 @@ function Properties() {
           ? res.data.map(property => ({
               ...property,
               images: property.images.map(img => 
-                typeof img === 'string' ? { url: img, type: '' } : img
-              )
+                typeof img === 'string' ? { url: img, type: 'image' } : img
+              ),
+              videos: property.videos || [] // Ensure videos array exists
             }))
           : [];
           
@@ -151,14 +152,16 @@ function Properties() {
   };
 
   const goToPrevImage = () => {
+    const mediaItems = [...currentProperty.images, ...currentProperty.videos];
     setCurrentImageIndex((prev) =>
-      prev === 0 ? currentProperty.images.length - 1 : prev - 1
+      prev === 0 ? mediaItems.length - 1 : prev - 1
     );
   };
 
   const goToNextImage = () => {
+    const mediaItems = [...currentProperty.images, ...currentProperty.videos];
     setCurrentImageIndex((prev) =>
-      prev === currentProperty.images.length - 1 ? 0 : prev + 1
+      prev === mediaItems.length - 1 ? 0 : prev + 1
     );
   };
 
@@ -184,6 +187,17 @@ function Properties() {
       return;
     }
     window.open(`tel:${phoneNumber}`);
+  };
+
+  // Combine images and videos for display
+  const getMediaItems = (property) => {
+    return [
+      ...(property.images || []),
+      ...(property.videos || []).map(video => ({
+        url: video,
+        type: 'video'
+      }))
+    ];
   };
 
   return (
@@ -347,127 +361,139 @@ function Properties() {
           </div>
         ) : filteredProperties.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 max-w-5xl mx-auto pb-20">
-            {filteredProperties.map((property) => (
-              <div
-                key={property._id}
-                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
-              >
-                <div className="flex flex-col md:flex-row">
-                  {/* Property Image */}
-                  <div className="relative md:w-2/5">
-                    <img
-                      src={property.images[0]?.url || property.images[0]}
-                      alt={property.title}
-                      className="w-full h-48 md:h-full object-cover cursor-pointer"
-                      onClick={() => openGallery(property, 0)}
-                    />
-                    <div className="absolute top-4 right-4 flex space-x-2">
-                      <button
-                        className={`p-2 rounded-full shadow-md transition ${
-                          favorites[property._id]
-                            ? "text-red-500 bg-white"
-                            : "bg-white text-gray-700"
-                        }`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFavorite(property._id);
-                        }}
-                      >
-                        <FiHeart
-                          className={`${
-                            favorites[property._id] ? "fill-current" : ""
-                          }`}
+            {filteredProperties.map((property) => {
+              const mediaItems = getMediaItems(property);
+              return (
+                <div
+                  key={property._id}
+                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+                >
+                  <div className="flex flex-col md:flex-row">
+                    {/* Property Image/Video */}
+                    <div className="relative md:w-2/5">
+                      {mediaItems[0]?.type === 'video' ? (
+                        <video
+                          src={mediaItems[0].url}
+                          className="w-full h-48 md:h-full object-cover cursor-pointer"
+                          onClick={() => openGallery(property, 0)}
+                          controls
                         />
-                      </button>
-                      <button
-                        className="bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          shareOnWhatsApp(property);
-                        }}
-                      >
-                        <FiShare2 />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Property Details */}
-                  <div className="p-4 md:p-6 md:w-3/5">
-                    <h3 className="text-lg font-semibold text-purple-800 mb-2">
-                      {property.bhkType} {property.propertyType} in {property.popularLocality}
-                    </h3>
-
-                    <div className="grid grid-cols-2 gap-4 mb-3">
-                      <div>
-                        <p className="text-sm text-gray-600">City</p>
-                        <p className="font-semibold">{property.city}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Nearby</p>
-                        <p className="font-semibold whitespace-pre-line">
-                          {String(property.nearby || "").replace(/,/g, "\n")}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Rent</p>
-                        <p className="font-semibold">₹{property.monthlyRent}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Deposit</p>
-                        <p className="font-semibold">₹{property.securityDeposit}</p>
+                      ) : (
+                        <img
+                          src={mediaItems[0]?.url}
+                          alt={property.title}
+                          className="w-full h-48 md:h-full object-cover cursor-pointer"
+                          onClick={() => openGallery(property, 0)}
+                        />
+                      )}
+                      <div className="absolute top-4 right-4 flex space-x-2">
+                        <button
+                          className={`p-2 rounded-full shadow-md transition ${
+                            favorites[property._id]
+                              ? "text-red-500 bg-white"
+                              : "bg-white text-gray-700"
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(property._id);
+                          }}
+                        >
+                          <FiHeart
+                            className={`${
+                              favorites[property._id] ? "fill-current" : ""
+                            }`}
+                          />
+                        </button>
+                        <button
+                          className="bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            shareOnWhatsApp(property);
+                          }}
+                        >
+                          <FiShare2 />
+                        </button>
                       </div>
                     </div>
 
-                    <div className="mb-3">
-                      <p className="text-sm text-gray-600">Furnishing</p>
-                      <p className="font-semibold">{property.furnishType}</p>
-                    </div>
+                    {/* Property Details */}
+                    <div className="p-4 md:p-6 md:w-3/5">
+                      <h3 className="text-lg font-semibold text-purple-800 mb-2">
+                        {property.bhkType} {property.propertyType} in {property.popularLocality}
+                      </h3>
 
-                    {property.facilities && (
-                      <div className="mb-3">
-                        <p className="text-sm text-gray-600">Facilities</p>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {Array.isArray(property.facilities) ? (
-                            property.facilities.slice(0, 3).map((facility, index) => (
-                              <span
-                                key={index}
-                                className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs"
-                              >
-                                {facility}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">
-                              {property.facilities}
-                            </span>
-                          )}
-                          {property.facilities.length > 3 && (
-                            <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">
-                              +{property.facilities.length - 3} more
-                            </span>
-                          )}
+                      <div className="grid grid-cols-2 gap-4 mb-3">
+                        <div>
+                          <p className="text-sm text-gray-600">City</p>
+                          <p className="font-semibold">{property.city}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Nearby</p>
+                          <p className="font-semibold whitespace-pre-line">
+                            {String(property.nearby || "").replace(/,/g, "\n")}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Rent</p>
+                          <p className="font-semibold">₹{property.monthlyRent}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Deposit</p>
+                          <p className="font-semibold">₹{property.securityDeposit}</p>
                         </div>
                       </div>
-                    )}
 
-                    <div className="flex flex-col sm:flex-row gap-3 mt-4">
-                      <button
-                        onClick={() => navigate(`/property/${property._id}`)}
-                        className="flex-1 bg-purple-800 text-white py-2 rounded-lg hover:bg-purple-900 transition"
-                      >
-                        View Details
-                      </button>
-                      <button
-                        onClick={() => contactOwner(property.ownerphone)}
-                        className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
-                      >
-                        <FiPhone /> Contact
-                      </button>
+                      <div className="mb-3">
+                        <p className="text-sm text-gray-600">Furnishing</p>
+                        <p className="font-semibold">{property.furnishType}</p>
+                      </div>
+
+                      {property.facilities && (
+                        <div className="mb-3">
+                          <p className="text-sm text-gray-600">Facilities</p>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {Array.isArray(property.facilities) ? (
+                              property.facilities.slice(0, 3).map((facility, index) => (
+                                <span
+                                  key={index}
+                                  className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs"
+                                >
+                                  {facility}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">
+                                {property.facilities}
+                              </span>
+                            )}
+                            {property.facilities.length > 3 && (
+                              <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">
+                                +{property.facilities.length - 3} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                        <button
+                          onClick={() => navigate(`/property/${property._id}`)}
+                          className="flex-1 bg-purple-800 text-white py-2 rounded-lg hover:bg-purple-900 transition"
+                        >
+                          View Details
+                        </button>
+                        <button
+                          onClick={() => contactOwner(property.ownerphone)}
+                          className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
+                        >
+                          <FiPhone /> Contact
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="flex justify-center items-center h-64">
@@ -480,7 +506,7 @@ function Properties() {
         )}
       </div>
 
-      {/* Image Gallery Modal */}
+      {/* Media Gallery Modal */}
       {isGalleryOpen && currentProperty && (
         <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex flex-col items-center justify-center p-4">
           <button
@@ -493,7 +519,7 @@ function Properties() {
           <div className="relative w-full max-w-4xl h-full max-h-[70vh] flex flex-col items-center justify-center">
             <div className="w-full text-center mb-4">
               <p className="text-white text-lg font-bold">
-                {currentProperty.images[currentImageIndex]?.type || "Property Image"}
+                {currentImageIndex + 1} of {[...currentProperty.images, ...currentProperty.videos].length}
               </p>
             </div>
             
@@ -505,11 +531,34 @@ function Properties() {
                 <FiChevronLeft size={24} />
               </button>
 
-              <img
-                src={currentProperty.images[currentImageIndex]?.url || currentProperty.images[currentImageIndex]}
-                alt={`Property ${currentImageIndex + 1}`}
-                className="max-w-full max-h-full object-contain rounded-lg"
-              />
+              {[...currentProperty.images, ...currentProperty.videos].map((item, index) => {
+                const isVideo = index >= currentProperty.images.length;
+                const url = isVideo ? currentProperty.videos[index - currentProperty.images.length] : item.url;
+                
+                return (
+                  <div 
+                    key={index}
+                    className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
+                      index === currentImageIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                    }`}
+                  >
+                    {isVideo ? (
+                      <video
+                        src={url}
+                        className="max-w-full max-h-full object-contain rounded-lg"
+                        controls
+                        autoPlay={index === currentImageIndex}
+                      />
+                    ) : (
+                      <img
+                        src={url}
+                        alt={`Property media ${index + 1}`}
+                        className="max-w-full max-h-full object-contain rounded-lg"
+                      />
+                    )}
+                  </div>
+                );
+              })}
 
               <button
                 onClick={goToNextImage}
@@ -520,31 +569,42 @@ function Properties() {
             </div>
           </div>
 
-          <div className="mt-4 text-white text-center">
-            <p className="text-lg">
-              {currentImageIndex + 1} / {currentProperty.images.length}
-            </p>
-          </div>
-
           {/* Thumbnail navigation */}
           <div className="flex gap-2 overflow-x-auto max-w-full px-4 py-2">
-            {currentProperty.images.map((img, index) => (
-              <div key={index} className="flex flex-col items-center">
-                <img
-                  src={img?.url || img}
-                  alt={`Thumbnail ${index + 1}`}
-                  className={`w-12 h-12 object-cover rounded cursor-pointer ${
-                    currentImageIndex === index
-                      ? "ring-2 ring-blue-500"
-                      : "opacity-70"
-                  }`}
-                  onClick={() => setCurrentImageIndex(index)}
-                />
-                <span className="text-white text-xs mt-1">
-                  {img?.type || "Image"}
-                </span>
-              </div>
-            ))}
+            {[...currentProperty.images, ...currentProperty.videos].map((item, index) => {
+              const isVideo = index >= currentProperty.images.length;
+              const url = isVideo ? currentProperty.videos[index - currentProperty.images.length] : item.url;
+              
+              return (
+                <div key={index} className="flex flex-col items-center">
+                  {isVideo ? (
+                    <video
+                      src={url}
+                      className={`w-12 h-12 object-cover rounded cursor-pointer ${
+                        currentImageIndex === index
+                          ? "ring-2 ring-blue-500"
+                          : "opacity-70"
+                      }`}
+                      onClick={() => setCurrentImageIndex(index)}
+                    />
+                  ) : (
+                    <img
+                      src={url}
+                      alt={`Thumbnail ${index + 1}`}
+                      className={`w-12 h-12 object-cover rounded cursor-pointer ${
+                        currentImageIndex === index
+                          ? "ring-2 ring-blue-500"
+                          : "opacity-70"
+                      }`}
+                      onClick={() => setCurrentImageIndex(index)}
+                    />
+                  )}
+                  <span className="text-white text-xs mt-1">
+                    {isVideo ? "Video" : "Image"}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

@@ -1,25 +1,38 @@
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
-const uploadDir = path.join(__dirname, '../../uploads/videos');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+// Ensure upload directory exists
+const uploadDir = "uploads/videos/";
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
+// Multer storage configuration
 const storage = multer.diskStorage({
-  destination: uploadDir,
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
   filename: (req, file, cb) => {
-    const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
 
+// File filter (only videos)
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg'];
-  allowedTypes.includes(file.mimetype) ? cb(null, true) : cb(new Error('Invalid file type'), false);
+  const allowedTypes = ["video/mp4", "video/webm", "video/mkv", "video/avi"];
+  if (!allowedTypes.includes(file.mimetype)) {
+    return cb(new Error("Invalid file type. Only video files are allowed."));
+  }
+  cb(null, true);
 };
 
-module.exports = multer({
+// Multer instance
+const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 500 * 1024 * 1024 } // 500MB
+  limits: { fileSize: 200 * 1024 * 1024 } // 200MB limit
 });
+
+export default upload;

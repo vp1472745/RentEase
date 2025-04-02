@@ -35,6 +35,11 @@ const propertySchema = new mongoose.Schema(
         );
       }
     },
+
+    videos: [{
+      url: String,
+      type: { type: String, default: 'video' }
+    }],
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
