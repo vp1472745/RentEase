@@ -36,10 +36,36 @@ const propertySchema = new mongoose.Schema(
       }
     },
 
-    videos: [{
-      url: String,
-      type: { type: String, default: 'video' }
-    }],
+ // In your Property model (backend)
+ videos: {
+  type: [{
+    url: { 
+      type: String, 
+      required: true,
+      validate: {
+        validator: function(v) {
+          return /^https?:\/\/.+\..+/.test(v);
+        },
+        message: props => `${props.value} is not a valid video URL!`
+      }
+    },
+    public_id: { 
+      type: String, 
+      required: true 
+    },
+    type: { 
+      type: String, 
+      default: "video" 
+    }
+  }],
+  validate: {
+    validator: function(v) {
+      // Allow empty array or array with valid video objects
+      return v.every(video => video.url && video.public_id);
+    },
+    message: "Videos must have both URL and public_id"
+  }
+},
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

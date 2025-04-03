@@ -1,64 +1,74 @@
-import express from 'express';
-import uploadMiddleware from '../middleware/videoUploadMiddleware.js';
-import { authMiddleware } from "../middleware/authMiddleware.js";
-import Video from "../models/videosModel.js";  // ✅ Import Video Schema
+import { EventEmitter } from 'events';
+EventEmitter.defaultMaxListeners = 15;
+
+import express from "express";
+import { authMiddleware, ownerOnly } from "../middleware/authMiddleware.js";
+import Property from "../models/property.js";
 
 const router = express.Router();
 
-// ✅ Video Upload Route
-router.post('/upload', authMiddleware, uploadMiddleware.single('video'), async (req, res) => {
+// Helper function to validate URLs
+function isValidUrl(string) {
   try {
-    console.log('✅ Request Body:', req.body);
-    console.log('📂 Uploaded File:', req.file);
+    new URL(string);
+    return true;
+  } catch (_) {
+    return false;  
+  }
+}
 
-    if (!req.file) {
-      return res.status(400).json({ error: '❌ No file uploaded' });
+// Save Cloudinary video URL to property
+router.post('/api/properties/save-video', authMiddleware, async (req, res) => {
+  try {
+    const { propertyId, videoUrl } = req.body;
+
+    // Input validation
+    if (!propertyId || !videoUrl) {
+      return res.status(400).json({ 
+        success: false,
+        error: "propertyId and videoUrl are required" 
+      });
     }
 
-    // ✅ MongoDB me video save karna
-    const videoUrl = `/uploads/videos/${req.file.filename}`;
-    const newVideo = new Video({
-      url: videoUrl,
-      filename: req.file.filename,
-      text:"vineet"
-    });
+    if (!isValidUrl(videoUrl)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid video URL format"
+      });
+    }
 
-    await newVideo.save();  // 🔥 Database me save karna
+    // Update property with new video
+    const property = await Property.findByIdAndUpdate(
+      propertyId,
+      { 
+        $push: { 
+          videos: { 
+            url: videoUrl, 
+            uploadedAt: new Date() 
+          } 
+        } 
+      },
+      { new: true }
+    );
 
-    console.log("✅ Saved video:", newVideo);  // 🔥 Debugging ke liye log
+    if (!property) {
+      return res.status(404).json({
+        success: false,
+        error: "Property not found"
+      });
+    }
 
     res.status(200).json({ 
       success: true, 
-      message: '✅ Video uploaded!', 
-      file: req.file, 
-      videoUrl: `http://localhost:5000${videoUrl}` 
+      property 
     });
 
   } catch (error) {
-    console.error("❌ Upload error:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-// ✅ Dummy Data Insert Route
-router.post('/add-dummy-video', async (req, res) => {
-  try {
-    const dummyVideo = new Video({
-      url: '/uploads/videos/dummy-video.mp4',
-      filename: 'dummy-video.mp4'
+    console.error("Error saving video:", error);
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to save video" 
     });
-    
-    await dummyVideo.save();
-    console.log("✅ Dummy video added:", dummyVideo);
-    
-    res.status(200).json({ 
-      success: true, 
-      message: '✅ Dummy video added!', 
-      data: dummyVideo
-    });
-  } catch (error) {
-    console.error("❌ Error adding dummy video:", error);
-    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 

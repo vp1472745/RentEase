@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FaGooglePlay, FaApple } from "react-icons/fa";
@@ -41,6 +41,7 @@ const Viewdetails = () => {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [modalImageIndex, setModalImageIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(3600); // 1 hour in seconds
+  const videoRefs = useRef([]);
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -61,7 +62,15 @@ const Viewdetails = () => {
           throw new Error('Property data not found');
         }
         
-        setProperty(res.data);
+        // Process media items to include both images and videos
+        const processedProperty = {
+          ...res.data,
+          media: [...(res.data.images || []), ...(res.data.videos || [])],
+          images: res.data.images || [],
+          videos: res.data.videos || []
+        };
+        
+        setProperty(processedProperty);
       } catch (error) {
         console.error("Error fetching property:", error);
         setError(error.response?.data?.message || error.message || 'Failed to load property details');
@@ -123,13 +132,13 @@ const Viewdetails = () => {
     const message =
       `Check out this property: ${property.title}\n\n` +
       `📍 Location: ${property.address}, ${property.city}, ${property.state}\n` +
-      `🏠 Type: ${property.propertyType.join(', ')} | ${property.bhkType.join(', ')}\n` +
-      `📏 Area: ${property.area} sq.ft\n` +
-      `💰 Price: ₹${property.monthlyRent}/month (Deposit: ₹${property.securityDeposit})\n` +
-      `📅 Available from: ${new Date(property.availableFrom).toLocaleDateString()}\n` +
-      `⏳ Minimum stay: ${property.rentalDurationMonths} months\n` +
-      `🛠️ Maintenance: ₹${property.maintenanceCharges}/month\n` +
-      `👤 Owner: ${property.ownerName} (${property.ownerphone})\n` +
+      `🏠 Type: ${property.propertyType?.join(', ') || 'N/A'} | ${property.bhkType?.join(', ') || 'N/A'}\n` +
+      `📏 Area: ${property.area || '0'} sq.ft\n` +
+      `💰 Price: ₹${property.monthlyRent || '0'}/month (Deposit: ₹${property.securityDeposit || '0'})\n` +
+      `📅 Available from: ${property.availableFrom ? new Date(property.availableFrom).toLocaleDateString() : 'N/A'}\n` +
+      `⏳ Minimum stay: ${property.rentalDurationMonths || '0'} months\n` +
+      `🛠️ Maintenance: ₹${property.maintenanceCharges || '0'}/month\n` +
+      `👤 Owner: ${property.ownerName || 'N/A'} (${property.ownerphone || 'N/A'})\n` +
       `More details: ${window.location.href}`;
 
     const encodedMessage = encodeURIComponent(message);
@@ -144,27 +153,80 @@ const Viewdetails = () => {
     window.open(`tel:${property.ownerphone}`);
   };
 
+  const isVideo = (mediaItem) => {
+    if (!mediaItem) return false;
+    
+    const url = typeof mediaItem === 'string' ? mediaItem : mediaItem.url;
+    if (!url) return false;
+    
+    // Check for video extensions
+    if (url.match(/\.(mp4|mov|webm|avi|m3u8|mkv)$/i)) return true;
+    
+    // Check for Cloudinary video URLs
+    if (url.includes('res.cloudinary.com') && 
+        (url.includes('/video/upload/') || url.includes('.mp4') || url.includes('.mov'))) {
+      return true;
+    }
+    
+    // Check for MIME type if available
+    if (typeof mediaItem === 'object' && mediaItem.mimeType) {
+      return mediaItem.mimeType.startsWith('video/');
+    }
+    
+    return false;
+  };
+
+  const getMediaUrl = (mediaItem) => {
+    if (!mediaItem) return '';
+    return typeof mediaItem === 'string' ? mediaItem : mediaItem.url;
+  };
+
   const openImageModal = (index) => {
     setModalImageIndex(index);
     setIsImageModalOpen(true);
     document.body.style.overflow = 'hidden';
+    // Pause all videos when opening modal
+    videoRefs.current.forEach(video => {
+      if (video) video.pause();
+    });
   };
 
   const closeImageModal = () => {
     setIsImageModalOpen(false);
     document.body.style.overflow = 'auto';
+    // Pause all videos when closing modal
+    videoRefs.current.forEach(video => {
+      if (video) video.pause();
+    });
   };
 
   const goToPrevImage = () => {
+    // Pause all videos when navigating
+    videoRefs.current.forEach(video => {
+      if (video) video.pause();
+    });
+    
     setModalImageIndex(prev => 
-      prev === 0 ? property.images.length - 1 : prev - 1
+      prev === 0 ? property.media.length - 1 : prev - 1
     );
   };
 
   const goToNextImage = () => {
+    // Pause all videos when navigating
+    videoRefs.current.forEach(video => {
+      if (video) video.pause();
+    });
+    
     setModalImageIndex(prev => 
-      prev === property.images.length - 1 ? 0 : prev + 1
+      prev === property.media.length - 1 ? 0 : prev + 1
     );
+  };
+
+  const handleVideoPlay = (index) => (e) => {
+    // Pause all other videos when one plays
+    videoRefs.current.forEach((video, i) => {
+      if (video && i !== index) video.pause();
+    });
   };
 
   const formatTime = (seconds) => {
@@ -188,7 +250,7 @@ const Viewdetails = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isImageModalOpen, modalImageIndex, property?.images]);
+  }, [isImageModalOpen, modalImageIndex, property?.media]);
 
   if (loading) {
     return (
@@ -235,6 +297,39 @@ const Viewdetails = () => {
     );
   }
 
+  // Video Player Component
+  const VideoPlayer = ({ src, className, onClick, thumbnail = false }) => {
+    return (
+      <div className={`relative ${className}`}>
+        <video
+          className="w-full h-10
+          
+          object-cover"
+          onClick={onClick}
+          playsInline
+          loop={!thumbnail}
+          controls={!thumbnail}
+          autoPlay={!thumbnail}
+          preload={thumbnail ? "metadata" : "auto"}
+        >
+          <source src={src} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+        {thumbnail && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+            <svg 
+              className="w-8 h-8 text-white opacity-80" 
+              fill="currentColor" 
+              viewBox="0 0 20 20"
+            >
+              <path d="M6.3 2.8L14.8 10l-8.5 7.2V2.8z"/>
+            </svg>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <>
       <div className='bg-[#2a1035] h-16 w-full'></div>
@@ -257,21 +352,36 @@ const Viewdetails = () => {
                 <div className="grid grid-cols-2 gap-1">
                   {/* Left Side - Main Image */}
                   <div className="col-span-1 relative">
-                    <img
-                      src={property.images?.[0]?.url || property.images?.[0] || 'https://via.placeholder.com/800x600?text=Image+Not+Available'}
-                      alt={property.title || 'Property Image'}
-                      className="w-full h-96 object-cover cursor-pointer"
-                      onClick={() => openImageModal(0)}
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Available';
-                      }}
-                    />
+                    {property.media?.[0] ? (
+                      isVideo(property.media[0]) ? (
+                        <VideoPlayer
+                          src={getMediaUrl(property.media[0])}
+                          className="w-full h-96 cursor-pointer"
+                          onClick={() => openImageModal(0)}
+                          thumbnail
+                        />
+                      ) : (
+                        <img
+                          src={getMediaUrl(property.media[0]) || 'https://via.placeholder.com/800x600?text=Image+Not+Available'}
+                          alt={property.title || 'Property Image'}
+                          className="w-full h-96 object-cover cursor-pointer"
+                          onClick={() => openImageModal(0)}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Available';
+                          }}
+                        />
+                      )
+                    ) : (
+                      <div className="w-full h-96 bg-gray-200 flex items-center justify-center">
+                        <span className="text-gray-500">No media available</span>
+                      </div>
+                    )}
                     
                     {/* Room Type Overlay */}
-                    {property.images?.[0]?.type && (
+                    {property.media?.[0]?.type && (
                       <div className="absolute bottom-4 left-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded-full text-sm">
-                        {property.images[0].type}
+                        {property.media[0].type}
                       </div>
                     )}
                   </div>
@@ -280,49 +390,79 @@ const Viewdetails = () => {
                   <div className="col-span-1 grid grid-rows-2 gap-1">
                     {/* Top Right Image */}
                     <div className="relative">
-                      <img
-                        src={property.images?.[1]?.url || property.images?.[1] || 'https://via.placeholder.com/800x600?text=Image+Not+Available'}
-                        alt={property.title || 'Property Image'}
-                        className="w-full h-48 object-cover cursor-pointer"
-                        onClick={() => openImageModal(1)}
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Available';
-                        }}
-                      />
+                      {property.media?.[1] ? (
+                        isVideo(property.media[1]) ? (
+                          <VideoPlayer
+                            src={getMediaUrl(property.media[1])}
+                            className="w-full h-48 cursor-pointer"
+                            onClick={() => openImageModal(1)}
+                            thumbnail
+                          />
+                        ) : (
+                          <img
+                            src={getMediaUrl(property.media[1]) || 'https://via.placeholder.com/800x600?text=Image+Not+Available'}
+                            alt={property.title || 'Property Image'}
+                            className="w-full h-48 object-cover cursor-pointer"
+                            onClick={() => openImageModal(1)}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Available';
+                            }}
+                          />
+                        )
+                      ) : (
+                        <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
+                          <span className="text-gray-500">No media available</span>
+                        </div>
+                      )}
                       
                       {/* Room Type Overlay */}
-                      {property.images?.[1]?.type && (
+                      {property.media?.[1]?.type && (
                         <div className="absolute bottom-4 left-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded-full text-sm">
-                          {property.images[1].type}
+                          {property.media[1].type}
                         </div>
                       )}
                     </div>
                     
                     {/* Bottom Right Image */}
                     <div className="relative">
-                      <img
-                        src={property.images?.[2]?.url || property.images?.[2] || 'https://via.placeholder.com/800x600?text=Image+Not+Available'}
-                        alt={property.title || 'Property Image'}
-                        className="w-full h-48 object-cover cursor-pointer"
-                        onClick={() => openImageModal(2)}
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Available';
-                        }}
-                      />
-                      
-                      {/* Room Type Overlay */}
-                      {property.images?.[2]?.type && (
-                        <div className="absolute bottom-4 left-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded-full text-sm">
-                          {property.images[2].type}
+                      {property.media?.[2] ? (
+                        isVideo(property.media[2]) ? (
+                          <VideoPlayer
+                            src={getMediaUrl(property.media[2])}
+                            className="w-full h-48 cursor-pointer"
+                            onClick={() => openImageModal(2)}
+                            thumbnail
+                          />
+                        ) : (
+                          <img
+                            src={getMediaUrl(property.media[2]) || 'https://via.placeholder.com/800x600?text=Image+Not+Available'}
+                            alt={property.title || 'Property Image'}
+                            className="w-full h-48 object-cover cursor-pointer"
+                            onClick={() => openImageModal(2)}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Available';
+                            }}
+                          />
+                        )
+                      ) : (
+                        <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
+                          <span className="text-gray-500">No media available</span>
                         </div>
                       )}
                       
-                      {/* Image Count Overlay */}
-                      {property.images?.length > 2 && (
+                      {/* Room Type Overlay */}
+                      {property.media?.[2]?.type && (
+                        <div className="absolute bottom-4 left-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded-full text-sm">
+                          {property.media[2].type}
+                        </div>
+                      )}
+                      
+                      {/* Media Count Overlay */}
+                      {property.media?.length > 2 && (
                         <div className="absolute bottom-4 right-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded-full text-sm">
-                          +{property.images.length - 2} more
+                          +{property.media.length - 2} more
                         </div>
                       )}
                     </div>
@@ -702,90 +842,121 @@ const Viewdetails = () => {
         </div>
       </div>
 
-      {/* Image Slider Modal */}
+      {/* Image/Video Slider Modal */}
       {isImageModalOpen && (
-  <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
-    <div className="relative w-full max-w-4xl h-full max-h-[80vh] flex flex-col">
-      {/* Modal Header */}
-      <div className="flex justify-between items-center px-4 py-3 bg-black/50 rounded-t-lg">
-        <h3 className="text-white font-medium">
-          {modalImageIndex + 1} / {property.images?.length || 0} - 
-          {property.images?.[modalImageIndex]?.type || 'Property Image'}
-        </h3>
-        <button 
-          onClick={closeImageModal}
-          className="text-white hover:text-gray-300 transition p-2 cursor-pointer"
-          aria-label="Close modal"
-        >
-          <FiX size={24} />
-        </button>
-      </div>
+        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+          <div className="relative w-200 h-[10px] flex flex-col -top-60 mb-50">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center px-4 py-3 bg-black/50 rounded-t-lg">
+              <h3 className="text-white font-medium">
+                {modalImageIndex + 1} / {property.media?.length || 0} - 
+                {property.media?.[modalImageIndex]?.type || 'Property Media'}
+              </h3>
+              <button 
+                onClick={closeImageModal}
+                className="text-white hover:text-gray-300 transition p-2 cursor-pointer"
+                aria-label="Close modal"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
 
-      {/* Main Image Content */}
-      <div className="relative flex-1 flex flex-col items-center justify-center">
-        <button
-          onClick={goToPrevImage}
-          className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition z-10 cursor-pointer"
-          aria-label="Previous image"
-        >
-          <FiChevronLeft size={24} />
-        </button>
+            {/* Main Media Content */}
+            <div className="relative flex-1 flex flex-col items-center justify-center">
+              <button
+                onClick={goToPrevImage}
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition z-10 cursor-pointer"
+                aria-label="Previous image"
+              >
+                <FiChevronLeft size={24} />
+              </button>
 
-        <div className="h-full w-full flex items-center justify-center">
-          <img
-            src={property.images?.[modalImageIndex]?.url || property.images?.[modalImageIndex] || 'https://via.placeholder.com/800x600?text=Image+Not+Available'}
-            alt={`Property Image ${modalImageIndex + 1}`}
-            className="max-w-[80%] max-h-[70%] object-contain"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Available';
-            }}
-          />
-        </div>
-
-        {/* Room Type Display */}
-        <p className="text-white text-center mt-2 text-sm">
-          {property.images?.[modalImageIndex]?.roomType || 'Room Type Not Available'}
-        </p>
-
-        <button
-          onClick={goToNextImage}
-          className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition z-10 cursor-pointer"
-          aria-label="Next image"
-        >
-          <FiChevronRight size={24} />
-        </button>
-      </div>
-
-      {/* Thumbnail Navigation */}
-      <div className="px-4 py-3 bg-black/50 rounded-b-lg">
-        <div className="flex overflow-x-auto space-x-2 justify-center py-2">
-          {property.images?.map((img, index) => (
-            <button
-              key={index}
-              onClick={() => setModalImageIndex(index)}
-              className={`flex-shrink-0 w-12 h-12 rounded-md overflow-hidden transition-all ${
-                index === modalImageIndex 
-                  ? 'ring-2 ring-white scale-110' 
-                  : 'opacity-70 hover:opacity-100'
-              }`}
-            >
-              <img
-                src={img?.url || img}
-                alt={`Thumbnail ${index}`}
-                className="w-full h-full object-cover"
-              />
-              <div className="text-white text-xs text-center mt-1 truncate">
-                {img?.type || "Image"}
+              <div className="h-full w-full flex items-center justify-center">
+                {property.media?.[modalImageIndex] ? (
+                  isVideo(property.media[modalImageIndex]) ? (
+                    <div className="relative w-full h-full">
+                      <video
+                        ref={el => videoRefs.current[modalImageIndex] = el}
+                        src={getMediaUrl(property.media[modalImageIndex])}
+                        className="w-full h-[500px] object-contain"
+                        controls
+                        autoPlay
+                        onPlay={handleVideoPlay(modalImageIndex)}
+                      />
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                        <div className="text-white flex items-center justify-center">
+                          <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                          </svg>
+                          <span>Video Tour</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <img
+                      src={getMediaUrl(property.media[modalImageIndex]) || 'https://via.placeholder.com/800x600?text=Image+Not+Available'}
+                      alt={`Property Media ${modalImageIndex + 1}`}
+                      className="max-w-full max-h-full object-contain"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Available';
+                      }}
+                    />
+                  )
+                ) : (
+                  <div className="text-white">No media available</div>
+                )}
               </div>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  </div>
-)}
 
+              <button
+                onClick={goToNextImage}
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition z-10 cursor-pointer"
+                aria-label="Next image"
+              >
+                <FiChevronRight size={24} />
+              </button>
+            </div>
+
+            {/* Thumbnail Navigation */}
+            <div className="px-4 py-3 bg-black/50 rounded-b-lg">
+              <div className="flex overflow-x-auto space-x-2 justify-center py-2">
+                {property.media?.map((mediaItem, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setModalImageIndex(index)}
+                    className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden transition-all ${
+                      index === modalImageIndex 
+                        ? 'ring-2 ring-white scale-110' 
+                        : 'opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    {isVideo(mediaItem) ? (
+                      <div className="relative w-full h-full">
+                        <video
+                          src={getMediaUrl(mediaItem)}
+                          className="w-full h-full object-cover"
+                          muted
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                          </svg>
+                        </div>
+                      </div>
+                    ) : (
+                      <img
+                        src={getMediaUrl(mediaItem)}
+                        alt={`Thumbnail ${index}`}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

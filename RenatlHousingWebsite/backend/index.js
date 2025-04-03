@@ -9,17 +9,16 @@ import twilio from "twilio";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-
-import { GoogleGenerativeAI } from "@google/generative-ai"; 
+import Video from "./src/models/videosModel.js"; // ✅ Import Video Model
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 import authRoutes from "./src/routes/authRoutes.js";
 import googleAuthRoutes from "./src/routes/Oauth-google.js";
 import propertyRoutes from "./src/routes/propertyRoute.js";
 import profileRoutes from "./src/routes/profileRoutes.js";
-import videoRoutes from "./src/routes/VideosRoutes.js"; // ✅ Fixed incorrect import path
-import Vineet from "./src/routes/VideosRoutes.js"; // ✅ Fixed incorrect import path
+import videoRoutes from "./src/routes/VideosRoutes.js";
 dotenv.config();
-
+mongoose.set("debug", true); // ✅ Yeh query logs print karega
 // ✅ Passport Configuration
 import "./src/config/passport.js";
 
@@ -28,8 +27,8 @@ const app = express();
 
 // ✅ Middleware
 app.use(morgan("dev"));
-app.use(express.json({ limit: '500mb' }));
-app.use(express.urlencoded({ limit: '500mb', extended: true }));
+app.use(express.json({ limit: "500mb" }));
+app.use(express.urlencoded({ limit: "500mb", extended: true }));
 app.use(cookieParser());
 app.use(
   cors({
@@ -51,20 +50,25 @@ app.use((req, res, next) => {
 app.use("/uploads", express.static("uploads"));
 app.use("/uploads/videos", express.static("uploads/videos"));
 
-// ✅ MongoDB Connection
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log("🚀 MongoDB Connected Successfully");
-  } catch (err) {
-    console.error("❌ MongoDB Connection Error:", err.message);
+// ✅ MongoDB Connection (Fixed Here)
+const MONGO_URI =
+  process.env.MONGO_URI || "mongodb://localhost:27017/RentEaseDB";
+mongoose
+  .connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("✅ MongoDB Connected Successfully"))
+  .catch((err) => {
+    console.error("❌ MongoDB Connection Error:", err);
     process.exit(1);
-  }
-};
-connectDB();
+  });
 
 // ✅ Twilio OTP Setup
-const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+const client = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
 let phoneOtpDatabase = {};
 
 // ✅ Google Generative AI Setup
@@ -84,7 +88,9 @@ app.post("/api/generate-text", async (req, res) => {
     res.json({ generatedText: text });
   } catch (error) {
     console.error("AI Error:", error);
-    res.status(500).json({ error: "AI generation failed", details: error.message });
+    res
+      .status(500)
+      .json({ error: "AI generation failed", details: error.message });
   }
 });
 
@@ -125,7 +131,8 @@ app.post("/api/auth/verify-phone-otp", (req, res) => {
 const imageStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadPath = "uploads/";
-    if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath, { recursive: true });
+    if (!fs.existsSync(uploadPath))
+      fs.mkdirSync(uploadPath, { recursive: true });
     cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
@@ -135,40 +142,47 @@ const imageStorage = multer.diskStorage({
 const imageUpload = multer({ storage: imageStorage });
 
 // 🔹 Route to Handle Image Uploads
-app.post("/api/properties/upload", imageUpload.array("images", 5), (req, res) => {
-  if (!req.files || req.files.length === 0) return res.status(400).json({ message: "❌ No files uploaded" });
+app.post(
+  "/api/properties/upload",
+  imageUpload.array("images", 5),
+  (req, res) => {
+    if (!req.files || req.files.length === 0)
+      return res.status(400).json({ message: "❌ No files uploaded" });
 
-  const imageUrls = req.files.map(file => `http://localhost:5000/uploads/${file.filename}`);
-  res.json({ imageUrls });
-});
+    const imageUrls = req.files.map(
+      (file) => `http://localhost:5000/uploads/${file.filename}`
+    );
+    res.json({ imageUrls });
+  }
+);
 
 // ✅ Multer Storage Setup for Video Uploads
 const videoStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadPath = "uploads/videos/";
-    if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath, { recursive: true });
+    if (!fs.existsSync(uploadPath))
+      fs.mkdirSync(uploadPath, { recursive: true });
     cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname));
   },
 });
-const videoUpload = multer({ 
+const videoUpload = multer({
   storage: videoStorage,
   fileFilter: (req, file, cb) => {
-    const allowedMimeTypes = ["video/mp4", "video/mkv", "video/webm", "video/avi"];
+    const allowedMimeTypes = [
+      "video/mp4",
+      "video/mkv",
+      "video/webm",
+      "video/avi",
+    ];
     if (allowedMimeTypes.includes(file.mimetype)) cb(null, true);
     else cb(new Error("Only video files are allowed!"), false);
   },
 });
 
-// 🔹 Route to Handle Video Uploads
-app.post("/api/videos/upload", videoUpload.single("file"), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
-  const videoUrl = `http://localhost:5000/uploads/videos/${req.file.filename}`;
-  res.json({ message: "Video uploaded successfully!", videoUrl });
-});
 
 // ✅ Routes
 app.use("/api/auth", authRoutes);
@@ -176,7 +190,6 @@ app.use("/api/auth/google", googleAuthRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/videos", videoRoutes);
-app.use("/api/vineet",Vineet);
 
 // ✅ Default Route
 app.get("/", (req, res) => res.send("🏠 RentEase Backend Running..."));

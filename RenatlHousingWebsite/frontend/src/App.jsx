@@ -19,6 +19,10 @@ import PropertyPage from "./component/horizontalproperty.jsx";
 import ScrollToTop from "./pages/scrolltop.jsx";
 import MyProperties from "./pages/myProperty.jsx"; // ✅ MyProperties को इम्पोर्ट किया
 import Viewdetails from '../src/pages/popertyCardPart/viewdetails.jsx';
+import Test from "./pages/testPage.jsx"
+
+
+
 function App() {
   return (
     <GoogleOAuthProvider clientId="385746889631-oepj52hiaskkn8oqbp3244r888uupr2d.apps.googleusercontent.com">
@@ -106,7 +110,11 @@ function AppContent() {
           <Route path="/properties" element={<Properties />} />
           <Route path="/premium" element={<Premium />} /> 
           <Route path="/my-properties" element={<MyProperties />} /> {/* ✅ नया Route */}
-          <Route path="/property/:id" element={<Viewdetails />} />        </Routes>
+          <Route path="/property/:id" element={<Viewdetails />} />        
+          <Route path="/test" element={<Test/>}/>
+          </Routes>
+
+
       </main>
 
       <OtpModal

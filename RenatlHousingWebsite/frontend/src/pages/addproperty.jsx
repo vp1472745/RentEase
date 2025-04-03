@@ -10,7 +10,7 @@ import {
   FaCheck,
   FaVideo,
 } from "react-icons/fa";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BsFillMicFill, BsStopFill } from "react-icons/bs";
 
 const AddProperty = () => {
@@ -64,6 +64,31 @@ const AddProperty = () => {
   const [validationErrors, setValidationErrors] = useState({});
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const videoRef = useRef(null);
+
+  // Video player controls
+  const handlePlay = (videoUrl) => {
+    const videoElement = document.getElementById(`video-${videoUrl}`);
+    if (videoElement) {
+      videoElement.play();
+    }
+  };
+
+  const handlePause = (videoUrl) => {
+    const videoElement = document.getElementById(`video-${videoUrl}`);
+    if (videoElement) {
+      videoElement.pause();
+    }
+  };
+
+  const handleStop = (videoUrl) => {
+    const videoElement = document.getElementById(`video-${videoUrl}`);
+    if (videoElement) {
+      videoElement.pause();
+      videoElement.currentTime = 0;
+    }
+  };
 
   // Initialize speech recognition
   useEffect(() => {
@@ -328,53 +353,58 @@ const AddProperty = () => {
     }
   };
 
-  const handleVideoUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    
-    // वैलिडेशन
-    if (files.length > 3 || formData.videos.length + files.length > 3) {
-      setValidationErrors({...validationErrors, videos: "Maximum 3 videos allowed"});
+  const handleVideoUpload = async (event) => {
+    const files = Array.from(event.target.files);
+    if (!files || files.length === 0) return;
+  
+    if (formData.videos.length + files.length > 3) {
+      setError("Maximum 3 videos allowed");
       return;
     }
   
-    setUploadingVideos(true);
-  
     try {
-      const uploadPromises = files.map(async (file) => {
-        const formData = new FormData();
-        formData.append('video', file);
+      setUploadingVideos(true);
+      setError(null);
+      setUploadProgress(0);
+      
+      const uploadedVideos = [];
+      for (const file of files) {
+        const uploadData = new FormData();
+        uploadData.append("file", file);
+        uploadData.append("upload_preset", "RentEase_Videos");
         
-        const response = await axios.post('/api/videos/upload', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        const response = await fetch(
+          "https://api.cloudinary.com/v1_1/dkrrpzlbl/video/upload",
+          {
+            method: "POST",
+            body: uploadData,
           }
-        });
-        return response.data.videoUrl; // बैकएंड से मिले URL का उपयोग करें
-      });
+        );
   
-      const uploadedUrls = await Promise.all(uploadPromises);
-      
-      // स्टेट अपडेट करें
-      setFormData(prev => ({
+        const data = await response.json();
+        if (data.secure_url) {
+          uploadedVideos.push({
+            url: data.secure_url,
+            public_id: data.public_id,
+            type: "video"
+          });
+        }
+      }
+  
+      setFormData((prev) => ({
         ...prev,
-        videos: [...prev.videos, ...uploadedUrls]
+        videos: [...prev.videos, ...uploadedVideos],
       }));
-      
-      // प्रीव्यू के लिए (अस्थायी URL)
-      const previewUrls = files.map(file => URL.createObjectURL(file));
-      setPreviewVideos(prev => [...prev, ...previewUrls]);
-  
+      setPreviewVideos((prev) => [...prev, ...uploadedVideos.map(v => v.url)]);
     } catch (error) {
-      console.error("Upload error:", error);
-      setValidationErrors({
-        ...validationErrors, 
-        videos: error.response?.data?.message || "Video upload failed"
-      });
+      console.error("Video upload failed:", error);
+      setError("Failed to upload videos. Please try again.");
     } finally {
       setUploadingVideos(false);
+      setUploadProgress(0);
     }
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -1429,20 +1459,21 @@ const AddProperty = () => {
                             }));
                           }}
                         >
-                          <option value="bedroom">Bedroom</option>
-                          <option value="master-bedroom">Master Bedroom</option>
-                          <option value="guest-bedroom">Guest Bedroom</option>
-                          <option value="kids-bedroom">Kids Bedroom</option>
-                          <option value="kitchen">Kitchen</option>
-                          <option value="drawing-room">Drawing Room</option>
-                          <option value="living-room">Living Room</option>
-                          <option value="dining-room">Dining Room</option>
-                          <option value="bathroom">Bathroom</option>
-                          <option value="toilet">Toilet</option>
-                          <option value="balcony">Balcony</option>
-                          <option value="study-room">Study Room</option>
-                          <option value="puja-room">Puja Room</option>
-                          <option value="store-room">Store Room</option>
+                          <option value=""><i className="fas fa-home"></i> Select Category</option>
+<option value="bedroom"><i className="fas fa-bed"></i> Bedroom</option>
+<option value="master-bedroom"><i className="fas fa-crown"></i> Master Bedroom</option>
+<option value="guest-bedroom"><i className="fas fa-user-friends"></i> Guest Bedroom</option>
+<option value="kids-bedroom"><i className="fas fa-child"></i> Kids Bedroom</option>
+<option value="kitchen"><i className="fas fa-utensils"></i> Kitchen</option>
+<option value="drawing-room"><i className="fas fa-paint-brush"></i> Drawing Room</option>
+<option value="living-room"><i className="fas fa-couch"></i> Living Room</option>
+<option value="dining-room"><i className="fas fa-utensils"></i> Dining Room</option>
+<option value="bathroom"><i className="fas fa-bath"></i> Bathroom</option>
+<option value="toilet"><i className="fas fa-toilet"></i> Toilet</option>
+<option value="balcony"><i className="fas fa-leaf"></i> Balcony</option>
+<option value="study-room"><i className="fas fa-book"></i> Study Room</option>
+<option value="puja-room"><i className="fas fa-pray"></i> Puja Room</option>
+<option value="store-room"><i className="fas fa-box-open"></i> Store Room</option>
                         </select>
 
                         <button
@@ -1493,7 +1524,7 @@ const AddProperty = () => {
                           : "Click to browse or drag and drop videos"}
                       </p>
                       <p className="text-xs text-purple-600 mt-1">
-                        MP4, MOV (Max 20MB each)
+                        MP4, MOV (Max 500MB each)
                       </p>
                     </div>
                   </div>
@@ -1505,28 +1536,17 @@ const AddProperty = () => {
                   )}
 
                   {uploadingVideos && (
-                    <div className="text-purple-800 flex items-center mt-2">
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-purple-800"
-                        xmlns="http://www.w3.org/3000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Uploading videos...
+                    <div className="mt-4">
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-purple-600 h-2.5 rounded-full" 
+                          style={{ width: `${uploadProgress}%` }}
+                        ></div>
+                      </div>
+                      <div className="flex justify-between text-xs text-purple-800 mt-1">
+                        <span>Uploading...</span>
+                        <span>{uploadProgress}%</span>
+                      </div>
                     </div>
                   )}
 
@@ -1535,10 +1555,34 @@ const AddProperty = () => {
                       <div key={index} className="relative group">
                         <div className="w-full h-48 bg-gray-100 rounded-md border border-purple-800 overflow-hidden">
                           <video
+                            id={`video-${src}`}
                             src={src}
                             controls
                             className="w-full h-full object-contain"
                           />
+                        </div>
+                        <div className="flex justify-center space-x-2 mt-2">
+                          <button
+                            type="button"
+                            onClick={() => handlePlay(src)}
+                            className="bg-green-500 text-white px-2 py-1 rounded text-sm"
+                          >
+                            Play
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handlePause(src)}
+                            className="bg-yellow-500 text-white px-2 py-1 rounded text-sm"
+                          >
+                            Pause
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleStop(src)}
+                            className="bg-red-500 text-white px-2 py-1 rounded text-sm"
+                          >
+                            Stop
+                          </button>
                         </div>
                         <button
                           type="button"
@@ -1621,7 +1665,7 @@ const AddProperty = () => {
                     <>
                       <svg
                         className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/3000/svg"
+                        xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
                       >

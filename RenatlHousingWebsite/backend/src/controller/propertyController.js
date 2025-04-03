@@ -16,6 +16,7 @@ export const addProperty = async (req, res) => {
       city,
       state,
       images,
+      videos, // Added videos field
       propertyType,
       bhkType,
       area,
@@ -70,6 +71,7 @@ export const addProperty = async (req, res) => {
       city,
       state,
       images,
+      videos, // Added videos field
       owner: req.user._id,
       propertyType: formattedPropertyType,
       bhkType: formattedBhkType,

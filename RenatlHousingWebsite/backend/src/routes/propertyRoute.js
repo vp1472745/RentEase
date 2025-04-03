@@ -179,4 +179,43 @@ router.post("/upload", uploadMiddleware.array("images", 10), (req, res) => {
   }
 });
 
+
+
+
+// Helper function to validate URLs
+function isValidUrl(string) {
+  try {
+    new URL(string);
+    return true;
+  } catch (_) {
+    return false;  
+  }
+}
+
+// Save Cloudinary video URL to property
+// ✅ Video Upload Route
+router.post("/api/properties/videos", async (req, res) => {
+  try {
+    const { propertyId, videos } = req.body;
+
+    if (!propertyId || !videos || !videos.length) {
+      return res.status(400).json({ error: "Property ID and videos are required" });
+    }
+
+    const property = await Property.findById(propertyId);
+    if (!property) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+
+    property.videos.push(...videos);
+    await property.save();
+
+    res.status(200).json({ message: "Videos added successfully", videos: property.videos });
+  } catch (error) {
+    console.error("Error saving videos:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
 export default router;

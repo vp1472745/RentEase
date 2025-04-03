@@ -49,10 +49,9 @@ function Properties() {
         const propertiesData = Array.isArray(res?.data) 
           ? res.data.map(property => ({
               ...property,
-              images: property.images.map(img => 
-                typeof img === 'string' ? { url: img, type: 'image' } : img
-              ),
-              videos: property.videos || [] // Ensure videos array exists
+              media: [...(property.images || []), ...(property.videos || [])],
+              videos: property.videos || [],
+              images: property.images || []
             }))
           : [];
           
@@ -152,16 +151,14 @@ function Properties() {
   };
 
   const goToPrevImage = () => {
-    const mediaItems = [...currentProperty.images, ...currentProperty.videos];
     setCurrentImageIndex((prev) =>
-      prev === 0 ? mediaItems.length - 1 : prev - 1
+      prev === 0 ? currentProperty.media.length - 1 : prev - 1
     );
   };
 
   const goToNextImage = () => {
-    const mediaItems = [...currentProperty.images, ...currentProperty.videos];
     setCurrentImageIndex((prev) =>
-      prev === mediaItems.length - 1 ? 0 : prev + 1
+      prev === currentProperty.media.length - 1 ? 0 : prev + 1
     );
   };
 
@@ -189,15 +186,62 @@ function Properties() {
     window.open(`tel:${phoneNumber}`);
   };
 
-  // Combine images and videos for display
-  const getMediaItems = (property) => {
-    return [
-      ...(property.images || []),
-      ...(property.videos || []).map(video => ({
-        url: video,
-        type: 'video'
-      }))
-    ];
+  const isVideo = (mediaItem) => {
+    if (!mediaItem) return false;
+    
+    const url = typeof mediaItem === 'string' ? mediaItem : mediaItem.url;
+    if (!url) return false;
+    
+    // Check for video extensions
+    if (url.match(/\.(mp4|mov|webm|avi|m3u8|mkv)$/i)) return true;
+    
+    // Check for Cloudinary video URLs
+    if (url.includes('res.cloudinary.com') && 
+        (url.includes('/video/upload/') || url.includes('.mp4') || url.includes('.mov'))) {
+      return true;
+    }
+    
+    // Check for MIME type if available
+    if (typeof mediaItem === 'object' && mediaItem.mimeType) {
+      return mediaItem.mimeType.startsWith('video/');
+    }
+    
+    return false;
+  };
+
+  const getMediaUrl = (mediaItem) => {
+    if (!mediaItem) return '';
+    return typeof mediaItem === 'string' ? mediaItem : mediaItem.url;
+  };
+
+  const VideoPlayer = ({ src, className, onClick, thumbnail = false }) => {
+    return (
+      <div className={`relative ${className}`}>
+        <video
+          className="w-full h-full object-cover"
+          onClick={onClick}
+          playsInline
+          loop={!thumbnail}
+          controls={!thumbnail}
+          autoPlay={!thumbnail}
+          preload={thumbnail ? "metadata" : "auto"}
+        >
+          <source src={src} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+        {thumbnail && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+            <svg 
+              className="w-8 h-8 text-white opacity-80" 
+              fill="currentColor" 
+              viewBox="0 0 20 20"
+            >
+              <path d="M6.3 2.8L14.8 10l-8.5 7.2V2.8z"/>
+            </svg>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -362,7 +406,10 @@ function Properties() {
         ) : filteredProperties.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 max-w-5xl mx-auto pb-20">
             {filteredProperties.map((property) => {
-              const mediaItems = getMediaItems(property);
+              const firstMedia = property.media?.[0];
+              const mediaUrl = getMediaUrl(firstMedia);
+              const isVideoMedia = isVideo(firstMedia);
+
               return (
                 <div
                   key={property._id}
@@ -370,19 +417,19 @@ function Properties() {
                 >
                   <div className="flex flex-col md:flex-row">
                     {/* Property Image/Video */}
-                    <div className="relative md:w-2/5">
-                      {mediaItems[0]?.type === 'video' ? (
-                        <video
-                          src={mediaItems[0].url}
-                          className="w-full h-48 md:h-full object-cover cursor-pointer"
+                    <div className="relative md:w-2/5 h-48 md:h-auto">
+                      {isVideoMedia ? (
+                        <VideoPlayer
+                          src={mediaUrl}
+                          className="w-full h-full cursor-pointer"
                           onClick={() => openGallery(property, 0)}
-                          controls
+                          thumbnail
                         />
                       ) : (
                         <img
-                          src={mediaItems[0]?.url}
+                          src={mediaUrl || "https://via.placeholder.com/400x300"}
                           alt={property.title}
-                          className="w-full h-48 md:h-full object-cover cursor-pointer"
+                          className="w-full h-full object-cover cursor-pointer"
                           onClick={() => openGallery(property, 0)}
                         />
                       )}
@@ -506,7 +553,7 @@ function Properties() {
         )}
       </div>
 
-      {/* Media Gallery Modal */}
+      {/* Image/Video Gallery Modal */}
       {isGalleryOpen && currentProperty && (
         <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex flex-col items-center justify-center p-4">
           <button
@@ -519,7 +566,7 @@ function Properties() {
           <div className="relative w-full max-w-4xl h-full max-h-[70vh] flex flex-col items-center justify-center">
             <div className="w-full text-center mb-4">
               <p className="text-white text-lg font-bold">
-                {currentImageIndex + 1} of {[...currentProperty.images, ...currentProperty.videos].length}
+                {currentProperty.title}
               </p>
             </div>
             
@@ -531,34 +578,25 @@ function Properties() {
                 <FiChevronLeft size={24} />
               </button>
 
-              {[...currentProperty.images, ...currentProperty.videos].map((item, index) => {
-                const isVideo = index >= currentProperty.images.length;
-                const url = isVideo ? currentProperty.videos[index - currentProperty.images.length] : item.url;
-                
-                return (
-                  <div 
-                    key={index}
-                    className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
-                      index === currentImageIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                    }`}
+              {isVideo(currentProperty.media[currentImageIndex]) ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <video
+                    className="max-w-full max-h-[70vh]"
+                    controls
+                    autoPlay
+                    playsInline
                   >
-                    {isVideo ? (
-                      <video
-                        src={url}
-                        className="max-w-full max-h-full object-contain rounded-lg"
-                        controls
-                        autoPlay={index === currentImageIndex}
-                      />
-                    ) : (
-                      <img
-                        src={url}
-                        alt={`Property media ${index + 1}`}
-                        className="max-w-full max-h-full object-contain rounded-lg"
-                      />
-                    )}
-                  </div>
-                );
-              })}
+                    <source src={getMediaUrl(currentProperty.media[currentImageIndex])} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              ) : (
+                <img
+                  src={getMediaUrl(currentProperty.media[currentImageIndex])}
+                  className="max-w-full max-h-[70vh] object-contain"
+                  alt={`Property media ${currentImageIndex + 1}`}
+                />
+              )}
 
               <button
                 onClick={goToNextImage}
@@ -569,39 +607,39 @@ function Properties() {
             </div>
           </div>
 
+          <div className="mt-4 text-white text-center">
+            <p className="text-lg">
+              {currentImageIndex + 1} / {currentProperty.media.length}
+            </p>
+          </div>
+
           {/* Thumbnail navigation */}
           <div className="flex gap-2 overflow-x-auto max-w-full px-4 py-2">
-            {[...currentProperty.images, ...currentProperty.videos].map((item, index) => {
-              const isVideo = index >= currentProperty.images.length;
-              const url = isVideo ? currentProperty.videos[index - currentProperty.images.length] : item.url;
-              
+            {currentProperty.media.map((item, index) => {
+              const mediaUrl = getMediaUrl(item);
+              const isVideoItem = isVideo(item);
+
               return (
-                <div key={index} className="flex flex-col items-center">
-                  {isVideo ? (
-                    <video
-                      src={url}
-                      className={`w-12 h-12 object-cover rounded cursor-pointer ${
-                        currentImageIndex === index
-                          ? "ring-2 ring-blue-500"
-                          : "opacity-70"
-                      }`}
-                      onClick={() => setCurrentImageIndex(index)}
-                    />
+                <div 
+                  key={index} 
+                  className={`flex-shrink-0 cursor-pointer ${currentImageIndex === index ? 'ring-2 ring-purple-500' : ''}`}
+                  onClick={() => setCurrentImageIndex(index)}
+                >
+                  {isVideoItem ? (
+                    <div className="relative w-16 h-16">
+                      <VideoPlayer
+                        src={mediaUrl}
+                        className="w-full h-full"
+                        thumbnail
+                      />
+                    </div>
                   ) : (
                     <img
-                      src={url}
+                      src={mediaUrl}
+                      className="w-16 h-16 object-cover"
                       alt={`Thumbnail ${index + 1}`}
-                      className={`w-12 h-12 object-cover rounded cursor-pointer ${
-                        currentImageIndex === index
-                          ? "ring-2 ring-blue-500"
-                          : "opacity-70"
-                      }`}
-                      onClick={() => setCurrentImageIndex(index)}
                     />
                   )}
-                  <span className="text-white text-xs mt-1">
-                    {isVideo ? "Video" : "Image"}
-                  </span>
                 </div>
               );
             })}
