@@ -20,9 +20,10 @@ import ScrollToTop from "./pages/scrolltop.jsx";
 import MyProperties from "./pages/myProperty.jsx"; // ✅ MyProperties को इम्पोर्ट किया
 import Viewdetails from '../src/pages/popertyCardPart/viewdetails.jsx';
 import Test from "./pages/testPage.jsx"
-
-
-
+import ReportResearch from "./pages/researchReport.jsx"
+import News from "./pages/news.jsx"
+import Housingprotect from"./pages/housingProtect.jsx"
+import PayRent from "./pages/payRent.jsx"
 function App() {
   return (
     <GoogleOAuthProvider clientId="385746889631-oepj52hiaskkn8oqbp3244r888uupr2d.apps.googleusercontent.com">
@@ -112,6 +113,10 @@ function AppContent() {
           <Route path="/my-properties" element={<MyProperties />} /> {/* ✅ नया Route */}
           <Route path="/property/:id" element={<Viewdetails />} />        
           <Route path="/test" element={<Test/>}/>
+          <Route path="/ReportResearch" element={<ReportResearch/>}/>
+          <Route path="/News" element={<News/>}/>
+          <Route path="/housingProtect" element={<Housingprotect/>}/>
+          <Route path="/PayRent" element={<PayRent/>}/>
           </Routes>
 
 

@@ -1,16 +1,19 @@
 import express from "express";
 import { getUserProfile, updateUserProfile } from "../controller/profileController.js";
-import upload from "../middleware/multerMiddleware.js"; // ✅ Multer Middleware
+import upload from "../middleware/multerMiddleware.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 
-// Create a router instance
 const router = express.Router();
 
-// ✅ Get Profile API (User Data देगा)
+// ✅ प्रोफाइल डेटा प्राप्त करने का रूट
 router.get("/", authMiddleware, getUserProfile);
 
-// ✅ Update Profile API (User Data अपडेट करेगा)
-router.put("/update", authMiddleware, upload.single("profileImage"), updateUserProfile);
+// ✅ प्रोफाइल अपडेट रूट (क्लाउडिनेरी पर इमेज अपलोड करेगा और URL MongoDB में सेव करेगा)
+router.put(
+  "/update",
+  authMiddleware,
+  upload.single("profileImage"), // 1. मल्टर द्वारा इमेज प्रोसेसिंग
+  updateUserProfile // 2. क्लाउडिनेरी अपलोड और MongoDB अपडेट
+);
 
-// Export the router so it can be used in the main server file
 export default router;

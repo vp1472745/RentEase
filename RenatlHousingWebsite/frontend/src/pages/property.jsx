@@ -20,6 +20,7 @@ function Properties() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentProperty, setCurrentProperty] = useState(null);
   const [favorites, setFavorites] = useState({});
+  const [seenProperties, setSeenProperties] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -57,6 +58,12 @@ function Properties() {
           
         setProperties(propertiesData);
         setFilteredProperties(propertiesData);
+        
+        // Load seen properties from localStorage
+        const savedSeenProperties = localStorage.getItem('seenProperties');
+        if (savedSeenProperties) {
+          setSeenProperties(JSON.parse(savedSeenProperties));
+        }
       } catch (error) {
         console.error("Error fetching properties:", error);
         setProperties([]);
@@ -129,6 +136,21 @@ function Properties() {
     );
 
     setFilteredProperties(filtered);
+  };
+
+  const handleViewDetails = (propertyId) => {
+    // Add property to seen properties if not already there
+    const seenProperties = JSON.parse(localStorage.getItem('seenProperties') || '[]');
+    if (!seenProperties.includes(propertyId)) {
+      const updatedSeenProperties = [...seenProperties, propertyId];
+      localStorage.setItem('seenProperties', JSON.stringify(updatedSeenProperties));
+      
+      // Dispatch event to notify MyActivity component
+      window.dispatchEvent(new CustomEvent('seenPropertyAdded', {
+        detail: { count: updatedSeenProperties.length }
+      }));
+    }
+    navigate(`/property/${propertyId}`);
   };
 
   const toggleFavorite = (propertyId) => {
@@ -524,7 +546,7 @@ function Properties() {
 
                       <div className="flex flex-col sm:flex-row gap-3 mt-4">
                         <button
-                          onClick={() => navigate(`/property/${property._id}`)}
+                          onClick={() => handleViewDetails(property._id)}
                           className="flex-1 bg-purple-800 text-white py-2 rounded-lg hover:bg-purple-900 transition"
                         >
                           View Details

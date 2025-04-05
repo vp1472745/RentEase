@@ -7,6 +7,8 @@ import {
   Edit,
 
 } from "lucide-react";
+import { FiHeart } from 'react-icons/fi';
+
 import users from "../assets/users.png";
 import { PiDetective } from "react-icons/pi";
 import { HiOutlineQuestionMarkCircle } from "react-icons/hi2";
@@ -85,7 +87,28 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
   const [isHousingOpen, setIsHousingOpen] = useState(false);
   const [isServicesOpen, setIsServicesOpen] = useState(false);
   const [refresh, setRefresh] = useState(false); // Refresh trigger state
+  const [seenCount, setSeenCount] = useState(0);
   
+  useEffect(() => {
+    // Initialize count from localStorage
+    const seenProperties = JSON.parse(localStorage.getItem('seenProperties') || '[]');
+    setSeenCount(seenProperties.length);
+
+    // Listen for updates from Properties component
+    const handleSeenPropertyAdded = (e) => {
+      setSeenCount(e.detail.count);
+    };
+
+    window.addEventListener('seenPropertyAdded', handleSeenPropertyAdded);
+
+    return () => {
+      window.removeEventListener('seenPropertyAdded', handleSeenPropertyAdded);
+    };
+  }, []);
+
+
+  
+
   // 🔹 Close Auth & Profile Menu on Click Outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -164,22 +187,23 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
       <Home size={24} className="mr-2" /> RentEase.com
     </Link>
       <div className="hidden md:flex items-center space-x-20">
-        <Link
-          to="/"
-          className={` text-[20px] flex items-center hover:text-gray-200 transition ${
-            isScrolled ? "text-purple-800 hover:text-purple-400" : " text-white font-bold"
-          }`}
-        >
-          Pay Rent
-        </Link>
-        <Link
-          to="/"
+      <Link
+          to="/premium"
           className={` text-[20px] flex items-center transition ${
             isScrolled ? "text-purple-800  hover:text-purple-400" : " text-white font-bold   hover:text-gray-200"
           }`}
         >
-          Download App
+         Premium
         </Link>
+        <Link
+          to="/PayRent"
+          className={` text-[20px] flex items-center hover:text-gray-200 transition ${
+            isScrolled ? "text-purple-800 hover:text-purple-400" : " text-white font-bold"
+          }`}
+        >
+          Download APP
+        </Link>
+        
         <div className="flex items-center">
       {/* Image Source Changes Based on Scroll */}
       <img
@@ -188,7 +212,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
         alt="Save"
       />
       <Link
-        to="/"
+        to="/profile?tab=myactivity"
         className={` text-[20px] flex items-center  transition cursor-pointer ${
           isScrolled ? "text-purple-800  hover:text-purple-400" : "text-white font-bold hover:text-gray-200"
         }`}
@@ -266,14 +290,21 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                 setIsProfileOpen(false);
               }}
             >
-              <div className="flex">
+
+             
+           
+            </Link>
+
+
+<Link  to="/premium" >
+            <div className="flex" onClick={(e) => e.stopPropagation()}>
                 <IoDiamondOutline className="mt-1" size={14} />
                 <span className="mt-1 ml-1 text-[12px]">
                   Upgrade to Premium{" "}
                 </span>
                 <RiArrowRightSLine className="mt-1 ml-1" size={19} />
               </div>
-            </Link>
+              </Link>
           </div>
           <button
             onClick={(e) => {
@@ -290,64 +321,64 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
 
         {/* My Activity Section - Keep all original content */}
         <div className="bg-white p-4 rounded-lg" onClick={(e) => e.stopPropagation()}>
-          <h2 className="font-semibold mb-4">My Activity</h2>
-          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar text-[12px] ">
-            {[
-              {
-                id: "Contacted",
-                label: "Contacted\nProperties",
-                icon: <img src={contactp} alt="Contacted" className="w-7 h-7 mt-2" />,
-                count: 4,
-              },
-              {
-                id: "Seen",
-                label: "Seen\nProperties",
-                icon: <img src={seen} alt="Contacted" className="w-6 h-6 mt-2" />,
-                count: 0,
-              },
-              {
-                id: "Saved",
-                label: "Saved\nProperties",
-                icon: <Heart size={26} className="mt-1"/>,
-                count: 0,
-              },
-              {
-                id: "Recent",
-                label: "Recent\nSearches",
-                icon: <MdOutlineWatchLater size={26} className="mt-1"/>,
-                count: 0,
-              },
-            ].map((tab) => (
-              <div
-                key={tab.id}
-                className={`flex flex-col items-center border-2 rounded-lg px-6 shadow-md w-[80px] h-[100px] relative cursor-pointer ${
-                  selectedTab === tab.id
-                    ? "bg-purple-50 border-purple-800 border-2 text-purple-800 hover:text-black"
-                    : "bg-white shadow-lg hover:border-purple-800 border-3"
-                }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedTab(tab.id);
-                }}
-              >
-                {tab.icon}
-                <p className="text-center whitespace-pre-line">
-                  {tab.label}
-                </p>
-                <div className={`px-3 rounded-full text-sm mb-2 mt-[0.5] ${
-                  selectedTab === tab.id
-                    ? "bg-purple-50 text-purple-800"
-                    : "bg-gray-200 text-purple-800"
-                }`}>
-                  {tab.count.toString().padStart(2, "0")}
-                </div>
-                {selectedTab === tab.id && (
-                  <div className="absolute bottom-[-6px] w-3 h-3 bg-purple-50 border-b-2 border-purple-800 rotate-45"></div>
-                )}
-              </div>
-            ))}
+      <h2 className="font-semibold mb-4">My Activity</h2>
+      <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar text-[12px]">
+        {[
+          {
+            id: "Contacted",
+            label: "Contacted\nProperties",
+            icon: <img src={contactp} alt="Contacted" className="w-7 h-7 mt-2" />,
+            count: 4,
+          },
+          {
+            id: "Seen",
+            label: "Seen\nProperties",
+            icon: <img src={seen} alt="Contacted" className="w-6 h-6 mt-2" />,
+            count: seenCount,
+          },
+          {
+            id: "Saved",
+            label: "Saved\nProperties",
+            icon: <FiHeart size={26} className="mt-1"/>,
+            count: 0,
+          },
+          {
+            id: "Recent",
+            label: "Recent\nSearches",
+            icon: <MdOutlineWatchLater size={26} className="mt-1"/>,
+            count: 0,
+          },
+        ].map((tab) => (
+          <div
+            key={tab.id}
+            className={`flex flex-col items-center border-2 rounded-lg px-6 shadow-md w-[80px] h-[100px] relative cursor-pointer ${
+              selectedTab === tab.id
+                ? "bg-purple-50 border-purple-800 border-2 text-purple-800 hover:text-black"
+                : "bg-white shadow-lg hover:border-purple-800 border-3"
+            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedTab(tab.id);
+            }}
+          >
+            {tab.icon}
+            <p className="text-center whitespace-pre-line">
+              {tab.label}
+            </p>
+            <div className={`px-3 rounded-full text-sm mb-2 mt-[0.5] ${
+              selectedTab === tab.id
+                ? "bg-purple-50 text-purple-800"
+                : "bg-gray-200 text-purple-800"
+            }`}>
+              {tab.count.toString().padStart(2, "0")}
+            </div>
+            {selectedTab === tab.id && (
+              <div className="absolute bottom-[-6px] w-3 h-3 bg-purple-50 border-b-2 border-purple-800 rotate-45"></div>
+            )}
           </div>
-        </div>
+        ))}
+      </div>
+    </div>
 
         <div className="my-2"></div>
         
@@ -423,7 +454,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
           {isQuickSearchOpen && (
             <div className="mt-2 w-80 h-22 rounded-md py-2 flex flex-wrap gap-2 p-2" onClick={(e) => e.stopPropagation()}>
               <Link
-                to="/buy"
+                to="/"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsProfileOpen(false);
@@ -436,7 +467,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                 </span>
               </Link>
               <Link
-                to="/rent"
+                to="/add-property"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsProfileOpen(false);
@@ -449,7 +480,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                 </span>
               </Link>
               <Link
-                to="/pg"
+                to="/News"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsProfileOpen(false);
@@ -462,7 +493,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                 </span>
               </Link>
               <Link
-                to="/commercial"
+                to="/ReportResearch"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsProfileOpen(false);
@@ -532,7 +563,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                 </span>
               </Link>
               <Link
-                to="/buy"
+                to="/premium"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsProfileOpen(false);
@@ -545,7 +576,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                 </span>
               </Link>
               <Link
-                to="/rent"
+                to="/receipted"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsProfileOpen(false);
@@ -557,21 +588,9 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                   Rent <br /> Receipted
                 </span>
               </Link>
+        
               <Link
-                to="/pg"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsProfileOpen(false);
-                }}
-                className="flex flex-col items-center p-2 hover:border-purple-800 border-3 hover:bg-purple-50 rounded h-18 w-20"
-              >
-                <HiOutlineNewspaper size={24} />
-                <span className="text-sm text-center text-black-800">
-                  Housing Protect
-                </span>
-              </Link>
-              <Link
-                to="/commercial"
+                  to="/housingProtect"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsProfileOpen(false);

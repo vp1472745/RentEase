@@ -511,40 +511,71 @@ const AddProperty = () => {
   };
 
   const calculateProgress = () => {
-    const requiredFieldsByStep = {
-      1: [
-        "title",
-        "description",
-        "address",
-        "city",
-        "state",
-        "ownerName",
-        "ownerphone",
-        "Gender",
-      ],
-      2: ["area", "propertyType", "bhkType", "furnishType"],
-      3: ["monthlyRent", "securityDeposit", "availableFrom"],
-      4: ["images", "videos"],
-    };
-
-    const currentStepFields = requiredFieldsByStep[step];
-    const filledInCurrentStep = currentStepFields.filter((field) => {
-      const value = formData[field];
-      if (Array.isArray(value)) return value.length > 0;
-      if (typeof value === "boolean") return true;
-      return value.toString().trim() !== "";
-    }).length;
-
-    const stepProgress = (filledInCurrentStep / currentStepFields.length) * 25;
-
+    // Define all fields grouped by steps with weights
+    const stepDefinitions = [
+      {
+        name: "step1",
+        fields: [
+          "title", "description", "address", "city", "state",
+          "ownerName", "ownerphone", "Gender", "popularLocality"
+        ],
+        weight: 0.2633 // 26.33% of total (79/3)
+      },
+      {
+        name: "step2",
+        fields: [
+          "area", "propertyType", "bhkType", "furnishType",
+          "floorNumber", "totalFloors", "ageOfProperty", "facingDirection",
+          "nearby", "balcony", "petsAllowed", "nonVegAllowed",
+          "smokingAllowed", "bachelorAllowed"
+        ],
+        weight: 0.2633 // 26.33% of total (79/3)
+      },
+      {
+        name: "step3",
+        fields: [
+          "facilities", "monthlyRent", "securityDeposit",
+          "rentalDurationMonths", "maintenanceCharges",
+          "availableFrom", "parking", "waterSupply", "electricityBackup"
+        ],
+        weight: 0.2633 // 26.33% of total (79/3)
+      },
+      {
+        name: "step4",
+        fields: ["images", "videos"],
+        weight: 0.30 // 21% of total
+      }
+    ];
+  
     let totalProgress = 0;
-    for (let i = 1; i < step; i++) {
-      totalProgress += 25;
-    }
-
-    return totalProgress + stepProgress;
+  
+    stepDefinitions.forEach(step => {
+      const { fields, weight } = step;
+      let filledFields = 0;
+  
+      fields.forEach(field => {
+        const value = formData[field];
+        
+        if (Array.isArray(value)) {
+          if (value.length > 0) filledFields++;
+        } else if (typeof value === 'string' || typeof value === 'number') {
+          if (value.toString().trim() !== '') filledFields++;
+        } else if (typeof value === 'object' && value !== null) {
+          if (Object.keys(value).length > 0) filledFields++;
+        }
+        // Boolean fields are intentionally excluded from progress calculation
+      });
+  
+      const stepCompletion = filledFields / fields.length;
+      totalProgress += stepCompletion * weight;
+    });
+  
+    // Convert to percentage and round
+    const percentage = Math.round(totalProgress * 100);
+    
+    // Ensure percentage is between 0 and 100
+    return Math.min(Math.max(percentage, 0), 100);
   };
-
   const progress = calculateProgress();
 
   if (!isAuthenticated) {
@@ -976,7 +1007,7 @@ const AddProperty = () => {
                               .replace(" ", "-")}`}
                             className="ml-2 text-sm text-purple-800"
                           >
-                            {place}
+                  ``          {place}
                           </label>
                         </div>
 

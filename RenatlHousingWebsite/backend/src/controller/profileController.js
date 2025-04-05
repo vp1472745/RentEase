@@ -1,4 +1,6 @@
 import User from "../models/user.js";
+import cloudinary from "../config/cloudinaryConfig.js";
+import fs from 'fs';
 
 export const getUserProfile = async (req, res) => {
   try {
@@ -8,7 +10,7 @@ export const getUserProfile = async (req, res) => {
     }
     
     res.json({ 
-      userId: user._id, // ✅ User ID भी return कर रहा हूँ 
+      userId: user._id,
       name: user.name,
       email: user.email,
       phone: user.phone,
@@ -20,17 +22,14 @@ export const getUserProfile = async (req, res) => {
   }
 };
 
-// 🔹 Update User Profile
-import cloudinary from "../config/cloudinaryConfig.js"; // import the cloudinary config
-
 export const updateUserProfile = async (req, res) => {
   try {
-    if (!req.user || !req.user._id) {
+    if (!req.user || !req.user.userId) {
       return res.status(401).json({ msg: "Unauthorized Access" });
     }
 
     const { name, phone } = req.body;
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user.userId);
 
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
@@ -40,24 +39,41 @@ export const updateUserProfile = async (req, res) => {
     user.name = name || user.name;
     user.phone = phone || user.phone;
 
-    // Handle profile image upload using Cloudinary
+    // Handle profile image upload
     if (req.file) {
-      // Upload the image to Cloudinary
-      const result = await cloudinary.v2.uploader.upload(req.file.path, {
-        folder: 'profiles', // specify the folder (optional)
-        use_filename: true,  // keep the original file name
-        unique_filename: false, // avoid appending random characters to the file name
-      });
+      try {
+        // Delete old image from Cloudinary if exists
+        if (user.profileImage) {
+          const publicId = user.profileImage.split('/').pop().split('.')[0];
+          await cloudinary.v2.uploader.destroy(`profiles/${publicId}`);
+        }
 
-      // Save the Cloudinary URL in the user's profile
-      user.profileImage = result.secure_url;
-      
+        // Upload new image to Cloudinary
+        const result = await cloudinary.v2.uploader.upload(req.file.path, {
+          folder: 'profiles',
+          use_filename: true,
+          unique_filename: false,
+        });
+
+        // Save the Cloudinary URL
+        user.profileImage = result.secure_url;
+        
+        // Delete file from server after upload
+        fs.unlink(req.file.path, (err) => {
+          if (err) console.error("Error deleting file:", err);
+        });
+      } catch (uploadError) {
+        console.error("Cloudinary upload error:", uploadError);
+        return res.status(500).json({ msg: "Error uploading image" });
+      }
     }
 
     await user.save();
+    
     res.json({
       msg: "Profile updated successfully",
       user: {
+        userId: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
@@ -65,7 +81,7 @@ export const updateUserProfile = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error("❌ Profile Update Error:", err.message);
+    console.error("Profile Update Error:", err.message);
     res.status(500).json({ msg: "Server Error", error: err.message });
   }
 };
