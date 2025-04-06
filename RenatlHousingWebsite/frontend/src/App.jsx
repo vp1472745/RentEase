@@ -24,6 +24,7 @@ import ReportResearch from "./pages/researchReport.jsx"
 import News from "./pages/news.jsx"
 import Housingprotect from"./pages/housingProtect.jsx"
 import PayRent from "./pages/payRent.jsx"
+import Fraud from "./pages/fraud.jsx"
 function App() {
   return (
     <GoogleOAuthProvider clientId="385746889631-oepj52hiaskkn8oqbp3244r888uupr2d.apps.googleusercontent.com">
@@ -117,6 +118,7 @@ function AppContent() {
           <Route path="/News" element={<News/>}/>
           <Route path="/housingProtect" element={<Housingprotect/>}/>
           <Route path="/PayRent" element={<PayRent/>}/>
+          <Route path="/Fraud" element={<Fraud/>}/>
           </Routes>
 
 

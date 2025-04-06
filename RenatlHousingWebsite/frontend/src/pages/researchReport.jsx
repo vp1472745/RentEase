@@ -72,28 +72,28 @@ const RealEstateResearchReports = () => {
   return (
           <>
           <div className='w-[100%] h-15 bg-purple-800'></div>
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl lg:text-6xl">
+          <h1 className="text-4xl font-extrabold text-purple-800 sm:text-2xl lg:text-5xl">
             Rental Property Research Hub
           </h1>
-          <p className="mt-5 max-w-xl mx-auto text-xl text-gray-500">
+          <p className="mt-5 max-w-xl mx-auto text-xl text-purple-800">
             Expert insights to help you list, manage, and optimize your rental properties in India.
           </p>
         </div>
 
-        <div className="mb-8 bg-white p-6 rounded-lg shadow-md">
+        <div className="mb-8 bg-white p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="w-full md:w-1/2">
-              <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="search" className="block text-sm font-medium text-purple-800 mb-1">
                 Search Reports
               </label>
               <div className="relative rounded-md shadow-sm">
                 <input
                   type="text"
                   id="search"
-                  className="block w-full pl-4 pr-10 py-2 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  className="block w-full pl-4 pr-10 py-2 border-purple-800 outline-none rounded-md  border" 
                   placeholder="Search by title or keyword"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -101,14 +101,14 @@ const RealEstateResearchReports = () => {
               </div>
             </div>
             <div className="w-full md:w-1/2">
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="category" className="block text-sm font-medium text-purple-800  mb-1">
                 Filter by Category
               </label>
               <select
                 id="category"
-                className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                className="block w-full pl-3 pr-10 py-2 text-base border border-purple-800 outline-none rounded-md"
                 value={activeCategory}
-                onChange={(e) => setActiveCategory(e.target.value)}
+                onChange={(e) => setActiveCategory(e.target.value)} 
               >
                 {categories.map(category => (
                   <option key={category} value={category}>{category}</option>
@@ -118,20 +118,20 @@ const RealEstateResearchReports = () => {
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 ">
           {filteredReports.length > 0 ? (
             filteredReports.map(report => (
-              <div key={report.id} className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow">
+              <div key={report.id} className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow border border-purple-800">
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{report.title}</h3>
-                  <p className="text-sm text-gray-600 mb-4">{report.description}</p>
-                  <div className="flex justify-between items-center text-sm text-gray-500">
+                  <h3 className="text-lg font-semibold text-purple-800 mb-2">{report.title}</h3>
+                  <p className="text-sm text-purple-800 mb-4">{report.description}</p>
+                  <div className="flex justify-between items-center text-sm text-purple-800">
                     <span>{report.date}</span>
                     <button
-                      className="text-blue-600 hover:text-blue-800 font-medium"
+                      className="text-purple-800 cursor-pointer hover:text-purple-600 font-medium"
                       onClick={() => handleDownload(report.title, report.downloadLink)}
                     >
-                      Download
+                 Read More →
                     </button>
                   </div>
                 </div>

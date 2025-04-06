@@ -161,6 +161,8 @@ const propertySchema = new mongoose.Schema(
         "South-West",
       ],
     },
+
+    
     nearby: [{ type: String }],
 
     // Facilities & Features

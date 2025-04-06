@@ -1,19 +1,39 @@
 import express from "express";
-import { getUserProfile, updateUserProfile } from "../controller/profileController.js";
+import { 
+  getUserProfile, 
+  updateUserProfile 
+} from "../controller/profileController.js";
 import upload from "../middleware/multerMiddleware.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// ✅ प्रोफाइल डेटा प्राप्त करने का रूट
+// Add proper response headers
+router.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  next();
+});
+
+// ✅ Get profile data route
 router.get("/", authMiddleware, getUserProfile);
 
-// ✅ प्रोफाइल अपडेट रूट (क्लाउडिनेरी पर इमेज अपलोड करेगा और URL MongoDB में सेव करेगा)
+// ✅ Profile update route
 router.put(
   "/update",
   authMiddleware,
-  upload.single("profileImage"), // 1. मल्टर द्वारा इमेज प्रोसेसिंग
-  updateUserProfile // 2. क्लाउडिनेरी अपलोड और MongoDB अपडेट
+  upload.single("profileImage"), // Multer middleware
+  (err, req, res, next) => { // Error handling for Multer
+    if (err) {
+      return res.status(400).json({
+        success: false,
+        message: "File upload error",
+        error: err.message
+      });
+    }
+    next();
+  },
+  updateUserProfile // Cloudinary upload and MongoDB update
 );
 
 export default router;

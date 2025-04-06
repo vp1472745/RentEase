@@ -183,19 +183,19 @@ const RealEstateNews = () => {
 
     <div className="min-h-screen bg-gray-50 px-6 py-10">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-6">Real Estate News & Updates</h1>
+        <h1 className="text-4xl font-bold text-center mb-6 text-purple-800">Real Estate News & Updates</h1>
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
           <input
             type="text"
             placeholder="Search news..."
-            className="w-full md:w-1/2 border border-gray-300 rounded-md px-4 py-2"
+            className="w-full md:w-1/2 border border-purple-800 rounded-md px-4 py-2 outline-none cursor-pointer"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
 
           <select
-            className="w-full md:w-1/3 border border-gray-300 rounded-md px-4 py-2"
+            className="w-full md:w-1/2 border border-purple-800 rounded-md px-4 py-2 cursor-pointer"
             value={activeCategory}
             onChange={(e) => setActiveCategory(e.target.value)}
           >
@@ -208,11 +208,11 @@ const RealEstateNews = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredNews.length > 0 ? (
             filteredNews.map(news => (
-              <div key={news.id} className="bg-white p-5 rounded-lg shadow hover:shadow-md transition duration-200">
+              <div key={news.id} className="bg-white p-5 rounded-lg shadow hover:shadow-md transition duration-200 border-2 border-purple-800">
                 <h2 className="text-xl font-semibold text-purple-800">{news.title}</h2>
-                <p className="text-sm text-gray-500 mb-2">{news.date} | {news.category}</p>
-                <p className="text-gray-700 mb-4">{news.description}</p>
-                <a href={news.source} target="_blank" rel="noopener noreferrer" className="text-purple-800 hover:underline">
+                <p className="text-sm  mb-2 text-purple-800">{news.date} | {news.category}</p>
+                <p className="text-purple-800 mb-4">{news.description}</p>
+                <a href={news.source} target="_blank" rel="noopener noreferrer" className="text-purple-800 ">
                   Read More →
                 </a>
               </div>

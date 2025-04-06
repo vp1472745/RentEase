@@ -32,12 +32,16 @@ function Properties() {
   const [localityFilter, setLocalityFilter] = useState("");
   const [priceRange, setPriceRange] = useState([0, 100000]);
   const [showFilters, setShowFilters] = useState(false);
+  const [showSeenProperties, setShowSeenProperties] = useState(false);
 
   useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const tab = searchParams.get('tab');
+    setShowSeenProperties(tab === 'seenproperties');
+    
     const fetchProperties = async () => {
       try {
         setLoading(true);
-        const searchParams = new URLSearchParams(location.search);
         const res = await axios.get(`http://localhost:5000/api/properties`, {
           params: {
             city: searchParams.get("city") || "",
@@ -57,12 +61,23 @@ function Properties() {
           : [];
           
         setProperties(propertiesData);
-        setFilteredProperties(propertiesData);
         
         // Load seen properties from localStorage
         const savedSeenProperties = localStorage.getItem('seenProperties');
         if (savedSeenProperties) {
           setSeenProperties(JSON.parse(savedSeenProperties));
+          
+          // If showing seen properties, filter them
+          if (tab === 'seenproperties') {
+            const seenProps = propertiesData.filter(prop => 
+              JSON.parse(savedSeenProperties).includes(prop._id)
+            );
+            setFilteredProperties(seenProps);
+          } else {
+            setFilteredProperties(propertiesData);
+          }
+        } else {
+          setFilteredProperties(propertiesData);
         }
       } catch (error) {
         console.error("Error fetching properties:", error);
@@ -76,7 +91,9 @@ function Properties() {
   }, [location.search]);
 
   useEffect(() => {
-    applyFilters();
+    if (!showSeenProperties) {
+      applyFilters();
+    }
   }, [
     searchTerm,
     cityFilter,
@@ -85,6 +102,7 @@ function Properties() {
     localityFilter,
     priceRange,
     properties,
+    showSeenProperties
   ]);
 
   const applyFilters = () => {
@@ -138,20 +156,108 @@ function Properties() {
     setFilteredProperties(filtered);
   };
 
-  const handleViewDetails = (propertyId) => {
-    // Add property to seen properties if not already there
-    const seenProperties = JSON.parse(localStorage.getItem('seenProperties') || '[]');
+// In Properties.js
+const handleViewDetails = async (propertyId) => {
+  try {
+    // Record view in backend if user is authenticated
+    const token = localStorage.getItem('token');
+    if (token) {
+      await axios.post(`http://localhost:5000/api/properties/${propertyId}/view`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+    }
+    
+    // Add to local storage for all users
+    const seenProperties = JSON.parse(localStorage.getItem('seenProperties') || []);
     if (!seenProperties.includes(propertyId)) {
       const updatedSeenProperties = [...seenProperties, propertyId];
       localStorage.setItem('seenProperties', JSON.stringify(updatedSeenProperties));
+      setSeenProperties(updatedSeenProperties);
       
-      // Dispatch event to notify MyActivity component
+      // Notify Navbar of update
       window.dispatchEvent(new CustomEvent('seenPropertyAdded', {
         detail: { count: updatedSeenProperties.length }
       }));
     }
+    
     navigate(`/property/${propertyId}`);
-  };
+  } catch (error) {
+    console.error("Error recording view:", error);
+    // Still navigate even if tracking fails
+    navigate(`/property/${propertyId}`);
+  }
+};
+
+// Update the fetchProperties function
+const fetchProperties = async () => {
+  try {
+    setLoading(true);
+    const searchParams = new URLSearchParams(location.search);
+    
+    // Fetch properties from API
+    const res = await axios.get(`http://localhost:5000/api/properties`, {
+      params: {
+        city: searchParams.get("city") || "",
+        address: searchParams.get("locality") || "",
+        propertyType: searchParams.get("category") || "",
+        popularLocality: searchParams.get("popularLocality") || "",
+      },
+    });
+    
+    const propertiesData = Array.isArray(res?.data) 
+      ? res.data.map(property => ({
+          ...property,
+          media: [...(property.images || []), ...(property.videos || [])],
+          videos: property.videos || [],
+          images: property.images || []
+        }))
+      : [];
+      
+    setProperties(propertiesData);
+    
+    // Check if we're showing seen properties
+    const tab = searchParams.get('tab');
+    setShowSeenProperties(tab === 'seenproperties');
+    
+    if (tab === 'seenproperties') {
+      // For authenticated users, fetch from backend
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const seenRes = await axios.get('http://localhost:5000/api/properties/user/views', {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+          const seenIds = seenRes.data.map(p => p._id);
+          const seenProps = propertiesData.filter(p => seenIds.includes(p._id));
+          setFilteredProperties(seenProps);
+        } catch (error) {
+          console.error("Error fetching seen properties:", error);
+          // Fallback to localStorage
+          const savedSeenProperties = JSON.parse(localStorage.getItem('seenProperties') || '[]');
+          const seenProps = propertiesData.filter(p => savedSeenProperties.includes(p._id));
+          setFilteredProperties(seenProps);
+        }
+      } else {
+        // For unauthenticated users, use localStorage
+        const savedSeenProperties = JSON.parse(localStorage.getItem('seenProperties') || '[]');
+        const seenProps = propertiesData.filter(p => savedSeenProperties.includes(p._id));
+        setFilteredProperties(seenProps);
+      }
+    } else {
+      setFilteredProperties(propertiesData);
+    }
+  } catch (error) {
+    console.error("Error fetching properties:", error);
+    setProperties([]);
+    setFilteredProperties([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const toggleFavorite = (propertyId) => {
     setFavorites((prev) => ({
@@ -272,150 +378,152 @@ function Properties() {
       <div className="bg-purple-800 w-full h-15"></div>
 
       {/* Search and Filters Section */}
-      <div className="container mx-auto px-4 py-4 bg-white shadow-sm rounded-lg">
-        {/* Mobile Filter Toggle */}
-        <div className="md:hidden flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold text-purple-800">
-            Properties ({filteredProperties.length})
-          </h2>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 bg-purple-100 text-purple-800 px-3 py-2 rounded-lg"
-          >
-            <FiFilter /> Filters
-          </button>
-        </div>
-
-        {/* Search and Filters - Desktop */}
-        <div className={`${showFilters ? 'block' : 'hidden'} md:block`}>
-          {/* Search Row */}
-          <div className="flex flex-col md:flex-row gap-3 mb-4">
-            <div className="relative flex-1">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiSearch className="text-gray-500" />
-              </div>
-              <input
-                type="text"
-                className="block w-full pl-10 pr-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 font-bold outline-none"
-                placeholder="Search properties, nearby or owners..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
-            <div className="flex-1">
-              <input
-                type="text"
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 font-bold outline-none"
-                placeholder="📍 Popular locality"
-                value={localityFilter}
-                onChange={(e) => setLocalityFilter(e.target.value)}
-              />
-            </div>
+      {!showSeenProperties && (
+        <div className="container mx-auto px-4 py-4 bg-white shadow-sm rounded-lg">
+          {/* Mobile Filter Toggle */}
+          <div className="md:hidden flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-purple-800">
+              Properties ({filteredProperties.length})
+            </h2>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 bg-purple-100 text-purple-800 px-3 py-2 rounded-lg"
+            >
+              <FiFilter /> Filters
+            </button>
           </div>
 
-          {/* Filter Row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {/* BHK Filter */}
-            <div className="relative">
-              <select
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 font-bold outline-none appearance-none"
-                value={bhkFilter}
-                onChange={(e) => setBhkFilter(e.target.value)}
-              >
-                <option value="">🏠 BHK Type</option>
-                <option value="1">1 BHK</option>
-                <option value="2">2 BHK</option>
-                <option value="3">3 BHK</option>
-                <option value="4">4+ BHK</option>
-              </select>
-              <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                <svg
-                  className="w-4 h-4 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+          {/* Search and Filters - Desktop */}
+          <div className={`${showFilters ? 'block' : 'hidden'} md:block`}>
+            {/* Search Row */}
+            <div className="flex flex-col md:flex-row gap-3 mb-4">
+              <div className="relative flex-1">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiSearch className="text-gray-500" />
+                </div>
+                <input
+                  type="text"
+                  className="block w-full pl-10 pr-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 font-bold outline-none"
+                  placeholder="Search properties, nearby or owners..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
+              <div className="flex-1">
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 font-bold outline-none"
+                  placeholder="📍 Popular locality"
+                  value={localityFilter}
+                  onChange={(e) => setLocalityFilter(e.target.value)}
+                />
               </div>
             </div>
 
-            {/* Property Type Filter */}
-            <div className="relative">
-              <select
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 font-bold outline-none appearance-none"
-                value={propertyTypeFilter}
-                onChange={(e) => setPropertyTypeFilter(e.target.value)}
-              >
-                <option value="">🏘️ Property Type</option>
-                <option value="Apartment">Apartment</option>
-                <option value="House">House</option>
-                <option value="Villa">Villa</option>
-                <option value="PG">PG/Hostel</option>
-              </select>
-              <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                <svg
-                  className="w-4 h-4 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            {/* Filter Row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {/* BHK Filter */}
+              <div className="relative">
+                <select
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 font-bold outline-none appearance-none"
+                  value={bhkFilter}
+                  onChange={(e) => setBhkFilter(e.target.value)}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                  <option value="">🏠 BHK Type</option>
+                  <option value="1">1 BHK</option>
+                  <option value="2">2 BHK</option>
+                  <option value="3">3 BHK</option>
+                  <option value="4">4+ BHK</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
               </div>
-            </div>
 
-            {/* Price Range Filter */}
-            <div className="col-span-2">
-              <div className="flex items-center space-x-2 bg-gray-50 p-1.5 rounded-lg border border-gray-200 focus-within:bg-white focus-within:ring-1 focus-within:ring-purple-500 focus-within:border-purple-500">
-                <span className="text-purple-800 font-bold text-sm whitespace-nowrap">
-                  💰 Price:
-                </span>
-                <div className="flex-1 flex items-center space-x-1">
-                  <input
-                    type="number"
-                    className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:ring-0 text-purple-800 font-bold outline-none"
-                    placeholder="Min"
-                    value={priceRange[0] === 0 ? "" : priceRange[0]}
-                    onChange={(e) =>
-                      setPriceRange([
-                        e.target.value ? Number(e.target.value) : 0,
-                        priceRange[1],
-                      ])
-                    }
-                    min="0"
-                  />
-                  <span className="text-gray-400">-</span>
-                  <input
-                    type="number"
-                    className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:ring-0 text-purple-800 font-bold outline-none"
-                    placeholder="Max"
-                    value={priceRange[1] === 100000 ? "" : priceRange[1]}
-                    onChange={(e) =>
-                      setPriceRange([
-                        priceRange[0],
-                        e.target.value ? Number(e.target.value) : 100000,
-                      ])
-                    }
-                    min="0"
-                  />
+              {/* Property Type Filter */}
+              <div className="relative">
+                <select
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 font-bold outline-none appearance-none"
+                  value={propertyTypeFilter}
+                  onChange={(e) => setPropertyTypeFilter(e.target.value)}
+                >
+                  <option value="">🏘️ Property Type</option>
+                  <option value="Apartment">Apartment</option>
+                  <option value="House">House</option>
+                  <option value="Villa">Villa</option>
+                  <option value="PG">PG/Hostel</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Price Range Filter */}
+              <div className="col-span-2">
+                <div className="flex items-center space-x-2 bg-gray-50 p-1.5 rounded-lg border border-gray-200 focus-within:bg-white focus-within:ring-1 focus-within:ring-purple-500 focus-within:border-purple-500">
+                  <span className="text-purple-800 font-bold text-sm whitespace-nowrap">
+                    💰 Price:
+                  </span>
+                  <div className="flex-1 flex items-center space-x-1">
+                    <input
+                      type="number"
+                      className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:ring-0 text-purple-800 font-bold outline-none"
+                      placeholder="Min"
+                      value={priceRange[0] === 0 ? "" : priceRange[0]}
+                      onChange={(e) =>
+                        setPriceRange([
+                          e.target.value ? Number(e.target.value) : 0,
+                          priceRange[1],
+                        ])
+                      }
+                      min="0"
+                    />
+                    <span className="text-gray-400">-</span>
+                    <input
+                      type="number"
+                      className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:ring-0 text-purple-800 font-bold outline-none"
+                      placeholder="Max"
+                      value={priceRange[1] === 100000 ? "" : priceRange[1]}
+                      onChange={(e) =>
+                        setPriceRange([
+                          priceRange[0],
+                          e.target.value ? Number(e.target.value) : 100000,
+                        ])
+                      }
+                      min="0"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Property Listings */}
       <div className="container mx-auto px-4 py-4">
@@ -425,144 +533,54 @@ function Properties() {
               Loading properties...
             </div>
           </div>
+        ) : showSeenProperties ? (
+          <div className="mb-4">
+            <h2 className="text-2xl font-bold text-purple-800 mb-4">
+              Seen Properties ({filteredProperties.length})
+            </h2>
+            {filteredProperties.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6 max-w-5xl mx-auto pb-20">
+                {filteredProperties.map((property) => (
+                  <PropertyCard 
+                    key={property._id}
+                    property={property}
+                    favorites={favorites}
+                    toggleFavorite={toggleFavorite}
+                    openGallery={openGallery}
+                    shareOnWhatsApp={shareOnWhatsApp}
+                    contactOwner={contactOwner}
+                    handleViewDetails={handleViewDetails}
+                    isVideo={isVideo}
+                    getMediaUrl={getMediaUrl}
+                    VideoPlayer={VideoPlayer}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex justify-center items-center h-64">
+                <p className="text-center text-purple-800">
+                  You haven't viewed any properties yet
+                </p>
+              </div>
+            )}
+          </div>
         ) : filteredProperties.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 max-w-5xl mx-auto pb-20">
-            {filteredProperties.map((property) => {
-              const firstMedia = property.media?.[0];
-              const mediaUrl = getMediaUrl(firstMedia);
-              const isVideoMedia = isVideo(firstMedia);
-
-              return (
-                <div
-                  key={property._id}
-                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
-                >
-                  <div className="flex flex-col md:flex-row">
-                    {/* Property Image/Video */}
-                    <div className="relative md:w-2/5 h-48 md:h-auto">
-                      {isVideoMedia ? (
-                        <VideoPlayer
-                          src={mediaUrl}
-                          className="w-full h-full cursor-pointer"
-                          onClick={() => openGallery(property, 0)}
-                          thumbnail
-                        />
-                      ) : (
-                        <img
-                          src={mediaUrl || "https://via.placeholder.com/400x300"}
-                          alt={property.title}
-                          className="w-full h-full object-cover cursor-pointer"
-                          onClick={() => openGallery(property, 0)}
-                        />
-                      )}
-                      <div className="absolute top-4 right-4 flex space-x-2">
-                        <button
-                          className={`p-2 rounded-full shadow-md transition ${
-                            favorites[property._id]
-                              ? "text-red-500 bg-white"
-                              : "bg-white text-gray-700"
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFavorite(property._id);
-                          }}
-                        >
-                          <FiHeart
-                            className={`${
-                              favorites[property._id] ? "fill-current" : ""
-                            }`}
-                          />
-                        </button>
-                        <button
-                          className="bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            shareOnWhatsApp(property);
-                          }}
-                        >
-                          <FiShare2 />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Property Details */}
-                    <div className="p-4 md:p-6 md:w-3/5">
-                      <h3 className="text-lg font-semibold text-purple-800 mb-2">
-                        {property.bhkType} {property.propertyType} in {property.popularLocality}
-                      </h3>
-
-                      <div className="grid grid-cols-2 gap-4 mb-3">
-                        <div>
-                          <p className="text-sm text-gray-600">City</p>
-                          <p className="font-semibold">{property.city}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Nearby</p>
-                          <p className="font-semibold whitespace-pre-line">
-                            {String(property.nearby || "").replace(/,/g, "\n")}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Rent</p>
-                          <p className="font-semibold">₹{property.monthlyRent}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Deposit</p>
-                          <p className="font-semibold">₹{property.securityDeposit}</p>
-                        </div>
-                      </div>
-
-                      <div className="mb-3">
-                        <p className="text-sm text-gray-600">Furnishing</p>
-                        <p className="font-semibold">{property.furnishType}</p>
-                      </div>
-
-                      {property.facilities && (
-                        <div className="mb-3">
-                          <p className="text-sm text-gray-600">Facilities</p>
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {Array.isArray(property.facilities) ? (
-                              property.facilities.slice(0, 3).map((facility, index) => (
-                                <span
-                                  key={index}
-                                  className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs"
-                                >
-                                  {facility}
-                                </span>
-                              ))
-                            ) : (
-                              <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">
-                                {property.facilities}
-                              </span>
-                            )}
-                            {property.facilities.length > 3 && (
-                              <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">
-                                +{property.facilities.length - 3} more
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="flex flex-col sm:flex-row gap-3 mt-4">
-                        <button
-                          onClick={() => handleViewDetails(property._id)}
-                          className="flex-1 bg-purple-800 text-white py-2 rounded-lg hover:bg-purple-900 transition"
-                        >
-                          View Details
-                        </button>
-                        <button
-                          onClick={() => contactOwner(property.ownerphone)}
-                          className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
-                        >
-                          <FiPhone /> Contact
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {filteredProperties.map((property) => (
+              <PropertyCard 
+                key={property._id}
+                property={property}
+                favorites={favorites}
+                toggleFavorite={toggleFavorite}
+                openGallery={openGallery}
+                shareOnWhatsApp={shareOnWhatsApp}
+                contactOwner={contactOwner}
+                handleViewDetails={handleViewDetails}
+                isVideo={isVideo}
+                getMediaUrl={getMediaUrl}
+                VideoPlayer={VideoPlayer}
+              />
+            ))}
           </div>
         ) : (
           <div className="flex justify-center items-center h-64">
@@ -577,97 +595,280 @@ function Properties() {
 
       {/* Image/Video Gallery Modal */}
       {isGalleryOpen && currentProperty && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex flex-col items-center justify-center p-4">
-          <button
-            onClick={closeGallery}
-            className="absolute top-4 right-4 text-white text-3xl hover:text-gray-300"
-          >
-            <FiX size={32} />
-          </button>
+        <GalleryModal 
+          currentProperty={currentProperty}
+          currentImageIndex={currentImageIndex}
+          closeGallery={closeGallery}
+          goToPrevImage={goToPrevImage}
+          goToNextImage={goToNextImage}
+          setCurrentImageIndex={setCurrentImageIndex}
+          isVideo={isVideo}
+          getMediaUrl={getMediaUrl}
+        />
+      )}
+    </div>
+  );
+}
 
-          <div className="relative w-full max-w-4xl h-full max-h-[70vh] flex flex-col items-center justify-center">
-            <div className="w-full text-center mb-4">
-              <p className="text-white text-lg font-bold">
-                {currentProperty.title}
+// Property Card Component
+function PropertyCard({ 
+  property, 
+  favorites, 
+  toggleFavorite, 
+  openGallery, 
+  shareOnWhatsApp, 
+  contactOwner, 
+  handleViewDetails,
+  isVideo,
+  getMediaUrl,
+  VideoPlayer
+}) {
+  const firstMedia = property.media?.[0];
+  const mediaUrl = getMediaUrl(firstMedia);
+  const isVideoMedia = isVideo(firstMedia);
+
+  return (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+      <div className="flex flex-col md:flex-row">
+        {/* Property Image/Video */}
+        <div className="relative md:w-2/5 h-48 md:h-auto">
+          {isVideoMedia ? (
+            <VideoPlayer
+              src={mediaUrl}
+              className="w-full h-full cursor-pointer"
+              onClick={() => openGallery(property, 0)}
+              thumbnail
+            />
+          ) : (
+            <img
+              src={mediaUrl || "https://via.placeholder.com/400x300"}
+              alt={property.title}
+              className="w-full h-full object-cover cursor-pointer"
+              onClick={() => openGallery(property, 0)}
+            />
+          )}
+          <div className="absolute top-4 right-4 flex space-x-2">
+            <button
+              className={`p-2 rounded-full shadow-md transition ${
+                favorites[property._id]
+                  ? "text-red-500 bg-white"
+                  : "bg-white text-gray-700"
+              }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFavorite(property._id);
+              }}
+            >
+              <FiHeart
+                className={`${
+                  favorites[property._id] ? "fill-current" : ""
+                }`}
+              />
+            </button>
+            <button
+              className="bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition"
+              onClick={(e) => {
+                e.stopPropagation();
+                shareOnWhatsApp(property);
+              }}
+            >
+              <FiShare2 />
+            </button>
+          </div>
+        </div>
+
+        {/* Property Details */}
+        <div className="p-4 md:p-6 md:w-3/5">
+          <h3 className="text-lg font-semibold text-purple-800 mb-2">
+            {property.bhkType} {property.propertyType} in {property.popularLocality}
+          </h3>
+
+          <div className="grid grid-cols-2 gap-4 mb-3">
+            <div>
+              <p className="text-sm text-gray-600">City</p>
+              <p className="font-semibold">{property.city}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Nearby</p>
+              <p className="font-semibold whitespace-pre-line">
+                {String(property.nearby || "").replace(/,/g, "\n")}
               </p>
             </div>
-            
-            <div className="relative w-full h-full flex items-center justify-center">
-              <button
-                onClick={goToPrevImage}
-                className="absolute left-2 md:left-4 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 z-10"
-              >
-                <FiChevronLeft size={24} />
-              </button>
+            <div>
+              <p className="text-sm text-gray-600">Rent</p>
+              <p className="font-semibold">₹{property.monthlyRent}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Deposit</p>
+              <p className="font-semibold">₹{property.securityDeposit}</p>
+            </div>
+          </div>
 
-              {isVideo(currentProperty.media[currentImageIndex]) ? (
-                <div className="w-full h-full flex items-center justify-center">
+          <div className="mb-3">
+            <p className="text-sm text-gray-600">Furnishing</p>
+            <p className="font-semibold">{property.furnishType}</p>
+          </div>
+
+          {property.facilities && (
+            <div className="mb-3">
+              <p className="text-sm text-gray-600">Facilities</p>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {Array.isArray(property.facilities) ? (
+                  property.facilities.slice(0, 3).map((facility, index) => (
+                    <span
+                      key={index}
+                      className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs"
+                    >
+                      {facility}
+                    </span>
+                  ))
+                ) : (
+                  <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">
+                    {property.facilities}
+                  </span>
+                )}
+                {property.facilities.length > 3 && (
+                  <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">
+                    +{property.facilities.length - 3} more
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row gap-3 mt-4">
+            <button
+              onClick={() => handleViewDetails(property._id)}
+              className="flex-1 bg-purple-800 text-white py-2 rounded-lg hover:bg-purple-900 transition"
+            >
+              View Details
+            </button>
+            <button
+              onClick={() => contactOwner(property.ownerphone)}
+              className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
+            >
+              <FiPhone /> Contact
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Gallery Modal Component
+function GalleryModal({
+  currentProperty,
+  currentImageIndex,
+  closeGallery,
+  goToPrevImage,
+  goToNextImage,
+  setCurrentImageIndex,
+  isVideo,
+  getMediaUrl
+}) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex flex-col items-center justify-center p-4">
+      <button
+        onClick={closeGallery}
+        className="absolute top-4 right-4 text-white text-3xl hover:text-gray-300"
+      >
+        <FiX size={32} />
+      </button>
+
+      <div className="relative w-full max-w-4xl h-full max-h-[70vh] flex flex-col items-center justify-center">
+        <div className="w-full text-center mb-4">
+          <p className="text-white text-lg font-bold">
+            {currentProperty.title}
+          </p>
+        </div>
+        
+        <div className="relative w-full h-full flex items-center justify-center">
+          <button
+            onClick={goToPrevImage}
+            className="absolute left-2 md:left-4 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 z-10"
+          >
+            <FiChevronLeft size={24} />
+          </button>
+
+          {isVideo(currentProperty.media[currentImageIndex]) ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <video
+                className="max-w-full max-h-[70vh]"
+                controls
+                autoPlay
+                playsInline
+              >
+                <source src={getMediaUrl(currentProperty.media[currentImageIndex])} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          ) : (
+            <img
+              src={getMediaUrl(currentProperty.media[currentImageIndex])}
+              className="max-w-full max-h-[70vh] object-contain"
+              alt={`Property media ${currentImageIndex + 1}`}
+            />
+          )}
+
+          <button
+            onClick={goToNextImage}
+            className="absolute right-2 md:right-4 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 z-10"
+          >
+            <FiChevronRight size={24} />
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-4 text-white text-center">
+        <p className="text-lg">
+          {currentImageIndex + 1} / {currentProperty.media.length}
+        </p>
+      </div>
+
+      {/* Thumbnail navigation */}
+      <div className="flex gap-2 overflow-x-auto max-w-full px-4 py-2">
+        {currentProperty.media.map((item, index) => {
+          const mediaUrl = getMediaUrl(item);
+          const isVideoItem = isVideo(item);
+
+          return (
+            <div 
+              key={index} 
+              className={`flex-shrink-0 cursor-pointer ${currentImageIndex === index ? 'ring-2 ring-purple-500' : ''}`}
+              onClick={() => setCurrentImageIndex(index)}
+            >
+              {isVideoItem ? (
+                <div className="relative w-16 h-16">
                   <video
-                    className="max-w-full max-h-[70vh]"
-                    controls
-                    autoPlay
+                    className="w-full h-full object-cover"
                     playsInline
+                    muted
+                    preload="metadata"
                   >
-                    <source src={getMediaUrl(currentProperty.media[currentImageIndex])} type="video/mp4" />
-                    Your browser does not support the video tag.
+                    <source src={mediaUrl} type="video/mp4" />
                   </video>
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                    <svg 
+                      className="w-4 h-4 text-white opacity-80" 
+                      fill="currentColor" 
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M6.3 2.8L14.8 10l-8.5 7.2V2.8z"/>
+                    </svg>
+                  </div>
                 </div>
               ) : (
                 <img
-                  src={getMediaUrl(currentProperty.media[currentImageIndex])}
-                  className="max-w-full max-h-[70vh] object-contain"
-                  alt={`Property media ${currentImageIndex + 1}`}
+                  src={mediaUrl}
+                  className="w-16 h-16 object-cover"
+                  alt={`Thumbnail ${index + 1}`}
                 />
               )}
-
-              <button
-                onClick={goToNextImage}
-                className="absolute right-2 md:right-4 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 z-10"
-              >
-                <FiChevronRight size={24} />
-              </button>
             </div>
-          </div>
-
-          <div className="mt-4 text-white text-center">
-            <p className="text-lg">
-              {currentImageIndex + 1} / {currentProperty.media.length}
-            </p>
-          </div>
-
-          {/* Thumbnail navigation */}
-          <div className="flex gap-2 overflow-x-auto max-w-full px-4 py-2">
-            {currentProperty.media.map((item, index) => {
-              const mediaUrl = getMediaUrl(item);
-              const isVideoItem = isVideo(item);
-
-              return (
-                <div 
-                  key={index} 
-                  className={`flex-shrink-0 cursor-pointer ${currentImageIndex === index ? 'ring-2 ring-purple-500' : ''}`}
-                  onClick={() => setCurrentImageIndex(index)}
-                >
-                  {isVideoItem ? (
-                    <div className="relative w-16 h-16">
-                      <VideoPlayer
-                        src={mediaUrl}
-                        className="w-full h-full"
-                        thumbnail
-                      />
-                    </div>
-                  ) : (
-                    <img
-                      src={mediaUrl}
-                      className="w-16 h-16 object-cover"
-                      alt={`Thumbnail ${index + 1}`}
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+          );
+        })}
+      </div>
     </div>
   );
 }

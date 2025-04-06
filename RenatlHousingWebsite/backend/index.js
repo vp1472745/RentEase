@@ -17,6 +17,7 @@ import googleAuthRoutes from "./src/routes/Oauth-google.js";
 import propertyRoutes from "./src/routes/propertyRoute.js";
 import profileRoutes from "./src/routes/profileRoutes.js";
 import videoRoutes from "./src/routes/VideosRoutes.js";
+import Viewdetails from "./src/routes/ViewdetailsRoutes.js"
 dotenv.config();
 mongoose.set("debug", true); // ✅ Yeh query logs print karega
 // ✅ Passport Configuration
@@ -190,6 +191,7 @@ app.use("/api/auth/google", googleAuthRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/videos", videoRoutes);
+app.use("/user/view",Viewdetails)
 
 // ✅ Default Route
 app.get("/", (req, res) => res.send("🏠 RentEase Backend Running..."));

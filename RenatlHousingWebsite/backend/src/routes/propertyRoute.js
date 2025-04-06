@@ -217,5 +217,47 @@ router.post("/api/properties/videos", async (req, res) => {
   }
 });
 
+// router.post('/', auth, async (req, res) => {
+//   try {
+//     const { propertyId } = req.body;
+//     const userId = req.user._id;
+
+//     // Check if view already exists
+//     const existingView = await PropertyView.findOne({ user: userId, property: propertyId });
+    
+//     if (!existingView) {
+//       const view = new PropertyView({
+//         user: userId,
+//         property: propertyId,
+//         viewedAt: new Date()
+//       });
+//       await view.save();
+//     }
+
+//     res.status(200).send();
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send({ error: 'Server error' });
+//   }
+// });
+
+// Get user's viewed properties
+// router.get('/', authMiddleware, async (req, res) => {
+//   try {
+//     const userId = req.user._id;
+//     const views = await PropertyView.find({ user: userId })
+//       .populate('property')
+//       .sort({ viewedAt: -1 });
+
+//     res.json(views.map(view => view.property));
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send({ error: 'Server error' });
+//   }
+// });
+
+
+
+
 
 export default router;
