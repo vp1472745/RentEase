@@ -33,6 +33,7 @@ const UserSchema = new mongoose.Schema({
     type: Boolean, 
     default: false 
   },
+    savedProperties: [{ type: mongoose.Schema.Types.ObjectId, ref: "Property" }],
   otp: { 
     type: String, 
     default: null 
