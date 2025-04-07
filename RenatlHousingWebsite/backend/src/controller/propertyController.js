@@ -335,3 +335,36 @@ export const deleteProperty = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+
+
+// ✅ Get All Properties of Logged-in Owner
+// ✅ Get Properties of Logged-in Owner
+export const getOwnerProperties = async (req, res) => {
+  try {
+    console.log("Fetching properties for owner:", req.user._id);
+    
+    const properties = await Property.find({ owner: req.user._id })
+      .populate("owner", "name email phone")
+      .sort({ createdAt: -1 });
+
+    if (!properties || properties.length === 0) {
+      return res.status(200).json({ 
+        success: true,
+        properties: [],
+        message: "No properties found for this owner" 
+      });
+    }
+
+    res.status(200).json({ 
+      success: true,
+      properties 
+    });
+  } catch (error) {
+    console.error("Error fetching owner properties:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to fetch owner properties",
+      error: error.message 
+    });
+  }
+};

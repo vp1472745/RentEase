@@ -4,7 +4,8 @@ import {
   addProperty,
   getAllProperties,
   updateProperty,
-  deleteProperty,
+  getOwnerProperties,
+  deleteProperty
 } from "../controller/propertyController.js";
 import { authMiddleware, ownerOnly } from "../middleware/authMiddleware.js";
 import uploadMiddleware from "../middleware/multerMiddleware.js";
@@ -13,7 +14,7 @@ import { readFile } from "fs/promises";
 import { GoogleGenerativeAI } from "@google/generative-ai"; // OpenAI की जगह Google Generative AI
 
 const router = express.Router();
-
+router.get('/owner/my-properties', authMiddleware, getOwnerProperties);
 // ✅ Google Gemini AI Initialization (FREE)
 const genAI = new GoogleGenerativeAI("AIzaSyBlKO3DyscHHPdEE2Sp9qYaXrGNUj7wRjs");
 

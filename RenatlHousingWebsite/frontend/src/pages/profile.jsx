@@ -46,25 +46,38 @@ const Profile = () => {
     tabFromURL || "editProfile"
   );
 
-  // Fetch only logged-in user's properties
-  const fetchUserProperties = async () => {
+  // Fetch only logged-in owner's properties
+  const fetchOwnerProperties = async () => {
     try {
       setPropertiesLoading(true);
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:5000/api/properties/owner", {
+      
+      const response = await axios.get("http://localhost:5000/api/properties/owner/my-properties", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       
-      if (response.data.success) {
+      console.log("API Response:", response); // Add this for debugging
+      
+      if (response.data && response.data.properties) {
         setProperties(response.data.properties);
       } else {
-        throw new Error(response.data.error || "Failed to fetch properties");
+        throw new Error(response.data?.message || "No properties found");
       }
     } catch (error) {
-      console.error("Error fetching properties:", error);
-      toast.error(error.response?.data?.error || error.message || "Failed to fetch properties");
+      console.error("Error fetching owner properties:", error);
+      console.error("Error details:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
+      toast.error(
+        error.response?.data?.message || 
+        error.message || 
+        "Failed to fetch your properties"
+      );
     } finally {
       setPropertiesLoading(false);
     }
@@ -80,7 +93,7 @@ const Profile = () => {
   // Fetch properties when section changes to myProperties
   useEffect(() => {
     if (selectedSection === "myProperties") {
-      fetchUserProperties();
+      fetchOwnerProperties();
     }
   }, [selectedSection]);
 
@@ -196,7 +209,7 @@ const Profile = () => {
         });
         toast.success("Property deleted successfully");
         // Refresh the properties list after deletion
-        fetchUserProperties();
+        fetchOwnerProperties();
       } catch (error) {
         console.error("Error deleting property:", error);
         toast.error(error.response?.data?.error || "Failed to delete property");
@@ -282,7 +295,7 @@ const Profile = () => {
                       </p>
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-bold text-purple-800">
-                          ₹{property.price?.toLocaleString() || '0'}
+                          ₹{property.monthlyRent?.toLocaleString() || '0'}
                         </span>
                         <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
                           {property.propertyType}
