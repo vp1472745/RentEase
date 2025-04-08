@@ -155,7 +155,7 @@ const AddProperty = () => {
     const token = localStorage.getItem("token");
     if (!token) {
       setError("Please login to add a property");
-      const timer = setTimeout(() => navigate("/login"), 5000);
+      const timer = setTimeout(() => navigate("/login"));
       return () => clearTimeout(timer);
     }
     setIsAuthenticated(true);
@@ -341,7 +341,7 @@ const AddProperty = () => {
       if (error.response?.status === 401) {
         setError("Session expired. Please login again.");
         localStorage.removeItem("token");
-        setTimeout(() => navigate("/login"), 1500);
+        setTimeout(() => navigate("/login"));
       } else {
         setError(
           error.response?.data?.message ||
@@ -489,7 +489,7 @@ const AddProperty = () => {
       if (error.response?.status === 401) {
         setError("Session expired. Please login again.");
         localStorage.removeItem("token");
-        setTimeout(() => navigate("/login"), 1500);
+        setTimeout(() => navigate("/login"));
       } else {
         setError(
           error.response?.data?.message ||

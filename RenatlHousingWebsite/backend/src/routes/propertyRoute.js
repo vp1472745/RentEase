@@ -5,17 +5,19 @@ import {
   getAllProperties,
   updateProperty,
   getOwnerProperties,
-  deleteProperty
+  deleteProperty,
+  recordPropertyView,
+  
 } from "../controller/propertyController.js";
 import { authMiddleware, ownerOnly } from "../middleware/authMiddleware.js";
 import uploadMiddleware from "../middleware/multerMiddleware.js";
 import Property from "../models/property.js";
 import { readFile } from "fs/promises";
-import { GoogleGenerativeAI } from "@google/generative-ai"; // OpenAI की जगह Google Generative AI
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const router = express.Router();
-router.get('/owner/my-properties', authMiddleware, getOwnerProperties);
-// ✅ Google Gemini AI Initialization (FREE)
+
+// ✅ Google Gemini AI Initialization
 const genAI = new GoogleGenerativeAI("AIzaSyBlKO3DyscHHPdEE2Sp9qYaXrGNUj7wRjs");
 
 // ✅ Load Popular Localities JSON
@@ -30,7 +32,7 @@ let popularLocalitiesData = {};
   }
 })();
 
-// ✅ AI Text Formatting Endpoint (Now using Google Gemini)
+// ✅ AI Text Formatting Endpoint
 router.post("/format-description", authMiddleware, async (req, res) => {
   try {
     const { text } = req.body;
@@ -66,13 +68,25 @@ router.post("/format-description", authMiddleware, async (req, res) => {
     });
   } catch (error) {
     console.error("AI formatting error:", error);
-    
     res.status(500).json({ 
       error: "Failed to format description",
       details: error.message 
     });
   }
 });
+
+
+
+router.post('/properties/:id/view', async (req, res) => {
+  console.log('API hit: /properties/:id/view');
+  res.status(200).json({ message: 'View recorded' });
+});
+
+
+// Route to save a property
+// router.post("/properties/save",  saveProperty);
+// ✅ Owner's Properties
+router.get('/owner/my-properties', authMiddleware, getOwnerProperties);
 
 // ✅ Add New Property (Only Owner)
 router.post("/add", authMiddleware, ownerOnly, addProperty);
@@ -90,7 +104,6 @@ router.get("/search", async (req, res) => {
     if (locality) conditions.push({ address: new RegExp(locality, "i") });
     if (address) conditions.push({ address: new RegExp(address, "i") });
 
-    // ✅ Popular Locality Check
     if (popularLocality) {
       const matchedLocalities = Object.values(popularLocalitiesData).flat();
       if (matchedLocalities.includes(popularLocality)) {
@@ -120,7 +133,7 @@ router.get("/search", async (req, res) => {
 // ✅ Get All Properties
 router.get("/", getAllProperties);
 
-// ✅ Get Property By ID (Improved Error Handling)
+// ✅ Get Property By ID
 router.get('/:id', async (req, res) => {
   try {
     const property = await Property.findById(req.params.id);
@@ -133,19 +146,67 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// ✅ Update Property (Only Owner)
+// ✅ Update Property (Secure Version)
 router.put("/:id", authMiddleware, ownerOnly, async (req, res) => {
   try {
-    const property = await Property.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const property = await Property.findById(req.params.id);
 
     if (!property) {
       return res.status(404).json({ message: "Property not found" });
     }
 
-    res.json(property);
+    // Owner verification
+    if (property.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ 
+        message: "Not authorized to update this property" 
+      });
+    }
+
+    // Format data before update (optional but useful)
+    if (req.body.bhkType) {
+      req.body.bhkType = Array.isArray(req.body.bhkType)
+        ? req.body.bhkType.map(item => item.toUpperCase())
+        : [req.body.bhkType.toUpperCase()];
+    }
+
+    if (req.body.propertyType) {
+      req.body.propertyType = Array.isArray(req.body.propertyType)
+        ? req.body.propertyType.map(item => item.toLowerCase())
+        : [req.body.propertyType.toLowerCase()];
+    }
+
+    if (req.body.furnishType) {
+      req.body.furnishType = Array.isArray(req.body.furnishType)
+        ? req.body.furnishType.map(item => item.toLowerCase())
+        : [req.body.furnishType.toLowerCase()];
+    }
+
+    if (req.body.facilities) {
+      req.body.facilities = Array.isArray(req.body.facilities)
+        ? req.body.facilities.map(item => item.toLowerCase())
+        : [req.body.facilities.toLowerCase()];
+    }
+
+    // Update property without strict validation
+    const updatedProperty = await Property.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({ 
+      success: true,
+      message: "Property updated successfully",
+      property: updatedProperty 
+    });
+
   } catch (error) {
-    console.error("❌ Update Property Error:", error);
-    res.status(500).json({ message: "Server Error", error: error.message });
+    console.error("Update Property Error:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to update property",
+      error: error.message 
+    });
   }
 });
 
@@ -180,20 +241,6 @@ router.post("/upload", uploadMiddleware.array("images", 10), (req, res) => {
   }
 });
 
-
-
-
-// Helper function to validate URLs
-function isValidUrl(string) {
-  try {
-    new URL(string);
-    return true;
-  } catch (_) {
-    return false;  
-  }
-}
-
-// Save Cloudinary video URL to property
 // ✅ Video Upload Route
 router.post("/api/properties/videos", async (req, res) => {
   try {
@@ -211,53 +258,15 @@ router.post("/api/properties/videos", async (req, res) => {
     property.videos.push(...videos);
     await property.save();
 
-    res.status(200).json({ message: "Videos added successfully", videos: property.videos });
+    res.status(200).json({ 
+      message: "Videos added successfully", 
+      videos: property.videos 
+    });
   } catch (error) {
     console.error("Error saving videos:", error);
     res.status(500).json({ error: "Server error" });
   }
 });
-
-// router.post('/', auth, async (req, res) => {
-//   try {
-//     const { propertyId } = req.body;
-//     const userId = req.user._id;
-
-//     // Check if view already exists
-//     const existingView = await PropertyView.findOne({ user: userId, property: propertyId });
-    
-//     if (!existingView) {
-//       const view = new PropertyView({
-//         user: userId,
-//         property: propertyId,
-//         viewedAt: new Date()
-//       });
-//       await view.save();
-//     }
-
-//     res.status(200).send();
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send({ error: 'Server error' });
-//   }
-// });
-
-// Get user's viewed properties
-// router.get('/', authMiddleware, async (req, res) => {
-//   try {
-//     const userId = req.user._id;
-//     const views = await PropertyView.find({ user: userId })
-//       .populate('property')
-//       .sort({ viewedAt: -1 });
-
-//     res.json(views.map(view => view.property));
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send({ error: 'Server error' });
-//   }
-// });
-
-
 
 
 

@@ -163,7 +163,11 @@ const propertySchema = new mongoose.Schema(
     },
 
     
-    nearby: [{ type: String }],
+    nearby: {
+      type: [String],},
+
+
+  
 
     // Facilities & Features
     facilities: {
@@ -215,6 +219,7 @@ const propertySchema = new mongoose.Schema(
         message: "Available date cannot be in the past",
       },
     },
+    
     securityDeposit: {
       type: Number,
       required: true,

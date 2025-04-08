@@ -132,7 +132,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
         
         if (token) {
           // If authenticated, fetch from backend
-          const response = await axios.get('http://localhost:5000/api/properties/seen', {
+          const response = await axios.get(`/api/properties/${propertyId}/view`, {
             headers: {
               Authorization: `Bearer ${token}`
             }
@@ -783,7 +783,8 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                     <h3 className="text-gray-600 text-sm mt-2">Follow on</h3>
                     <div className="flex space-x-7 mt-2 text-gray-600 ml-3">
                       <FaFacebook className="text-xl hover:text-blue-600 cursor-pointer" />
-                      <FaInstagram className="text-xl hover:text-pink-600 cursor-pointer" />
+                      <Link to="https://www.instagram.com/rentease_1611/"><FaInstagram className="text-xl hover:text-pink-600 cursor-pointer" /></Link>
+                      
                       <FaLinkedin className="text-xl hover:text-blue-700 cursor-pointer" />
                       <FaTwitter className="text-xl hover:text-blue-400 cursor-pointer" />
                       <FaYoutube className="text-xl hover:text-red-600 cursor-pointer" />

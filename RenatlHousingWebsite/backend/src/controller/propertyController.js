@@ -270,13 +270,44 @@ export const updateProperty = async (req, res) => {
   try {
     const property = await Property.findById(req.params.id);
 
-    if (!property) return res.status(404).json({ message: "Property not found" });
-
-    if (property.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Not authorized to update this property" });
+    if (!property) {
+      return res.status(404).json({ message: "Property not found" });
     }
 
-    // Handle format conversions for updated fields
+    // Owner verification
+    if (property.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ 
+        message: "Not authorized to update this property" 
+      });
+    }
+
+    // Validate allowed updates
+    const allowedUpdates = [
+      'title', 'description', 'address', 'city', 'state', 'images', 'videos',
+      'propertyType', 'bhkType', 'area', 'furnishType', 'facilities',
+      'monthlyRent', 'availableFrom', 'securityDeposit', 'rentalDurationMonths',
+      'popularLocality', 'floorNumber', 'totalFloors', 'ageOfProperty',
+      'facingDirection', 'maintenanceCharges', 'parking', 'waterSupply',
+      'electricityBackup', 'balcony', 'petsAllowed', 'nonVegAllowed',
+      'smokingAllowed', 'bachelorAllowed'
+    ];
+
+    const updates = Object.keys(req.body);
+    const isValidOperation = updates.every(update => 
+      allowedUpdates.includes(update)
+    );
+
+    if (!isValidOperation) {
+      return res.status(400).json({ 
+        message: "Attempted to update invalid fields" 
+      });
+    }
+
+    // Remove restricted fields
+    const restrictedFields = ['owner', '_id', 'createdAt', '__v'];
+    restrictedFields.forEach(field => delete req.body[field]);
+
+    // Format data before update
     if (req.body.bhkType) {
       req.body.bhkType = Array.isArray(req.body.bhkType)
         ? req.body.bhkType.map(item => item.toUpperCase())
@@ -306,14 +337,20 @@ export const updateProperty = async (req, res) => {
       req.body,
       { new: true, runValidators: true }
     );
-    
+
     res.status(200).json({ 
-      message: "Property Updated Successfully", 
+      success: true,
+      message: "Property updated successfully",
       property: updatedProperty 
     });
+
   } catch (error) {
-    console.error("❌ Update Property Error:", error.message);
-    res.status(500).json({ message: "Server Error" });
+    console.error("Update Property Error:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to update property",
+      error: error.message 
+    });
   }
 };
 
@@ -366,5 +403,30 @@ export const getOwnerProperties = async (req, res) => {
       message: "Failed to fetch owner properties",
       error: error.message 
     });
+  }
+};
+
+
+
+// Record a property view (increment view count)
+// Endpoint example: POST /api/properties/:id/view
+export const recordPropertyView = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
+    if (!property) {
+      return res.status(404).json({ message: "Property not found" });
+    }
+
+    // Increment the view count (initialize to 0 if it does not exist)
+    property.viewCount = (property.viewCount || 0) + 1;
+    await property.save();
+
+    res.status(200).json({
+      message: "View count updated successfully",
+      viewCount: property.viewCount,
+    });
+  } catch (error) {
+    console.error("❌ Record View Error:", error.message);
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };

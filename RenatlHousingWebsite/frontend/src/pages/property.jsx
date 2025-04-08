@@ -36,9 +36,9 @@ function Properties() {
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const tab = searchParams.get('tab');
-    setShowSeenProperties(tab === 'seenproperties');
-    
+    const tab = searchParams.get("tab");
+    setShowSeenProperties(tab === "seenproperties");
+
     const fetchProperties = async () => {
       try {
         setLoading(true);
@@ -50,26 +50,26 @@ function Properties() {
             popularLocality: searchParams.get("popularLocality") || "",
           },
         });
-        
-        const propertiesData = Array.isArray(res?.data) 
-          ? res.data.map(property => ({
+
+        const propertiesData = Array.isArray(res?.data)
+          ? res.data.map((property) => ({
               ...property,
               media: [...(property.images || []), ...(property.videos || [])],
               videos: property.videos || [],
-              images: property.images || []
+              images: property.images || [],
             }))
           : [];
-          
+
         setProperties(propertiesData);
-        
+
         // Load seen properties from localStorage
-        const savedSeenProperties = localStorage.getItem('seenProperties');
+        const savedSeenProperties = localStorage.getItem("seenProperties");
         if (savedSeenProperties) {
           setSeenProperties(JSON.parse(savedSeenProperties));
-          
+
           // If showing seen properties, filter them
-          if (tab === 'seenproperties') {
-            const seenProps = propertiesData.filter(prop => 
+          if (tab === "seenproperties") {
+            const seenProps = propertiesData.filter((prop) =>
               JSON.parse(savedSeenProperties).includes(prop._id)
             );
             setFilteredProperties(seenProps);
@@ -102,7 +102,7 @@ function Properties() {
     localityFilter,
     priceRange,
     properties,
-    showSeenProperties
+    showSeenProperties,
   ]);
 
   const applyFilters = () => {
@@ -112,16 +112,15 @@ function Properties() {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter((property) => {
         return (
-          (property.title?.toLowerCase().includes(searchLower)) ||
-          (property.description?.toLowerCase().includes(searchLower))
+          property.title?.toLowerCase().includes(searchLower) ||
+          property.description?.toLowerCase().includes(searchLower)
         );
       });
     }
 
     if (cityFilter) {
-      filtered = filtered.filter(
-        (property) =>
-          property.city?.toLowerCase().includes(cityFilter.toLowerCase())
+      filtered = filtered.filter((property) =>
+        property.city?.toLowerCase().includes(cityFilter.toLowerCase())
       );
     }
 
@@ -136,14 +135,15 @@ function Properties() {
       filtered = filtered.filter(
         (property) =>
           property.propertyType?.toString().toLowerCase() ===
-            propertyTypeFilter.toLowerCase()
+          propertyTypeFilter.toLowerCase()
       );
     }
 
     if (localityFilter) {
-      filtered = filtered.filter(
-        (property) =>
-          property.popularLocality?.toLowerCase().includes(localityFilter.toLowerCase())
+      filtered = filtered.filter((property) =>
+        property.popularLocality
+          ?.toLowerCase()
+          .includes(localityFilter.toLowerCase())
       );
     }
 
@@ -156,108 +156,132 @@ function Properties() {
     setFilteredProperties(filtered);
   };
 
-// In Properties.js
-const handleViewDetails = async (propertyId) => {
-  try {
-    // Record view in backend if user is authenticated
-    const token = localStorage.getItem('token');
-    if (token) {
-      await axios.post(`http://localhost:5000/api/properties/${propertyId}/view`, {}, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-    }
-    
-    // Add to local storage for all users
-    const seenProperties = JSON.parse(localStorage.getItem('seenProperties') || []);
-    if (!seenProperties.includes(propertyId)) {
-      const updatedSeenProperties = [...seenProperties, propertyId];
-      localStorage.setItem('seenProperties', JSON.stringify(updatedSeenProperties));
-      setSeenProperties(updatedSeenProperties);
-      
-      // Notify Navbar of update
-      window.dispatchEvent(new CustomEvent('seenPropertyAdded', {
-        detail: { count: updatedSeenProperties.length }
-      }));
-    }
-    
-    navigate(`/property/${propertyId}`);
-  } catch (error) {
-    console.error("Error recording view:", error);
-    // Still navigate even if tracking fails
-    navigate(`/property/${propertyId}`);
-  }
-};
-
-// Update the fetchProperties function
-const fetchProperties = async () => {
-  try {
-    setLoading(true);
-    const searchParams = new URLSearchParams(location.search);
-    
-    // Fetch properties from API
-    const res = await axios.get(`http://localhost:5000/api/properties`, {
-      params: {
-        city: searchParams.get("city") || "",
-        address: searchParams.get("locality") || "",
-        propertyType: searchParams.get("category") || "",
-        popularLocality: searchParams.get("popularLocality") || "",
-      },
-    });
-    
-    const propertiesData = Array.isArray(res?.data) 
-      ? res.data.map(property => ({
-          ...property,
-          media: [...(property.images || []), ...(property.videos || [])],
-          videos: property.videos || [],
-          images: property.images || []
-        }))
-      : [];
-      
-    setProperties(propertiesData);
-    
-    // Check if we're showing seen properties
-    const tab = searchParams.get('tab');
-    setShowSeenProperties(tab === 'seenproperties');
-    
-    if (tab === 'seenproperties') {
-      // For authenticated users, fetch from backend
-      const token = localStorage.getItem('token');
+  // In Properties.js
+  const handleViewDetails = async (propertyId) => {
+    try {
+      // Record view in backend if user is authenticated
+      const token = localStorage.getItem("token");
       if (token) {
-        try {
-          const seenRes = await axios.get('http://localhost:5000/api/properties/user/views', {
+        await axios.post(
+          `http://localhost:5000/api/properties/${propertyId}/view`,
+          {},
+          {
             headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
-          const seenIds = seenRes.data.map(p => p._id);
-          const seenProps = propertiesData.filter(p => seenIds.includes(p._id));
-          setFilteredProperties(seenProps);
-        } catch (error) {
-          console.error("Error fetching seen properties:", error);
-          // Fallback to localStorage
-          const savedSeenProperties = JSON.parse(localStorage.getItem('seenProperties') || '[]');
-          const seenProps = propertiesData.filter(p => savedSeenProperties.includes(p._id));
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      }
+
+      // Add to local storage for all users
+      const seenProperties = JSON.parse(
+        localStorage.getItem("seenProperties") || []
+      );
+      if (!seenProperties.includes(propertyId)) {
+        const updatedSeenProperties = [...seenProperties, propertyId];
+        localStorage.setItem(
+          "seenProperties",
+          JSON.stringify(updatedSeenProperties)
+        );
+        setSeenProperties(updatedSeenProperties);
+
+        // Notify Navbar of update
+        window.dispatchEvent(
+          new CustomEvent("seenPropertyAdded", {
+            detail: { count: updatedSeenProperties.length },
+          })
+        );
+      }
+
+      navigate(`/property/${propertyId}`);
+    } catch (error) {
+      console.error("Error recording view:", error);
+      // Still navigate even if tracking fails
+      navigate(`/property/${propertyId}`);
+    }
+  };
+
+  // Update the fetchProperties function
+  const fetchProperties = async () => {
+    try {
+      setLoading(true);
+      const searchParams = new URLSearchParams(location.search);
+
+      // Fetch properties from API
+      const res = await axios.get(`http://localhost:5000/api/properties`, {
+        params: {
+          city: searchParams.get("city") || "",
+          address: searchParams.get("locality") || "",
+          propertyType: searchParams.get("category") || "",
+          popularLocality: searchParams.get("popularLocality") || "",
+        },
+      });
+
+      const propertiesData = Array.isArray(res?.data)
+        ? res.data.map((property) => ({
+            ...property,
+            media: [...(property.images || []), ...(property.videos || [])],
+            videos: property.videos || [],
+            images: property.images || [],
+          }))
+        : [];
+
+      setProperties(propertiesData);
+
+      // Check if we're showing seen properties
+      const tab = searchParams.get("tab");
+      setShowSeenProperties(tab === "seenproperties");
+
+      if (tab === "seenproperties") {
+        // For authenticated users, fetch from backend
+        const token = localStorage.getItem("token");
+        if (token) {
+          try {
+            const seenRes = await axios.get(
+              "http://localhost:5000/api/properties/user/views",
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+            const seenIds = seenRes.data.map((p) => p._id);
+            const seenProps = propertiesData.filter((p) =>
+              seenIds.includes(p._id)
+            );
+            setFilteredProperties(seenProps);
+          } catch (error) {
+            console.error("Error fetching seen properties:", error);
+            // Fallback to localStorage
+            const savedSeenProperties = JSON.parse(
+              localStorage.getItem("seenProperties") || "[]"
+            );
+            const seenProps = propertiesData.filter((p) =>
+              savedSeenProperties.includes(p._id)
+            );
+            setFilteredProperties(seenProps);
+          }
+        } else {
+          // For unauthenticated users, use localStorage
+          const savedSeenProperties = JSON.parse(
+            localStorage.getItem("seenProperties") || "[]"
+          );
+          const seenProps = propertiesData.filter((p) =>
+            savedSeenProperties.includes(p._id)
+          );
           setFilteredProperties(seenProps);
         }
       } else {
-        // For unauthenticated users, use localStorage
-        const savedSeenProperties = JSON.parse(localStorage.getItem('seenProperties') || '[]');
-        const seenProps = propertiesData.filter(p => savedSeenProperties.includes(p._id));
-        setFilteredProperties(seenProps);
+        setFilteredProperties(propertiesData);
       }
-    } else {
-      setFilteredProperties(propertiesData);
+    } catch (error) {
+      console.error("Error fetching properties:", error);
+      setProperties([]);
+      setFilteredProperties([]);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("Error fetching properties:", error);
-    setProperties([]);
-    setFilteredProperties([]);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const toggleFavorite = (propertyId) => {
     setFavorites((prev) => ({
@@ -316,30 +340,34 @@ const fetchProperties = async () => {
 
   const isVideo = (mediaItem) => {
     if (!mediaItem) return false;
-    
-    const url = typeof mediaItem === 'string' ? mediaItem : mediaItem.url;
+
+    const url = typeof mediaItem === "string" ? mediaItem : mediaItem.url;
     if (!url) return false;
-    
+
     // Check for video extensions
     if (url.match(/\.(mp4|mov|webm|avi|m3u8|mkv)$/i)) return true;
-    
+
     // Check for Cloudinary video URLs
-    if (url.includes('res.cloudinary.com') && 
-        (url.includes('/video/upload/') || url.includes('.mp4') || url.includes('.mov'))) {
+    if (
+      url.includes("res.cloudinary.com") &&
+      (url.includes("/video/upload/") ||
+        url.includes(".mp4") ||
+        url.includes(".mov"))
+    ) {
       return true;
     }
-    
+
     // Check for MIME type if available
-    if (typeof mediaItem === 'object' && mediaItem.mimeType) {
-      return mediaItem.mimeType.startsWith('video/');
+    if (typeof mediaItem === "object" && mediaItem.mimeType) {
+      return mediaItem.mimeType.startsWith("video/");
     }
-    
+
     return false;
   };
 
   const getMediaUrl = (mediaItem) => {
-    if (!mediaItem) return '';
-    return typeof mediaItem === 'string' ? mediaItem : mediaItem.url;
+    if (!mediaItem) return "";
+    return typeof mediaItem === "string" ? mediaItem : mediaItem.url;
   };
 
   const VideoPlayer = ({ src, className, onClick, thumbnail = false }) => {
@@ -359,12 +387,12 @@ const fetchProperties = async () => {
         </video>
         {thumbnail && (
           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
-            <svg 
-              className="w-8 h-8 text-white opacity-80" 
-              fill="currentColor" 
+            <svg
+              className="w-8 h-8 text-white opacity-80"
+              fill="currentColor"
               viewBox="0 0 20 20"
             >
-              <path d="M6.3 2.8L14.8 10l-8.5 7.2V2.8z"/>
+              <path d="M6.3 2.8L14.8 10l-8.5 7.2V2.8z" />
             </svg>
           </div>
         )}
@@ -394,7 +422,7 @@ const fetchProperties = async () => {
           </div>
 
           {/* Search and Filters - Desktop */}
-          <div className={`${showFilters ? 'block' : 'hidden'} md:block`}>
+          <div className={`${showFilters ? "block" : "hidden"} md:block`}>
             {/* Search Row */}
             <div className="flex flex-col md:flex-row gap-3 mb-4">
               <div className="relative flex-1">
@@ -541,7 +569,7 @@ const fetchProperties = async () => {
             {filteredProperties.length > 0 ? (
               <div className="grid grid-cols-1 gap-6 max-w-5xl mx-auto pb-20">
                 {filteredProperties.map((property) => (
-                  <PropertyCard 
+                  <PropertyCard
                     key={property._id}
                     property={property}
                     favorites={favorites}
@@ -567,7 +595,7 @@ const fetchProperties = async () => {
         ) : filteredProperties.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 max-w-5xl mx-auto pb-20">
             {filteredProperties.map((property) => (
-              <PropertyCard 
+              <PropertyCard
                 key={property._id}
                 property={property}
                 favorites={favorites}
@@ -595,7 +623,7 @@ const fetchProperties = async () => {
 
       {/* Image/Video Gallery Modal */}
       {isGalleryOpen && currentProperty && (
-        <GalleryModal 
+        <GalleryModal
           currentProperty={currentProperty}
           currentImageIndex={currentImageIndex}
           closeGallery={closeGallery}
@@ -611,17 +639,17 @@ const fetchProperties = async () => {
 }
 
 // Property Card Component
-function PropertyCard({ 
-  property, 
-  favorites, 
-  toggleFavorite, 
-  openGallery, 
-  shareOnWhatsApp, 
-  contactOwner, 
+function PropertyCard({
+  property,
+  favorites,
+  toggleFavorite,
+  openGallery,
+  shareOnWhatsApp,
+  contactOwner,
   handleViewDetails,
   isVideo,
   getMediaUrl,
-  VideoPlayer
+  VideoPlayer,
 }) {
   const firstMedia = property.media?.[0];
   const mediaUrl = getMediaUrl(firstMedia);
@@ -660,9 +688,7 @@ function PropertyCard({
               }}
             >
               <FiHeart
-                className={`${
-                  favorites[property._id] ? "fill-current" : ""
-                }`}
+                className={`${favorites[property._id] ? "fill-current" : ""}`}
               />
             </button>
             <button
@@ -678,9 +704,10 @@ function PropertyCard({
         </div>
 
         {/* Property Details */}
-        <div className="p-4 md:p-6 md:w-3/5">
+        <div className="p-4 md:p-6 md:w-3/5 ">
           <h3 className="text-lg font-semibold text-purple-800 mb-2">
-            {property.bhkType} {property.propertyType} in {property.popularLocality}
+            {property.bhkType} {property.propertyType} in{" "}
+            {property.popularLocality}
           </h3>
 
           <div className="grid grid-cols-2 gap-4 mb-3">
@@ -702,11 +729,23 @@ function PropertyCard({
               <p className="text-sm text-gray-600">Deposit</p>
               <p className="font-semibold">₹{property.securityDeposit}</p>
             </div>
-          </div>
+            <div>
+              Tenant Preference
+              <p className="text-black font-semibold">
+                {property.Gender || "Any"}
 
-          <div className="mb-3">
-            <p className="text-sm text-gray-600">Furnishing</p>
-            <p className="font-semibold">{property.furnishType}</p>
+                {property.coupleFriendly &&
+                  property.coupleFriendly === "Yes" && (
+                    <span className="block text-sm text-green-600">
+                      Couple Friendly
+                    </span>
+                  )}
+              </p>
+            </div>
+            <div className="mb-3">
+              <p className="text-sm text-gray-600">Furnishing</p>
+              <p className="font-semibold">{property.furnishType}</p>
+            </div>
           </div>
 
           {property.facilities && (
@@ -765,7 +804,7 @@ function GalleryModal({
   goToNextImage,
   setCurrentImageIndex,
   isVideo,
-  getMediaUrl
+  getMediaUrl,
 }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex flex-col items-center justify-center p-4">
@@ -782,7 +821,7 @@ function GalleryModal({
             {currentProperty.title}
           </p>
         </div>
-        
+
         <div className="relative w-full h-full flex items-center justify-center">
           <button
             onClick={goToPrevImage}
@@ -799,7 +838,10 @@ function GalleryModal({
                 autoPlay
                 playsInline
               >
-                <source src={getMediaUrl(currentProperty.media[currentImageIndex])} type="video/mp4" />
+                <source
+                  src={getMediaUrl(currentProperty.media[currentImageIndex])}
+                  type="video/mp4"
+                />
                 Your browser does not support the video tag.
               </video>
             </div>
@@ -833,9 +875,11 @@ function GalleryModal({
           const isVideoItem = isVideo(item);
 
           return (
-            <div 
-              key={index} 
-              className={`flex-shrink-0 cursor-pointer ${currentImageIndex === index ? 'ring-2 ring-purple-500' : ''}`}
+            <div
+              key={index}
+              className={`flex-shrink-0 cursor-pointer ${
+                currentImageIndex === index ? "ring-2 ring-purple-500" : ""
+              }`}
               onClick={() => setCurrentImageIndex(index)}
             >
               {isVideoItem ? (
@@ -849,12 +893,12 @@ function GalleryModal({
                     <source src={mediaUrl} type="video/mp4" />
                   </video>
                   <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
-                    <svg 
-                      className="w-4 h-4 text-white opacity-80" 
-                      fill="currentColor" 
+                    <svg
+                      className="w-4 h-4 text-white opacity-80"
+                      fill="currentColor"
                       viewBox="0 0 20 20"
                     >
-                      <path d="M6.3 2.8L14.8 10l-8.5 7.2V2.8z"/>
+                      <path d="M6.3 2.8L14.8 10l-8.5 7.2V2.8z" />
                     </svg>
                   </div>
                 </div>
