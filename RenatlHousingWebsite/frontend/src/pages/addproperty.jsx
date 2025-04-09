@@ -724,7 +724,9 @@ const AddProperty = () => {
                     field: "title",
                     label: "Property Title",
                     type: "text",
+                   
                     required: true,
+                    place: "Enter Property Title",
                   },
                   {
                     field: "address",
@@ -772,20 +774,24 @@ const AddProperty = () => {
                         name={field}
                         value={formData[field]}
                         onChange={handleChange}
+                        
                         className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md focus:ring focus:ring-blue-300 cursor-pointer"
                         required={required}
                         rows={4}
-                      />
+                                          />
                     ) : (
                       <input
                         type={type}
                         name={field}
                         value={formData[field]}
                         onChange={handleChange}
+                       
                         className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md focus:ring focus:ring-blue-300 cursor-pointer"
                         required={required}
                         minLength={field === "ownerphone" ? 10 : 3}
                         maxLength={field === "ownerphone" ? 15 : undefined}
+                       
+                    
                       />
                     )}
                     {validationErrors[field] && (
@@ -809,6 +815,7 @@ const AddProperty = () => {
                       className="mt-1 p-3 w-full border border-purple-800 outline-none rounded-md focus:ring focus:ring-blue-300 cursor-pointer"
                       required
                       rows={4}
+                    
                     />
                     <div className="absolute bottom-2 right-2">
                       {isListening ? (

@@ -1849,7 +1849,7 @@ const Profile = () => {
         return (
           <>
           
-<div className="bg-white h-full rounded-md border-2 border-purple-800 shadow-lg p-6">
+<div className="bg-white h-full rounded-md  shadow-lg p-6">
   <div className="flex justify-between items-center mb-6">
     <h2 className="text-2xl font-bold text-purple-800">My Properties</h2>
     <button
