@@ -1849,7 +1849,7 @@ const Profile = () => {
         return (
           <>
           
-<div className="bg-white h-full rounded-md  shadow-lg p-6">
+<div className="bg-white h-200 rounded-md  shadow-lg p-6">
   <div className="flex justify-between items-center mb-6">
     <h2 className="text-2xl font-bold text-purple-800">My Properties</h2>
     <button
@@ -1878,65 +1878,80 @@ const Profile = () => {
       </button>
     </div>
   ) : (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-      {properties.map((property) => (
-        <div
-          key={property._id}
-          className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
-        >
-          <div className="h-48 overflow-hidden">
-            {property.images && property.images.length > 0 ? (
-              <img
-                src={property.images[0].url}
-                alt={property.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                <BiHomeSmile className="text-4xl text-gray-400" />
-              </div>
-            )}
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-10  h-[560px]">
+  {properties.map((property) => (
+    <div
+      key={property._id}
+      className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow "
+    >
+      {/* Flex container for image (left) and details (right) */}
+      <div className="flex flex-col md:flex-row">
+        {/* Image (Left Side) */}
+        <div className="h-48 overflow-hidden md:w-1/2 md:h-auto">
+          {property.images && property.images.length > 0 ? (
+            <img
+              src={property.images[0].url}
+              alt={property.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <BiHomeSmile className="text-4xl text-gray-400" />
+            </div>
+          )}
+        </div>
+
+        {/* Details (Right Side) */}
+        <div className="p-4 md:w-1/2">
+          <h3 className="font-bold text-lg mb-1">
+            <span>Title :</span> {property.title}
+          </h3>
+          <p className="text-gray-600 text-sm mb-2">
+            Address: {property.address}, {property.city}
+          </p>
+          <p className="text-gray-600 text-sm mb-2">
+            City: {property.city}
+          </p>
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-bold text-purple-800">
+              MonthlyRent : ₹{property.monthlyRent?.toLocaleString() || '0'}
+            </span>
+
+            <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
+              {property.propertyType}
+            </span>
+
+            
           </div>
-          <div className="p-4">
-            <h3 className="font-bold text-lg mb-1"><span>Title :</span>{property.title}</h3>
-            <p className="text-gray-600 text-sm mb-2">
-              Address: {property.address}, {property.city}
-            </p>
-            <p className="text-gray-600 text-sm mb-2">
-              City: {property.city}
-            </p>
-            <div className="flex justify-between items-center mb-2">
-              <span className="font-bold text-purple-800">
-                MonthlyRent ₹{property.monthlyRent?.toLocaleString() || '0'}
-              </span>
-              <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
-                {property.propertyType}
-              </span>
-            </div>
-            <div className="flex justify-between mt-4">
+
+          <span className="font-bold text-purple-800">
+              Nearby : {property.nearby.toLocaleString() || '0'}
+            </span>
+          <div className="flex justify-between mt-8">
             <button
-  onClick={() => handleViewDetails(property._id)}
-  className="w-30 bg-purple-800 text-white py-2 rounded-lg hover:bg-purple-900 transition  cursor-pointer "
->
-  View Details
-</button>
-              <button
-                onClick={() => handleEditProperty(property._id)}
-                className="w-20 bg-purple-800 text-white py-2 rounded-lg hover:bg-purple-900 transition flex text-center items-center justify-center  cursor-pointer"
-              >
-                <CiEdit className="mr-1" /> Edit
-              </button>
-              <button
-                onClick={() => handleDeleteProperty(property._id)}
-                className="w-20 bg-purple-800 text-white py-2 rounded-lg hover:bg-purple-900 transition flex text-center items-center justify-center cursor-pointer"
-              >
-                <MdDeleteOutline className="mr-1" /> Delete
-              </button>
-            </div>
+              onClick={() => handleViewDetails(property._id)}
+              className="w-30 bg-purple-800 text-white py-2 rounded-lg hover:bg-purple-900 transition cursor-pointer"
+            >
+              View Details
+            </button>
+            <button
+              onClick={() => handleEditProperty(property._id)}
+              className="w-20 bg-[#4CAF50] text-white py-2 rounded-lg hover:bg-purple-900 transition flex text-center items-center justify-center cursor-pointer"
+            >
+              <CiEdit className="mr-1" /> Edit
+            </button>
+            <button
+              onClick={() => handleDeleteProperty(property._id)}
+              className="w-20 bg-[#F44336] text-white py-2 rounded-lg hover:bg-purple-900 transition flex text-center items-center justify-center cursor-pointer"
+            >
+              <MdDeleteOutline className="mr-1" /> Delete
+            </button>
           </div>
         </div>
-      ))}
+      </div>
     </div>
+  ))}
+</div>
     
   )}
 </div>
@@ -2059,7 +2074,7 @@ const Profile = () => {
                   className="hidden"
                 />
               </div>
-              <div className="w-1/2">
+              <div className="w-1/2 mt-12">
                 <h2 className="text-lg font-semibold">Profile Info</h2>
                 <input
                   type="text"
@@ -2077,7 +2092,7 @@ const Profile = () => {
                 />
               </div>
             </div>
-            <div className="bg-white p-4 rounded-md mt-4">
+            <div className="bg-white p-4 rounded-md mt-4 ml-12">
               <h2 className="text-lg font-semibold">Change Password</h2>
               {/* <input
                 type="tel"
