@@ -18,6 +18,8 @@ import propertyRoutes from "./src/routes/propertyRoute.js";
 import profileRoutes from "./src/routes/profileRoutes.js";
 import videoRoutes from "./src/routes/VideosRoutes.js";
 import Viewdetails from "./src/routes/ViewdetailsRoutes.js"
+import fraudRoutes from './src/routes/fraudRoutes.js';
+import  FraudModel from "./src/models/fraud.js"; // ✅ Ensure Correct Path
 dotenv.config();
 mongoose.set("debug", true); // ✅ Yeh query logs print karega
 // ✅ Passport Configuration
@@ -191,10 +193,62 @@ app.use("/api/auth/google", googleAuthRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/videos", videoRoutes);
-app.use("/user/view",Viewdetails)
+app.post("/api/properties/:propertyId/view", async (req, res) => {
+  try {
+      const { propertyId } = req.params;
+      if (!propertyId) {
+          return res.status(400).json({ error: "Property ID is required" });
+      }
 
-// ✅ Default Route
-app.get("/", (req, res) => res.send("🏠 RentEase Backend Running..."));
+      const property = await PropertyModel.findById(propertyId);
+      if (!property) {
+          return res.status(404).json({ error: "Property not found" });
+      }
+
+      // Example: Increase view count
+      property.views = (property.views || 0) + 1;
+      await property.save();
+
+      res.status(200).json({ message: "Property view recorded", views: property.views });
+  } catch (error) {
+      console.error("Error updating property views:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.post("/report-fraud", async (req, res) => {
+  try {
+    console.log("Received Data:", req.body); // ✅ Debugging ke liye
+
+    const { name, contact, email, category, details } = req.body;
+
+    if (!name || !contact || !email || !category) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    const newFraudReport = new FraudModel({
+      name,
+      contact,
+      email,
+      category,
+      details,
+    });
+
+    console.log("Saving to DB:", newFraudReport); // ✅ Yeh check karega ki model instance sahi hai ya nahi
+
+    await newFraudReport.save(); // ✅ MongoDB me save karega
+
+    console.log("✅ Data saved successfully!"); // ✅ Debugging ke liye
+    res.status(201).json({ message: "Report saved successfully!" });
+
+  } catch (error) {
+    console.error("❌ Error saving report:", error); // ✅ Agar error aaya to yeh print karega
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+
 
 // ✅ Start Server
 const PORT = process.env.PORT || 5000;

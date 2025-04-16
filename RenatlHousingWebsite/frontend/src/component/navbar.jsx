@@ -132,7 +132,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
         
         if (token) {
           // If authenticated, fetch from backend
-          const response = await axios.get(`/api/properties/${propertyId}/view`, {
+          const response = await axios.get('/api/properties/viewed', {
             headers: {
               Authorization: `Bearer ${token}`
             }

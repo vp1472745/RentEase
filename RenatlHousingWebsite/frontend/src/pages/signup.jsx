@@ -146,7 +146,7 @@ const Signup = () => {
       setPhoneError("Phone number is required");
       isValid = false;
     } else if (!validatePhone(phone)) {
-      setPhoneError("Phone must be 10 digits starting with 6-9");
+      setPhoneError("Phone must be 10 digits starting with 6/7/8/9");
       isValid = false;
     }
     
