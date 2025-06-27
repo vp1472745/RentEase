@@ -10,7 +10,7 @@ export const addProperty = async (req, res) => {
     }
 
     const {
-      title,
+      /* title, */
       description,
       address,
       city,
@@ -65,7 +65,7 @@ export const addProperty = async (req, res) => {
       : [facilities.toLowerCase()];
 
     const newProperty = new Property({
-      title,
+      /* title, */
       description,
       address,
       city,
@@ -283,7 +283,7 @@ export const updateProperty = async (req, res) => {
 
     // Validate allowed updates
     const allowedUpdates = [
-      'title', 'description', 'address', 'city', 'state', 'images', 'videos',
+      'description', 'address', 'city', 'state', 'images', 'videos',
       'propertyType', 'bhkType', 'area', 'furnishType', 'facilities',
       'monthlyRent', 'availableFrom', 'securityDeposit', 'rentalDurationMonths',
       'popularLocality', 'floorNumber', 'totalFloors', 'ageOfProperty',

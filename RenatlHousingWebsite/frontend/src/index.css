@@ -4,10 +4,71 @@
 html, body {
     overflow: auto;
     scrollbar-width: none; /* For Firefox */
-    -ms-overflow-style: none; /* For Internet Explorer & Edge */
+    /* -ms-overflow-style: none;  Remove deprecated property */
 }
 
 /* Hide scrollbar for WebKit browsers */
 html::-webkit-scrollbar {
     display: none;
+}
+
+/* High Contrast Mode Support */
+@media (forced-colors: active) {
+  /* Base styles for high contrast mode */
+  :root {
+    --hc-background: Canvas;
+    --hc-text: CanvasText;
+    --hc-link: LinkText;
+    --hc-button: ButtonText;
+    --hc-button-bg: ButtonFace;
+    --hc-border: ButtonBorder;
+  }
+
+  /* Apply high contrast styles */
+  body {
+    background-color: var(--hc-background);
+    color: var(--hc-text);
+  }
+
+  a {
+    color: var(--hc-link);
+    text-decoration: underline;
+  }
+
+  button, 
+  .btn {
+    background-color: var(--hc-button-bg);
+    color: var(--hc-button);
+    border: 1px solid var(--hc-border);
+  }
+
+  input, 
+  textarea, 
+  select {
+    background-color: var(--hc-background);
+    color: var(--hc-text);
+    border: 1px solid var(--hc-border);
+  }
+
+  /* Ensure images and icons are visible */
+  img, 
+  svg {
+    forced-color-adjust: none;
+  }
+
+  /* Ensure form elements are clearly visible */
+  input:focus, 
+  textarea:focus, 
+  select:focus {
+    outline: 2px solid var(--hc-border);
+    outline-offset: 2px;
+  }
+
+  /* Ensure interactive elements are clearly visible */
+  button:hover, 
+  .btn:hover,
+  a:hover {
+    outline: 2px solid var(--hc-border);
+    outline-offset: 2px;
+  }
 }

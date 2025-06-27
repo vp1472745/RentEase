@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 import { randomBytes } from "crypto";
 import OTP from "../models/otpModels.js";
+import UserSessionLog from "../models/userSessionLog.js";
 
 
 dotenv.config();
@@ -120,6 +121,19 @@ export const login = async (req, res) => {
     const token = jwt.sign({ userId: user._id, role: user.role,profileImage:user.profileImage}, process.env.JWT_SECRET, { expiresIn: "1h" });
     res.cookie("auth_token", token, { httpOnly: true, sameSite: "strict" });
     res.json({ msg: "Login successful", token, user: { name: user.name, email: user.email, role: user.role } });
+
+    // Log login event
+    try {
+      await new UserSessionLog({
+        userId: user._id,
+        userType: user.role,
+        eventType: "login",
+        device: req.headers["user-agent"],
+        timestamp: new Date()
+      }).save();
+    } catch (logErr) {
+      console.error("Failed to log login event:", logErr);
+    }
   } catch (error) {
     console.error("Server Error:", error);  // Log the error to server console
     res.status(500).json({ msg: "Server Error", error: error.message });
@@ -187,6 +201,26 @@ export const resetPassword = async (req, res) => {
 
 // ✅ Logout Function
 export const logout = (req, res) => {
+  // Log logout event
+  try {
+    let userId = null;
+    let userType = null;
+    if (req.user) {
+      userId = req.user.userId || req.user._id;
+      userType = req.user.role;
+    }
+    new UserSessionLog({
+      userId,
+      userType,
+      eventType: "logout",
+      device: req.headers["user-agent"],
+      timestamp: new Date()
+    }).save().catch((err) => {
+      console.error("Failed to log logout event:", err);
+    });
+  } catch (err) {
+    console.error("Failed to log logout event:", err);
+  }
   res.clearCookie("auth_token");
   res.json({ msg: "Logout successful" });
 };

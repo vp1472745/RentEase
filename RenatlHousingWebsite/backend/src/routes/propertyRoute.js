@@ -9,11 +9,14 @@ import {
   recordPropertyView,
   
 } from "../controller/propertyController.js";
-import { authMiddleware, ownerOnly } from "../middleware/authMiddleware.js";
+import { authMiddleware, ownerOnly ,adminOnly, ownerOrAdmin} from "../middleware/authMiddleware.js";
 import uploadMiddleware from "../middleware/multerMiddleware.js";
 import Property from "../models/property.js";
 import { readFile } from "fs/promises";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import SaveProperty from "../models/SaveProperty.js";
+import User from "../models/user.js";
+import SearchLog from "../models/searchLog.js";
 
 const router = express.Router();
 
@@ -77,10 +80,10 @@ router.post("/format-description", authMiddleware, async (req, res) => {
 
 
 
-router.post('/properties/:id/view', async (req, res) => {
-  console.log('API hit: /properties/:id/view');
-  res.status(200).json({ message: 'View recorded' });
-});
+// router.post('/properties/:id/view', async (req, res) => {
+//   console.log('API hit: /properties/:id/view');
+//   res.status(200).json({ message: 'View recorded' });
+// });
 
 
 // Route to save a property
@@ -94,25 +97,23 @@ router.post("/add", authMiddleware, ownerOnly, addProperty);
 // ✅ Search Properties Route
 router.get("/search", async (req, res) => {
   try {
-    const { city, propertyType, locality, address, popularLocality } = req.query;
+    const { city, propertyType, address, popularLocality, locality } = req.query;
     let filter = {};
 
-    if (city) filter.city = new RegExp(`^${city}$`, "i");
+    let orConditions = [];
+    // Collect all search values from locality, address, and popularLocality
+    const searchValues = [locality, address, popularLocality].filter(Boolean);
+    searchValues.forEach(val => {
+      orConditions.push({ city: new RegExp(val, "i") });
+      orConditions.push({ address: new RegExp(val, "i") });
+      orConditions.push({ popularLocality: new RegExp(val, "i") });
+    });
+
+    if (city) filter.city = new RegExp(city, "i");
     if (propertyType) filter.propertyType = new RegExp(propertyType, "i");
 
-    let conditions = [];
-    if (locality) conditions.push({ address: new RegExp(locality, "i") });
-    if (address) conditions.push({ address: new RegExp(address, "i") });
-
-    if (popularLocality) {
-      const matchedLocalities = Object.values(popularLocalitiesData).flat();
-      if (matchedLocalities.includes(popularLocality)) {
-        conditions.push({ popularLocality: new RegExp(`^${popularLocality}$`, "i") });
-      }
-    }
-
-    if (conditions.length > 0) {
-      filter.$and = conditions;
+    if (orConditions.length > 0) {
+      filter.$or = orConditions;
     }
 
     console.log("🔍 Applied Filters:", filter);
@@ -125,7 +126,6 @@ router.get("/search", async (req, res) => {
 
     res.json(properties);
   } catch (error) {
-    console.error("❌ API Error:", error.message);
     res.status(500).json({ message: "Server Error" });
   }
 });
@@ -133,7 +133,50 @@ router.get("/search", async (req, res) => {
 // ✅ Get All Properties
 router.get("/", getAllProperties);
 
-// ✅ Get Property By ID
+// Get user's viewed properties - MUST be before /:id route
+router.get('/viewed', authMiddleware, async (req, res) => {
+  try {
+    // Get seen properties from query parameter
+    let seenPropertyIds = [];
+    try {
+      if (req.query.ids) {
+        seenPropertyIds = JSON.parse(req.query.ids);
+        if (!Array.isArray(seenPropertyIds)) {
+          console.warn("Invalid seen properties format:", req.query.ids);
+          return res.status(400).json({ 
+            message: 'Invalid seen properties data format' 
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Error parsing seen properties:", e);
+      return res.status(400).json({ 
+        message: 'Invalid seen properties data format' 
+      });
+    }
+
+    // Fetch properties that exist and are active
+    const properties = await Property.find({
+      _id: { $in: seenPropertyIds },
+      isActive: true
+    }).select('-__v').populate('owner', 'name email phone');
+
+    // Sort properties to match the order of seenPropertyIds
+    const sortedProperties = seenPropertyIds
+      .map(id => properties.find(p => p._id.toString() === id))
+      .filter(Boolean); // Remove any null/undefined entries
+
+    res.json(sortedProperties);
+  } catch (error) {
+    console.error('❌ Error fetching viewed properties:', error);
+    res.status(500).json({ 
+      message: 'Failed to fetch viewed properties',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// ✅ Get Property By ID - MUST be after /viewed route
 router.get('/:id', async (req, res) => {
   try {
     const property = await Property.findById(req.params.id);
@@ -146,21 +189,53 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// ✅ Update Property (Secure Version)
-router.put("/:id", authMiddleware, ownerOnly, async (req, res) => {
+// ✅ Update Property (Owner or Admin)
+router.put("/:id", authMiddleware, ownerOrAdmin, async (req, res) => {
   try {
+    console.log('🔍 Update Property Request:', {
+      propertyId: req.params.id,
+      userRole: req.user.role,
+      requestBody: req.body
+    });
+
     const property = await Property.findById(req.params.id);
 
     if (!property) {
       return res.status(404).json({ message: "Property not found" });
     }
 
-    // Owner verification
-    if (property.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ 
-        message: "Not authorized to update this property" 
-      });
+    // If user is owner, verify they own the property
+    if (req.user.role.toLowerCase() === "owner") {
+      if (property.owner.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ 
+          message: "Not authorized to update this property" 
+        });
+      }
     }
+
+    // Handle date formatting for availableFrom
+    if (req.body.availableFrom) {
+      // Convert string date to proper Date object
+      const dateValue = new Date(req.body.availableFrom);
+      if (isNaN(dateValue.getTime())) {
+        return res.status(400).json({ 
+          message: "Invalid date format for availableFrom" 
+        });
+      }
+      req.body.availableFrom = dateValue;
+      console.log('📅 Formatted availableFrom date:', req.body.availableFrom);
+    }
+
+    // Convert string numbers to actual numbers
+    const numericFields = ['monthlyRent', 'securityDeposit', 'maintenanceCharges', 'rentalDurationMonths', 'area', 'floorNumber', 'totalFloors', 'ageOfProperty'];
+    numericFields.forEach(field => {
+      if (req.body[field] !== undefined && req.body[field] !== '') {
+        const numValue = Number(req.body[field]);
+        if (!isNaN(numValue)) {
+          req.body[field] = numValue;
+        }
+      }
+    });
 
     // Format data before update (optional but useful)
     if (req.body.bhkType) {
@@ -187,12 +262,16 @@ router.put("/:id", authMiddleware, ownerOnly, async (req, res) => {
         : [req.body.facilities.toLowerCase()];
     }
 
-    // Update property without strict validation
+    console.log('🔧 Processed update data:', req.body);
+
+    // Update property with validation
     const updatedProperty = await Property.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true, runValidators: true }
     );
+
+    console.log('✅ Property updated successfully');
 
     res.status(200).json({ 
       success: true,
@@ -201,7 +280,7 @@ router.put("/:id", authMiddleware, ownerOnly, async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Update Property Error:", error);
+    console.error("❌ Update Property Error:", error);
     res.status(500).json({ 
       success: false,
       message: "Failed to update property",
@@ -210,15 +289,26 @@ router.put("/:id", authMiddleware, ownerOnly, async (req, res) => {
   }
 });
 
-// ✅ Delete Property (Only Owner)
-router.delete("/:id", authMiddleware, ownerOnly, async (req, res) => {
+// ✅ Delete Property (Owner or Admin)
+router.delete("/:id", authMiddleware, ownerOrAdmin, async (req, res) => {
   try {
-    const property = await Property.findByIdAndDelete(req.params.id);
+    const property = await Property.findById(req.params.id);
 
     if (!property) {
       return res.status(404).json({ message: "Property not found" });
     }
 
+    // If user is owner, verify they own the property
+    if (req.user.role.toLowerCase() === "owner") {
+      if (property.owner.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ 
+          message: "Not authorized to delete this property" 
+        });
+      }
+    }
+
+    // Admin can delete any property, owner can only delete their own
+    await Property.findByIdAndDelete(req.params.id);
     res.json({ message: "Property deleted successfully" });
   } catch (error) {
     console.error("❌ Delete Property Error:", error);
@@ -268,6 +358,156 @@ router.post("/api/properties/videos", async (req, res) => {
   }
 });
 
+// ✅ Save Property
+router.post("/save/:propertyId", authMiddleware, async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+    const userId = req.user._id;
 
+    // Check if property exists
+    const property = await Property.findById(propertyId);
+    if (!property) {
+      return res.status(404).json({ message: "Property not found" });
+    }
+
+    // Check if already saved
+    const existingSave = await SaveProperty.findOne({ user: userId, property: propertyId });
+    if (existingSave) {
+      return res.status(400).json({ message: "Property already saved" });
+    }
+
+    // Save property
+    const savedProperty = new SaveProperty({
+      user: userId,
+      property: propertyId
+    });
+
+    await savedProperty.save();
+
+    // Update user's savedProperties array
+    await User.findByIdAndUpdate(userId, {
+      $addToSet: { savedProperties: propertyId }
+    });
+
+    res.status(201).json({ 
+      success: true, 
+      message: "Property saved successfully" 
+    });
+  } catch (error) {
+    console.error("❌ Error saving property:", error);
+    res.status(500).json({ 
+      message: "Failed to save property",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// ✅ Unsave Property
+router.delete("/save/:propertyId", authMiddleware, async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+    const userId = req.user._id;
+
+    // Remove from SaveProperty collection
+    const result = await SaveProperty.findOneAndDelete({ 
+      user: userId, 
+      property: propertyId 
+    });
+
+    if (!result) {
+      return res.status(404).json({ message: "Saved property not found" });
+    }
+
+    // Remove from user's savedProperties array
+    await User.findByIdAndUpdate(userId, {
+      $pull: { savedProperties: propertyId }
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      message: "Property unsaved successfully" 
+    });
+  } catch (error) {
+    console.error("❌ Error unsaving property:", error);
+    res.status(500).json({ 
+      message: "Failed to unsave property",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// ✅ Get User's Saved Properties
+router.get("/saved", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Get saved properties with populated property details
+    const savedProperties = await SaveProperty.find({ user: userId })
+      .populate({
+        path: 'property',
+        select: '-__v',
+        populate: {
+          path: 'owner',
+          select: 'name email phone'
+        }
+      })
+      .sort({ savedAt: -1 });
+
+    // Extract property data
+    const properties = savedProperties
+      .map(sp => sp.property)
+      .filter(Boolean); // Remove any null properties
+
+    res.json(properties);
+  } catch (error) {
+    console.error("❌ Error fetching saved properties:", error);
+    res.status(500).json({ 
+      message: "Failed to fetch saved properties",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// ✅ Check if property is saved by user
+router.get("/saved/:propertyId", authMiddleware, async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+    const userId = req.user._id;
+
+    const savedProperty = await SaveProperty.findOne({ 
+      user: userId, 
+      property: propertyId 
+    });
+
+    res.json({ 
+      isSaved: !!savedProperty 
+    });
+  } catch (error) {
+    console.error("❌ Error checking saved property:", error);
+    res.status(500).json({ 
+      message: "Failed to check saved property",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+router.post('/search-log', authMiddleware, async (req, res) => {
+  try {
+    const { searchTerm, userType, device } = req.body;
+    let userId = null;
+    if (req.user && req.user._id) userId = req.user._id;
+    const log = new SearchLog({
+      userId,
+      userType,
+      searchTerm,
+      device,
+      timestamp: new Date()
+    });
+    await log.save();
+    res.status(201).json({ message: 'Search logged' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to log search', error: error.message });
+  }
+});
 
 export default router;

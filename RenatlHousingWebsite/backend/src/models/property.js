@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const propertySchema = new mongoose.Schema(
   {
     // Basic Information
-    title: { type: String, required: true },
+    // title: { type: String, required: true },
     description: { type: String, required: true },
     address: { type: String, required: true },
     city: { type: String, required: true },
@@ -214,9 +214,14 @@ const propertySchema = new mongoose.Schema(
       required: true,
       validate: {
         validator: function (v) {
-          return v >= new Date();
+          // For new properties, date should not be in the past
+          // For existing properties (updates), allow any date
+          if (this.isNew) {
+            return v >= new Date();
+          }
+          return true; // Allow any date for updates
         },
-        message: "Available date cannot be in the past",
+        message: "Available date cannot be in the past for new properties",
       },
     },
     

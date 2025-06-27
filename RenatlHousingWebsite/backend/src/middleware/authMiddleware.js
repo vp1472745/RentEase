@@ -1,179 +1,222 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.js";
+import Admin from "../models/adminModals.js";
 
-// Enhanced Authentication Middleware
+// ✅ Authentication Middleware
 export const authMiddleware = async (req, res, next) => {
   try {
+    console.log("🔁 Incoming Auth Request");
+
     const authHeader = req.headers.authorization;
+    const cookieToken = req.cookies?.auth_token;
     const refreshToken = req.cookies?.refreshToken;
+    let token = null;
 
-    console.log("🔹 Auth Headers:", {
-      authHeader: authHeader ? "Present" : "Missing",
-      refreshToken: refreshToken ? "Present" : "Missing"
-    });
+    if (cookieToken) {
+      token = cookieToken;
+      console.log("🔐 Token found in cookies");
+    } else if (authHeader?.startsWith("Bearer ")) {
+      token = authHeader.split(" ")[1];
+      console.log("🔐 Token found in Authorization header");
+    }
 
-    // 🛑 No Token Case - Enhanced check
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.error("❌ No Token Provided!");
-      return res.status(401).json({ 
+    if (!token) {
+      console.log("❌ No token found");
+      return res.status(401).json({
         success: false,
         message: "Unauthorized: No Token Provided",
-        shouldRefresh: !!refreshToken // Indicate if refresh token exists
+        shouldRefresh: !!refreshToken,
       });
     }
 
-    // 🎯 Extract Token
-    const token = authHeader.split(" ")[1];
-    console.log("🔹 Token Extraction:", token ? "Success" : "Failed");
-
-    // ✅ Verify Token with enhanced error handling
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log("✅ Token Decoded:", { 
-        userId: decoded.userId, 
-        iat: new Date(decoded.iat * 1000).toISOString(),
-        exp: new Date(decoded.exp * 1000).toISOString()
-      });
+      console.log("✅ Token verified");
 
-      // 🔎 Enhanced User Lookup with caching consideration
-      const user = await User.findById(decoded.userId)
+      const userId = decoded.userId || decoded.id;
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized: Invalid Token Structure",
+          shouldLogout: true,
+        });
+      }
+
+      let user = await User.findById(userId)
         .select("-password -refreshToken")
         .lean();
 
-      // 🛑 If User Not Found - Enhanced response
       if (!user) {
-        console.error("❌ User Not Found in Database!");
-        return res.status(401).json({ 
+        const admin = await Admin.findById(userId)
+          .select("-password")
+          .lean();
+
+        if (admin) {
+          user = {
+            ...admin,
+            _id: admin._id,
+            role: admin.role || "admin",
+            isActive: true,
+          };
+          console.log("✅ Admin found:", admin.email);
+        }
+      }
+
+      if (!user) {
+        return res.status(401).json({
           success: false,
-          message: "Unauthorized: User Not Found",
-          shouldLogout: true
+          message: "Unauthorized: User/Admin Not Found",
+          shouldLogout: true,
         });
       }
 
-      // 🔥 Attach Enhanced User Object to Request
-      req.user = {
-        ...user,
-        tokenExpiry: decoded.exp,
-        tokenIssuedAt: decoded.iat
-      };
-      
-      console.log(`✅ Authenticated: ${user.email} (${user.role}) | Active: ${user.isActive}`);
-
-      // 🛑 Check if account is active
-      if (user.isActive === false) {
-        console.error("❌ Inactive Account!");
+      if (user.role !== "admin" && user.isActive === false) {
         return res.status(403).json({
           success: false,
           message: "Account Deactivated",
-          shouldLogout: true
+          shouldLogout: true,
         });
       }
 
+      req.user = {
+        ...user,
+        tokenExpiry: decoded.exp,
+        tokenIssuedAt: decoded.iat,
+      };
+
       next();
     } catch (error) {
-      // Enhanced Token Error Handling
+      console.error("❌ Token Error:", error);
+
       if (error instanceof jwt.TokenExpiredError) {
-        console.error("❌ Token Expired at:", new Date(error.expiredAt).toISOString());
-        return res.status(401).json({ 
+        return res.status(401).json({
           success: false,
           message: "Session Expired",
-          shouldRefresh: !!refreshToken
+          shouldRefresh: !!refreshToken,
         });
       } else if (error instanceof jwt.JsonWebTokenError) {
-        console.error("❌ Invalid Token:", error.message);
-        return res.status(401).json({ 
+        return res.status(401).json({
           success: false,
           message: "Invalid Session",
-          shouldLogout: true
+          shouldLogout: true,
         });
       }
-      console.error("🔴 Critical JWT Error:", error);
+
       throw error;
     }
   } catch (error) {
-    console.error("❌ Auth Middleware Failure:", error.stack);
-    return res.status(500).json({ 
+    console.error("🔥 Authentication Middleware Error:", error);
+    return res.status(500).json({
       success: false,
       message: "Authentication Service Unavailable",
-      systemError: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
 
-// Enhanced Owner-Only Middleware
+// ✅ Owner-Only Middleware
 export const ownerOnly = (req, res, next) => {
   try {
     const user = req.user;
-    console.log("🔹 Role Verification:", {
-      userId: user?._id,
-      role: user?.role,
-      path: req.path
-    });
-
-    // 🛑 Comprehensive Access Checks
     if (!user || !user.role) {
-      console.error("❌ Access Violation: No User/Role");
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
         message: "Identity Verification Failed",
-        shouldRelogin: true
+        shouldRelogin: true,
       });
     }
 
-    // 🎯 Role Validation with case-insensitive check
-    const normalizedRole = user.role.toString().toLowerCase().trim();
-    if (normalizedRole !== "owner") {
-      console.error("❌ Role Violation:", {
-        required: "owner",
-        provided: user.role
-      });
-      return res.status(403).json({ 
+    const role = user.role.toLowerCase().trim();
+    if (role !== "owner") {
+      return res.status(403).json({
         success: false,
         message: "Resource Restricted to Property Owners",
-        requiredRole: "owner"
+        requiredRole: "owner",
       });
     }
 
-    // ✅ Success Logging
-    console.log("✅ Owner Access Granted:", {
-      userId: user._id,
-      email: user.email
-    });
-
-    // 🛡️ Add Security Headers for Owner Routes
     res.set({
-      'X-Owner-Access': 'granted',
-      'X-User-ID': user._id
+      "X-Owner-Access": "granted",
+      "X-User-ID": user._id,
     });
 
     next();
   } catch (error) {
-    console.error("❌ Owner Middleware Crash:", error.stack);
-    return res.status(500).json({ 
+    console.error("❌ OwnerOnly Error:", error);
+    return res.status(500).json({
       success: false,
       message: "Authorization Service Failed",
-      systemError: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
 
-// New: Combined Auth + Owner Middleware
-export const authOwner = [authMiddleware, ownerOnly];
-
-// New: Admin-Only Middleware (Bonus)
+// ✅ Admin-Only Middleware
 export const adminOnly = (req, res, next) => {
   try {
     const user = req.user;
     if (!user || user.role.toLowerCase() !== "admin") {
-      console.error("Admin Access Denied for:", user?.email);
-      return res.status(403).json({ 
+      return res.status(403).json({
         success: false,
-        message: "Administrator Access Required"
+        message: "Administrator Access Required",
       });
     }
+
     next();
   } catch (error) {
-    console.error("Admin Middleware Error:", error);
-    res.status(500).json({ message: "Admin Verification Failed" });
+    console.error("❌ AdminOnly Middleware - Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Admin Verification Failed",
+    });
   }
 };
+
+// ✅ Owner or Admin Access
+export const ownerOrAdmin = (req, res, next) => {
+  try {
+    const user = req.user;
+    const role = user?.role?.toLowerCase();
+
+    if (role === "owner" || role === "admin") {
+      next();
+    } else {
+      return res.status(403).json({
+        success: false,
+        message: "Owner or Administrator Access Required",
+      });
+    }
+  } catch (error) {
+    console.error("❌ OwnerOrAdmin Middleware - Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Authorization Verification Failed",
+    });
+  }
+};
+
+// ✅ Simple Token Verifier (Optional)
+export const verifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized: No token",
+    });
+  }
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid token",
+    });
+  }
+};
+
+// ✅ Combined Middleware for Owner Routes
+export const authOwner = [authMiddleware, ownerOnly];

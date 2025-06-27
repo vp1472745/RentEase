@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "../axios";
+import axios from "../lib/axios";
+import { toast } from 'react-toastify';
 import {
   FiHeart,
   FiShare2,
@@ -32,29 +33,118 @@ function Properties() {
   const [localityFilter, setLocalityFilter] = useState("");
   const [tenantFilter, setTenantFilter] = useState("");
   const [coupleFriendlyFilter, setCoupleFriendlyFilter] = useState("");
-  const [priceRange, setPriceRange] = useState([0, 100000]);
+  const [priceRange, setPriceRange] = useState(["", ""]);
   const [showFilters, setShowFilters] = useState(false);
   const [showSeenProperties, setShowSeenProperties] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Load saved properties on component mount
+  useEffect(() => {
+    const loadSavedProperties = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const response = await axios.get('/api/properties/saved', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const savedProperties = response.data;
+        const savedIds = {};
+        savedProperties.forEach(property => {
+          savedIds[property._id] = true;
+        });
+        setFavorites(savedIds);
+      } catch (error) {
+        console.error('Error loading saved properties:', error);
+      }
+    };
+
+    loadSavedProperties();
+  }, []);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const tab = searchParams.get("tab");
     setShowSeenProperties(tab === "seenproperties");
 
+    // Initialize filter states from URL parameters
+    setSearchTerm(searchParams.get("searchTerm") || "");
+    setCityFilter(searchParams.get("city") || "");
+    setPropertyTypeFilter(searchParams.get("propertyType") || ""); 
+    setLocalityFilter(searchParams.get("popularLocality") || searchParams.get("address") || "");
+    setBhkFilter(searchParams.get("bhk") || ""); // Ensure bhkFilter is read from URL
+    setTenantFilter(searchParams.get("tenant") || ""); // Ensure tenantFilter is read from URL
+    setCoupleFriendlyFilter(searchParams.get("coupleFriendly") || ""); // Ensure coupleFriendlyFilter is read from URL
+
+    const minPriceParam = searchParams.get("minPrice");
+    const maxPriceParam = searchParams.get("maxPrice");
+
+    setPriceRange([
+      minPriceParam ? Number(minPriceParam) : "",
+      maxPriceParam ? Number(maxPriceParam) : "" 
+    ]);
+
     const fetchProperties = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`http://localhost:5000/api/properties`, {
-          params: {
+        setError(null);
+        
+        const token = localStorage.getItem('token');
+        const config = token ? {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        } : {};
+
+        // Determine which endpoint to call based on active search parameters
+        const hasSearchParams = Array.from(searchParams.keys()).some(key => 
+            key !== "tab" && searchParams.get(key) !== "" && searchParams.get(key) !== "0"
+        );
+
+        let endpoint = '/api/properties/';
+        let requestParams = {};
+
+        if (hasSearchParams) {
+          endpoint = '/api/properties/search';
+          // Map frontend filter states to backend search parameters
+          requestParams = {
+            searchTerm: searchParams.get("searchTerm") || "",
+            city: searchParams.get("city") || "",
+            propertyType: searchParams.get("propertyType") || "",
+            locality: searchParams.get("locality") || searchParams.get("address") || searchParams.get("popularLocality") || "",
+            bhkType: searchParams.get("bhk") || "",
+            tenant: searchParams.get("tenant") || "",
+            coupleFriendly: searchParams.get("coupleFriendly") || "",
+            minPrice: minPriceParam,
+            maxPrice: maxPriceParam,
+            // Add other parameters as needed by your backend /search route
+          };
+        } else {
+          // If no specific search, just fetch all properties (or based on initial URL params)
+          requestParams = {
             city: searchParams.get("city") || "",
             address: searchParams.get("locality") || "",
             propertyType: searchParams.get("category") || "",
             popularLocality: searchParams.get("popularLocality") || "",
-          },
+          };
+        }
+
+        console.log(`📡 Fetching from: ${endpoint} with params:`, requestParams);
+
+        const res = await axios.get(endpoint, {
+          ...config,
+          params: requestParams
         });
 
-        const propertiesData = Array.isArray(res?.data)
-          ? res.data.map((property) => ({
+        if (!res.data) {
+          throw new Error('No data received from server');
+        }
+
+        const propertiesData = Array.isArray(res.data) 
+          ? res.data.map(property => ({
               ...property,
               media: [...(property.images || []), ...(property.videos || [])],
               videos: property.videos || [],
@@ -62,18 +152,17 @@ function Properties() {
             }))
           : [];
 
+        console.log('Fetched properties:', propertiesData);
         setProperties(propertiesData);
 
-        // Load seen properties from localStorage
+        // Load seen properties
         const savedSeenProperties = localStorage.getItem("seenProperties");
         if (savedSeenProperties) {
-          setSeenProperties(JSON.parse(savedSeenProperties));
+          const seenIds = JSON.parse(savedSeenProperties);
+          setSeenProperties(seenIds);
 
-          // If showing seen properties, filter them
           if (tab === "seenproperties") {
-            const seenProps = propertiesData.filter((prop) =>
-              JSON.parse(savedSeenProperties).includes(prop._id)
-            );
+            const seenProps = propertiesData.filter(prop => seenIds.includes(prop._id));
             setFilteredProperties(seenProps);
           } else {
             setFilteredProperties(propertiesData);
@@ -83,15 +172,31 @@ function Properties() {
         }
       } catch (error) {
         console.error("Error fetching properties:", error);
+        let errorMessage = "Failed to load properties";
+        
+        if (error.response) {
+          console.error("Error response:", error.response.data);
+          errorMessage = error.response.data.message || errorMessage;
+        } else if (error.request) {
+          console.error("No response received:", error.request);
+          errorMessage = "Server not responding. Please try again later.";
+        } else {
+          console.error("Error setting up request:", error.message);
+          errorMessage = error.message || errorMessage;
+        }
+        
+        toast.error(errorMessage);
         setProperties([]);
         setFilteredProperties([]);
       } finally {
         setLoading(false);
       }
     };
+
     fetchProperties();
   }, [location.search]);
 
+  // This useEffect will run applyFilters when filter states or properties change
   useEffect(() => {
     if (!showSeenProperties) {
       applyFilters();
@@ -105,12 +210,27 @@ function Properties() {
     tenantFilter,
     coupleFriendlyFilter,
     priceRange,
-    properties,
+    properties, 
     showSeenProperties,
+    // Removed location.search as a direct dependency here. fetchProperties handles it.
   ]);
 
   const applyFilters = () => {
+    console.log("=== Applying Filters ===");
+    console.log("Initial properties for filtering:", properties);
+    console.log("Current filter states:", {
+      searchTerm,
+      cityFilter,
+      bhkFilter,
+      propertyTypeFilter,
+      localityFilter,
+      tenantFilter,
+      coupleFriendlyFilter,
+      priceRange,
+    });
+
     let filtered = Array.isArray(properties) ? [...properties] : [];
+    console.log("After initial copy:", filtered.length, "properties");
 
     if (searchTerm.trim() !== "") {
       const searchLower = searchTerm.toLowerCase();
@@ -120,12 +240,14 @@ function Properties() {
           property.description?.toLowerCase().includes(searchLower)
         );
       });
+      console.log("After searchTerm filter:", filtered.length, "properties");
     }
 
     if (cityFilter) {
       filtered = filtered.filter((property) =>
         property.city?.toLowerCase().includes(cityFilter.toLowerCase())
       );
+      console.log("After cityFilter filter:", filtered.length, "properties");
     }
 
     if (bhkFilter) {
@@ -133,6 +255,7 @@ function Properties() {
         (property) =>
           property.bhkType?.toString().toLowerCase() === bhkFilter.toLowerCase()
       );
+      console.log("After bhkFilter filter:", filtered.length, "properties");
     }
 
     if (propertyTypeFilter) {
@@ -141,14 +264,19 @@ function Properties() {
           property.propertyType?.toString().toLowerCase() ===
           propertyTypeFilter.toLowerCase()
       );
+      console.log("After propertyTypeFilter filter:", filtered.length, "properties");
     }
 
     if (localityFilter) {
       filtered = filtered.filter((property) =>
-        property.popularLocality
-          ?.toLowerCase()
-          .includes(localityFilter.toLowerCase())
+        (property.popularLocality &&
+          property.popularLocality.toLowerCase().includes(localityFilter.toLowerCase())) ||
+        (property.address &&
+          property.address.toLowerCase().includes(localityFilter.toLowerCase())) ||
+        (property.city &&
+          property.city.toLowerCase().includes(localityFilter.toLowerCase()))
       );
+      console.log("After localityFilter filter:", filtered.length, "properties");
     }
 
     if (tenantFilter) {
@@ -164,6 +292,7 @@ function Properties() {
           gender.toLowerCase().includes(tenantFilter.toLowerCase())
         );
       });
+      console.log("After tenantFilter filter:", filtered.length, "properties");
     }
 
     if (coupleFriendlyFilter) {
@@ -172,15 +301,25 @@ function Properties() {
           String(property.coupleFriendly || "").toLowerCase() === 
           coupleFriendlyFilter.toLowerCase()
       );
+      console.log("After coupleFriendlyFilter filter:", filtered.length, "properties");
     }
 
-    filtered = filtered.filter(
-      (property) =>
-        property.monthlyRent >= priceRange[0] &&
-        property.monthlyRent <= priceRange[1]
-    );
+    filtered = filtered.filter((property) => {
+      const min = priceRange[0] !== "" ? Number(priceRange[0]) : null;
+      const max = priceRange[1] !== "" ? Number(priceRange[1]) : null;
+      if (min !== null && max !== null) {
+        return property.monthlyRent >= min && property.monthlyRent <= max;
+      } else if (min !== null) {
+        return property.monthlyRent >= min;
+      } else if (max !== null) {
+        return property.monthlyRent <= max;
+      }
+      return true; // No price filter if both are empty
+    });
+    console.log("After priceRange filter:", filtered.length, "properties");
 
     setFilteredProperties(filtered);
+    console.log("Final filtered properties set:", filtered.length, "properties");
   };
 
   const handleSearch = (searchParams) => {
@@ -238,11 +377,50 @@ function Properties() {
     }
   };
 
-  const toggleFavorite = (propertyId) => {
-    setFavorites((prev) => ({
-      ...prev,
-      [propertyId]: !prev[propertyId],
-    }));
+  const toggleFavorite = async (propertyId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please login to save properties');
+        return;
+      }
+
+      const isCurrentlySaved = favorites[propertyId];
+      
+      if (isCurrentlySaved) {
+        // Unsave property
+        await axios.delete(`/api/properties/save/${propertyId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        setFavorites((prev) => ({
+          ...prev,
+          [propertyId]: false,
+        }));
+        
+        toast.success('Property removed from saved');
+      } else {
+        // Save property
+        await axios.post(`/api/properties/save/${propertyId}`, {}, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        setFavorites((prev) => ({
+          ...prev,
+          [propertyId]: true,
+        }));
+        
+        toast.success('Property saved successfully');
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to update saved property';
+      toast.error(errorMessage);
+    }
   };
 
   const openGallery = (property, index = 0) => {
@@ -293,36 +471,32 @@ function Properties() {
     window.open(`tel:${phoneNumber}`);
   };
 
-  const isVideo = (mediaItem) => {
-    if (!mediaItem) return false;
-
-    const url = typeof mediaItem === "string" ? mediaItem : mediaItem.url;
-    if (!url) return false;
-
-    // Check for video extensions
-    if (url.match(/\.(mp4|mov|webm|avi|m3u8|mkv)$/i)) return true;
-
-    // Check for Cloudinary video URLs
-    if (
-      url.includes("res.cloudinary.com") &&
-      (url.includes("/video/upload/") ||
-        url.includes(".mp4") ||
-        url.includes(".mov"))
-    ) {
-      return true;
-    }
-
-    // Check for MIME type if available
-    if (typeof mediaItem === "object" && mediaItem.mimeType) {
-      return mediaItem.mimeType.startsWith("video/");
-    }
-
-    return false;
+  const getMediaUrl = (mediaItem) => {
+    if (!mediaItem) return null;
+    
+    // If mediaItem is a string (old format), return it directly
+    if (typeof mediaItem === 'string') return mediaItem;
+    
+    // If mediaItem is an object with url property (new format), return the url
+    if (mediaItem.url) return mediaItem.url;
+    
+    return null;
   };
 
-  const getMediaUrl = (mediaItem) => {
-    if (!mediaItem) return "";
-    return typeof mediaItem === "string" ? mediaItem : mediaItem.url;
+  const isVideo = (mediaItem) => {
+    if (!mediaItem) return false;
+    
+    // If mediaItem is an object with type property
+    if (typeof mediaItem === 'object' && mediaItem.type) {
+      return mediaItem.type.toLowerCase() === 'video';
+    }
+    
+    // If mediaItem is a string, check if it ends with video extension
+    if (typeof mediaItem === 'string') {
+      return /\.(mp4|webm|ogg)$/i.test(mediaItem);
+    }
+    
+    return false;
   };
 
   const VideoPlayer = ({ src, className, onClick, thumbnail = false }) => {
@@ -371,8 +545,8 @@ function Properties() {
           initialLocality={localityFilter}
           initialTenant={tenantFilter}
           initialCoupleFriendly={coupleFriendlyFilter}
-          initialMinPrice={priceRange[0]}
-          initialMaxPrice={priceRange[1]}
+          initialMinPrice={priceRange[0] !== "" ? Number(priceRange[0]) : 0}
+          initialMaxPrice={priceRange[1] !== "" ? Number(priceRange[1]) : Infinity}
         />
       )}
 
@@ -383,37 +557,6 @@ function Properties() {
             <div className="animate-pulse text-center text-gray-600">
               Loading properties...
             </div>
-          </div>
-        ) : showSeenProperties ? (
-          <div className="mb-4">
-            <h2 className="text-2xl font-bold text-purple-800 mb-4">
-              Seen Properties ({filteredProperties.length})
-            </h2>
-            {filteredProperties.length > 0 ? (
-              <div className="grid grid-cols-1 gap-6 max-w-5xl mx-auto pb-20">
-                {filteredProperties.map((property) => (
-                  <PropertyCard
-                    key={property._id}
-                    property={property}
-                    favorites={favorites}
-                    toggleFavorite={toggleFavorite}
-                    openGallery={openGallery}
-                    shareOnWhatsApp={shareOnWhatsApp}
-                    contactOwner={contactOwner}
-                    handleViewDetails={handleViewDetails}
-                    isVideo={isVideo}
-                    getMediaUrl={getMediaUrl}
-                    VideoPlayer={VideoPlayer}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="flex justify-center items-center h-64">
-                <p className="text-center text-purple-800">
-                  You haven't viewed any properties yet
-                </p>
-              </div>
-            )}
           </div>
         ) : filteredProperties.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 max-w-5xl mx-auto pb-20">
@@ -474,19 +617,33 @@ function PropertyCard({
   getMediaUrl,
   VideoPlayer,
 }) {
-  const firstMedia = property.media?.[0];
+  // Get first media item (image or video)
+  const firstMedia = property.media?.[0] || property.images?.[0];
   const mediaUrl = getMediaUrl(firstMedia);
   const isVideoMedia = isVideo(firstMedia);
 
   // Format Gender display
   const formatGenderDisplay = () => {
     if (!property.Gender) return "Any";
-    
-    const genderValues = Array.isArray(property.Gender) 
-      ? property.Gender 
-      : [property.Gender];
-      
-    return genderValues.join(", ");
+    return Array.isArray(property.Gender) ? property.Gender.join(", ") : property.Gender;
+  };
+
+  // Format BHK Type display
+  const formatBhkDisplay = () => {
+    if (!property.bhkType) return "";
+    return Array.isArray(property.bhkType) ? property.bhkType.join(", ") : property.bhkType;
+  };
+
+  // Format Furnish Type display
+  const formatFurnishDisplay = () => {
+    if (!property.furnishType) return "";
+    return Array.isArray(property.furnishType) ? property.furnishType.join(", ") : property.furnishType;
+  };
+
+  // Format Property Type display
+  const formatPropertyTypeDisplay = () => {
+    if (!property.propertyType) return "";
+    return Array.isArray(property.propertyType) ? property.propertyType.join(", ") : property.propertyType;
   };
 
   return (
@@ -503,125 +660,98 @@ function PropertyCard({
             />
           ) : (
             <img
-              src={mediaUrl || "https://via.placeholder.com/400x300"}
+              src={mediaUrl || "https://via.placeholder.com/400x300?text=No+Image"}
               alt={property.title}
               className="w-full h-full object-cover cursor-pointer"
               onClick={() => openGallery(property, 0)}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "https://via.placeholder.com/400x300?text=Image+Not+Available";
+              }}
             />
           )}
-          <div className="absolute top-4 right-4 flex space-x-2">
+        </div>
+
+        {/* Property Details */}
+        <div className="p-4 md:w-3/5">
+          <div className="flex justify-between items-start">
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">{property.title}</h3>
             <button
-              className={`p-2 rounded-full shadow-md transition ${
-                favorites[property._id]
-                  ? "text-red-500 bg-white"
-                  : "bg-white text-gray-700"
-              }`}
               onClick={(e) => {
                 e.stopPropagation();
                 toggleFavorite(property._id);
               }}
+              className={`p-2 rounded-full ${
+                favorites[property._id] ? "text-red-500" : "text-gray-400"
+              } hover:text-red-500 transition-colors`}
             >
-              <FiHeart
-                className={`${favorites[property._id] ? "fill-current" : ""}`}
-              />
-            </button>
-            <button
-              className="bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition"
-              onClick={(e) => {
-                e.stopPropagation();
-                shareOnWhatsApp(property);
-              }}
-            >
-              <FiShare2 />
+              <FiHeart size={24} />
             </button>
           </div>
-        </div>
 
-        {/* Property Details */}
-        <div className="p-4 md:p-6 md:w-3/5 ">
-          <h3 className="text-lg font-semibold text-purple-800 mb-2">
-            {property.bhkType} {property.propertyType} in{" "}
-            {property.popularLocality}
-          </h3>
+          <div className="space-y-2">
+            <p className="text-gray-600">
+              <span className="font-medium">Location:</span> {property.address}, {property.city}, {property.state}
+            </p>
+            <p className="text-gray-600">
+              <span className="font-medium">Property Type:</span> {formatPropertyTypeDisplay()}
+            </p>
+            <p className="text-gray-600">
+              <span className="font-medium">BHK Type:</span> {formatBhkDisplay()}
+            </p>
+            <p className="text-gray-600">
+              <span className="font-medium">Furnishing:</span> {formatFurnishDisplay()}
+            </p>
+            <p className="text-gray-600">
+              <span className="font-medium">Popular Locality:</span> {property.popularLocality}
+            </p>
+            <p className="text-gray-600">
+              <span className="font-medium">Available From:</span>{" "}
+              {new Date(property.availableFrom).toLocaleDateString()}
+            </p>
+            <p className="text-gray-600">
+              <span className="font-medium">Gender:</span> {formatGenderDisplay()}
+            </p>
+          </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-3">
+          <div className="mt-4 flex justify-between items-center">
             <div>
-              <p className="text-sm text-gray-600">City</p>
-              <p className="font-semibold">{property.city}</p>
+              <p className="text-2xl font-bold text-purple-800">₹{property.monthlyRent}/month</p>
+              <p className="text-sm text-gray-500">Security Deposit: ₹{property.securityDeposit}</p>
             </div>
-            <div>
-              <p className="text-sm text-gray-600">Nearby</p>
-              <p className="font-semibold whitespace-pre-line">
-                {String(property.nearby || "").replace(/,/g, "\n")}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Rent</p>
-              <p className="font-semibold">₹{property.monthlyRent}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Deposit</p>
-              <p className="font-semibold">₹{property.securityDeposit}</p>
-            </div>
-            <div>
-              Tenant Preference
-              <p className="text-black font-semibold">
-                {formatGenderDisplay()}
-                {property.coupleFriendly &&
-                  property.coupleFriendly === "Yes" && (
-                    <span className="block text-sm text-green-600">
-                      Couple Friendly
-                    </span>
-                  )}
-              </p>
-            </div>
-            <div className="mb-3">
-              <p className="text-sm text-gray-600">Furnishing</p>
-              <p className="font-semibold">{property.furnishType}</p>
+            <div className="flex space-x-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  shareOnWhatsApp(property);
+                }}
+                className="p-2 text-gray-600 hover:text-green-600 transition-colors"
+                title="Share on WhatsApp"
+              >
+                <FiShare2 size={20} />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  contactOwner(property);
+                }}
+                className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
+                title="Contact Owner"
+              >
+                <FiPhone size={20} />
+              </button>
             </div>
           </div>
 
-          {property.facilities && (
-            <div className="mb-3">
-              <p className="text-sm text-gray-600">Facilities</p>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {Array.isArray(property.facilities) ? (
-                  property.facilities.slice(0, 3).map((facility, index) => (
-                    <span
-                      key={index}
-                      className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs"
-                    >
-                      {facility}
-                    </span>
-                  ))
-                ) : (
-                  <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">
-                    {property.facilities}
-                  </span>
-                )}
-                {Array.isArray(property.facilities) && property.facilities.length > 3 && (
-                  <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">
-                    +{property.facilities.length - 3} more
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div className="flex flex-col sm:flex-row gap-3 mt-4">
-            <button
-              onClick={() => handleViewDetails(property._id)}
-              className="flex-1 bg-purple-800 text-white py-2 rounded-lg hover:bg-purple-900 transition"
-            >
-              View Details
-            </button>
-            <button
-              onClick={() => contactOwner(property.ownerphone)}
-              className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
-            >
-              <FiPhone /> Contact
-            </button>
-          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleViewDetails(property._id);
+            }}
+            className="mt-4 w-full bg-purple-800 text-white py-2 rounded hover:bg-purple-700 transition-colors"
+          >
+            View Details
+          </button>
         </div>
       </div>
     </div>
@@ -761,7 +891,7 @@ const PropertySearchBox = ({
   initialTenant = "",
   initialCoupleFriendly = "",
   initialMinPrice = 0,
-  initialMaxPrice = 100000
+  initialMaxPrice = Infinity
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
@@ -771,8 +901,8 @@ const PropertySearchBox = ({
   const [localityFilter, setLocalityFilter] = useState(initialLocality);
   const [tenantFilter, setTenantFilter] = useState(initialTenant);
   const [coupleFriendlyFilter, setCoupleFriendlyFilter] = useState(initialCoupleFriendly);
-  const [minPrice, setMinPrice] = useState(initialMinPrice);
-  const [maxPrice, setMaxPrice] = useState(initialMaxPrice);
+  const [minPrice, setMinPrice] = useState(initialMinPrice || "");
+  const [maxPrice, setMaxPrice] = useState(initialMaxPrice || "");
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -796,8 +926,8 @@ const PropertySearchBox = ({
     setLocalityFilter("");
     setTenantFilter("");
     setCoupleFriendlyFilter("");
-    setMinPrice(0);
-    setMaxPrice(100000);
+    setMinPrice("");
+    setMaxPrice("");
     onSearch({
       searchTerm: "",
       cityFilter: "",
@@ -806,7 +936,7 @@ const PropertySearchBox = ({
       localityFilter: "",
       tenantFilter: "",
       coupleFriendlyFilter: "",
-      priceRange: [0, 100000]
+      priceRange: ["", ""]
     });
   };
 
@@ -936,8 +1066,7 @@ const PropertySearchBox = ({
                   className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 outline-none"
                   placeholder="Min"
                   value={minPrice}
-                  onChange={(e) => setMinPrice(Number(e.target.value))}
-                  min="0"
+                  onChange={(e) => setMinPrice(e.target.value)}
                 />
                 <span className="text-gray-400">to</span>
                 <input
@@ -945,7 +1074,7 @@ const PropertySearchBox = ({
                   className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 outline-none"
                   placeholder="Max"
                   value={maxPrice}
-                  onChange={(e) => setMaxPrice(Number(e.target.value))}
+                  onChange={(e) => setMaxPrice(e.target.value)}
                   min="0"
                 />
               </div>

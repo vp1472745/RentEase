@@ -14,7 +14,7 @@ import {
   resetPassword 
     } from "../controller/user.controller.js"; 
 
-import { authMiddleware } from "../middleware/authMiddleware.js"; 
+import { adminOnly, authMiddleware } from "../middleware/authMiddleware.js"; 
 import { validateSignup, validateLogin } from "../middleware/authValidate.js";
 
 const router = express.Router();
@@ -43,7 +43,36 @@ router.post("/reset-password", resetPassword);
 router.post("/logout", logout);
 
 // ✅ Protected Routes (Require Token)
-router.get("/profile", authMiddleware, getUserProfile);
+router.get("/profile", authMiddleware,adminOnly, getUserProfile);
 router.put("/profile", authMiddleware, updateUserProfile);
+
+router.get('/search-logs', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const logs = await SearchLog.find().populate('userId', 'name email role');
+    res.json(logs);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch search logs', error: error.message });
+  }
+});
+
+router.post('/search-log', authMiddleware, async (req, res) => {
+  try {
+    const { searchTerm, device } = req.body;
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    const log = new SearchLog({
+      userId: req.user._id,
+      userType: req.user.role,
+      searchTerm,
+      device,
+      timestamp: new Date()
+    });
+    await log.save();
+    res.status(201).json({ message: 'Search logged' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to log search', error: error.message });
+  }
+});
 
 export default router;  // ✅ Correct Export

@@ -19,7 +19,6 @@ const PropertyUpdateForm = () => {
   const [validationErrors, setValidationErrors] = useState({});
 
   const [formData, setFormData] = useState({
-    title: "",
     description: "",
     address: "",
     city: "",
@@ -154,7 +153,6 @@ const PropertyUpdateForm = () => {
         });
 
         setFormData({
-          title: property.title || "",
           description: property.description || "",
           address: property.address || "",
           city: property.city || "",
@@ -267,7 +265,6 @@ const PropertyUpdateForm = () => {
     const errors = {};
 
     if (step === 1) {
-      if (!formData.title.trim()) errors.title = "Title is required";
       if (!formData.description.trim()) errors.description = "Description is required";
       if (!formData.address.trim()) errors.address = "Address is required";
       if (!formData.city.trim()) errors.city = "City is required";
@@ -461,7 +458,6 @@ const PropertyUpdateForm = () => {
 
       // Prepare data for submission
       const submitData = {
-        title: formData.title.trim(),
         description: formData.description.trim(),
         address: formData.address.trim(),
         city: formData.city.trim(),
@@ -543,7 +539,7 @@ const PropertyUpdateForm = () => {
 
   const calculateProgress = () => {
     const stepDefinitions = [
-      { fields: ["title", "description", "address", "city", "state", "ownerName", "ownerphone", "Gender"], weight: 0.25 },
+      { fields: ["description", "address", "city", "state", "ownerName", "ownerphone", "Gender"], weight: 0.25 },
       { fields: ["area", "propertyType", "bhkType", "furnishType", "floorNumber", "totalFloors", "ageOfProperty", "facingDirection"], weight: 0.25 },
       { fields: ["monthlyRent", "securityDeposit", "availableFrom", "facilities", "maintenanceCharges"], weight: 0.25 },
       { fields: ["images", "videos"], weight: 0.25 }
@@ -630,21 +626,6 @@ const PropertyUpdateForm = () => {
             <div className="space-y-4">
               <h2 className="text-xl font-semibold text-purple-800 mb-4">Basic Information</h2>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title*</label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  required
-                />
-                {validationErrors.title && (
-                  <p className="text-red-500 text-sm mt-1">{validationErrors.title}</p>
-                )}
-              </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description*</label>
                 <div className="relative">

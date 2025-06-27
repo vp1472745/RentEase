@@ -1,4 +1,4 @@
-import axios from "../axios";
+import axios from "../axios"
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import { useNavigate } from "react-router-dom";
@@ -12,11 +12,11 @@ import {
 } from "react-icons/fa";
 import { useState, useEffect, useRef } from "react";
 import { BsFillMicFill, BsStopFill } from "react-icons/bs";
+import { toast } from "react-hot-toast";
 
 const AddProperty = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    title: "",
     description: "",
     address: "",
     city: "",
@@ -214,7 +214,6 @@ const AddProperty = () => {
     const errors = {};
 
     if (step === 1) {
-      if (!formData.title.trim()) errors.title = "Title is required";
       if (!formData.description.trim())
         errors.description = "Description is required";
       if (!formData.address.trim()) errors.address = "Address is required";
@@ -311,45 +310,78 @@ const AddProperty = () => {
       return;
     }
 
-    const uploadData = new FormData();
-    files.forEach((file) => {
-      uploadData.append("images", file);
-    });
-
     try {
       setUploading(true);
       setError(null);
-      const token = localStorage.getItem("token");
-      const res = await axios.post("/api/properties/upload", uploadData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      setUploadProgress(0);
+      
+      const uploadedImages = [];
+      for (const file of files) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          setError("Only image files are allowed");
+          continue;
+        }
 
-      const newImageUrls = res.data.imageUrls || [];
-      setFormData((prev) => ({
-        ...prev,
-        images: [
-          ...prev.images,
-          ...newImageUrls.map((url) => ({ url, type: "" })),
-        ],
-      }));
-      setPreviewImages((prev) => [...prev, ...newImageUrls]);
+        // Validate file size (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+          setError("Image size should be less than 5MB");
+          continue;
+        }
+
+        try {
+          const uploadData = new FormData();
+          uploadData.append("file", file);
+          uploadData.append("upload_preset", "RentEase_Videos"); // Using the same preset that works for videos
+          uploadData.append("cloud_name", "dkrrpzlbl");
+          uploadData.append("resource_type", "image"); // Explicitly specify resource type
+          
+          const response = await fetch(
+            "https://api.cloudinary.com/v1_1/dkrrpzlbl/image/upload",
+            {
+              method: "POST",
+              body: uploadData,
+            }
+          );
+
+          const data = await response.json();
+          
+          if (!response.ok) {
+            console.error("Cloudinary response:", data); // Log the full response for debugging
+            throw new Error(data.error?.message || "Upload failed");
+          }
+
+          if (data.secure_url) {
+            uploadedImages.push({
+              url: data.secure_url,
+              public_id: data.public_id,
+              type: "image"
+            });
+            // Update progress for each successful upload
+            setUploadProgress(prev => Math.min(prev + (100 / files.length), 100));
+          }
+        } catch (uploadError) {
+          console.error("Error uploading individual file:", uploadError);
+          setError(`Failed to upload ${file.name}: ${uploadError.message}`);
+          continue; // Continue with next file even if one fails
+        }
+      }
+
+      if (uploadedImages.length > 0) {
+        setFormData((prev) => ({
+          ...prev,
+          images: [...prev.images, ...uploadedImages],
+        }));
+        setPreviewImages((prev) => [...prev, ...uploadedImages.map(img => img.url)]);
+        toast.success(`Successfully uploaded ${uploadedImages.length} image(s)`);
+      }
     } catch (error) {
       console.error("Image upload failed:", error);
-      if (error.response?.status === 401) {
-        setError("Session expired. Please login again.");
-        localStorage.removeItem("token");
-        setTimeout(() => navigate("/login"));
-      } else {
-        setError(
-          error.response?.data?.message ||
-            "Failed to upload images. Please try again."
-        );
-      }
+      setError(error.message || "Failed to upload images. Please try again.");
+      toast.error(error.message || "Failed to upload images");
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -369,36 +401,55 @@ const AddProperty = () => {
       
       const uploadedVideos = [];
       for (const file of files) {
-        const uploadData = new FormData();
-        uploadData.append("file", file);
-        uploadData.append("upload_preset", "RentEase_Videos");
-        
-        const response = await fetch(
-          "https://api.cloudinary.com/v1_1/dkrrpzlbl/video/upload",
-          {
-            method: "POST",
-            body: uploadData,
-          }
-        );
+        try {
+          const uploadData = new FormData();
+          uploadData.append("file", file);
+          uploadData.append("upload_preset", "RentEase_Videos");
+          uploadData.append("cloud_name", "dkrrpzlbl");
+          uploadData.append("resource_type", "video"); // Explicitly specify resource type
+          
+          const response = await fetch(
+            "https://api.cloudinary.com/v1_1/dkrrpzlbl/video/upload",
+            {
+              method: "POST",
+              body: uploadData,
+            }
+          );
   
-        const data = await response.json();
-        if (data.secure_url) {
-          uploadedVideos.push({
-            url: data.secure_url,
-            public_id: data.public_id,
-            type: "video"
-          });
+          const data = await response.json();
+          
+          if (!response.ok) {
+            console.error("Cloudinary response:", data);
+            throw new Error(data.error?.message || "Upload failed");
+          }
+
+          if (data.secure_url) {
+            uploadedVideos.push({
+              url: data.secure_url,
+              public_id: data.public_id,
+              type: "video"
+            });
+            setUploadProgress(prev => Math.min(prev + (100 / files.length), 100));
+          }
+        } catch (uploadError) {
+          console.error("Error uploading individual video:", uploadError);
+          setError(`Failed to upload ${file.name}: ${uploadError.message}`);
+          continue;
         }
       }
   
-      setFormData((prev) => ({
-        ...prev,
-        videos: [...prev.videos, ...uploadedVideos],
-      }));
-      setPreviewVideos((prev) => [...prev, ...uploadedVideos.map(v => v.url)]);
+      if (uploadedVideos.length > 0) {
+        setFormData((prev) => ({
+          ...prev,
+          videos: [...prev.videos, ...uploadedVideos],
+        }));
+        setPreviewVideos((prev) => [...prev, ...uploadedVideos.map(v => v.url)]);
+        toast.success(`Successfully uploaded ${uploadedVideos.length} video(s)`);
+      }
     } catch (error) {
       console.error("Video upload failed:", error);
-      setError("Failed to upload videos. Please try again.");
+      setError(error.message || "Failed to upload videos. Please try again.");
+      toast.error(error.message || "Failed to upload videos");
     } finally {
       setUploadingVideos(false);
       setUploadProgress(0);
@@ -441,10 +492,11 @@ const AddProperty = () => {
       });
 
       setSuccess(true);
+      toast.success("Property added successfully!");
+      navigate("/");
 
       setTimeout(() => {
         setFormData({
-          title: "",
           description: "",
           address: "",
           city: "",
@@ -482,7 +534,6 @@ const AddProperty = () => {
         });
         setPreviewImages([]);
         setPreviewVideos([]);
-        navigate("/my-properties");
       }, 2000);
     } catch (error) {
       console.error("Submission Error:", error);
@@ -516,7 +567,7 @@ const AddProperty = () => {
       {
         name: "step1",
         fields: [
-          "title", "description", "address", "city", "state",
+          "description", "address", "city", "state",
           "ownerName", "ownerphone", "Gender", "popularLocality"
         ],
         weight: 0.2633 // 26.33% of total (79/3)
@@ -720,14 +771,6 @@ const AddProperty = () => {
             {step === 1 && (
               <div className="space-y-4 text-bold border-purple-800 outline-none">
                 {[
-                  {
-                    field: "title",
-                    label: "Property Title",
-                    type: "text",
-                   
-                    required: true,
-                    place: "Enter Property Title",
-                  },
                   {
                     field: "address",
                     label: "Full Address",
@@ -1014,7 +1057,7 @@ const AddProperty = () => {
                               .replace(" ", "-")}`}
                             className="ml-2 text-sm text-purple-800"
                           >
-                  ``          {place}
+                            {place}
                           </label>
                         </div>
 

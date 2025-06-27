@@ -24,8 +24,8 @@ function AuthForm({ type, setToken }) {
     try {
       const response = await fetch(
         type === "login"
-          ? "http://localhost:4500/api/auth/login"
-          : "http://localhost:4500/api/auth/signup",
+          ? "http://localhost:5000/api/auth/login"
+          : "http://localhost:5000/api/auth/signup",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

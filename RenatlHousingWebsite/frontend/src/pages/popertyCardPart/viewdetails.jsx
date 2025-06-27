@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../lib/axios';
 import { FaGooglePlay, FaApple } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
 import {
@@ -42,9 +42,21 @@ const Viewdetails = () => {
   const [modalImageIndex, setModalImageIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(3600); // 1 hour in seconds
   const videoRefs = useRef([]);
+  const [showSignupPopup, setShowSignupPopup] = useState(false);
+
+  // Validate ID format
+  const isValidId = (id) => {
+    return id && id !== 'undefined' && /^[0-9a-fA-F]{24}$/.test(id);
+  };
 
   useEffect(() => {
     const fetchProperty = async () => {
+      if (!isValidId(id)) {
+        setError("Invalid property ID");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
@@ -55,26 +67,48 @@ const Viewdetails = () => {
             Authorization: `Bearer ${token}`
           }
         } : {};
+
+        const [propertyRes, savedRes] = await Promise.all([
+          axios.get(`/api/properties/${id}`, config),
+          token ? axios.get(`/api/properties/saved/${id}`, config).catch(() => ({ data: { isSaved: false } })) : Promise.resolve({ data: { isSaved: false } })
+        ]);
+
+        const propertyData = propertyRes.data;
         
-        const res = await axios.get(`http://localhost:5000/api/properties/${id}`, config);
-        
-        if (!res.data) {
-          throw new Error('Property data not found');
+        // Set property data
+        setProperty({
+          ...propertyData,
+          media: [...(propertyData.images || []), ...(propertyData.videos || [])],
+          videos: propertyData.videos || [],
+          images: propertyData.images || [],
+        });
+
+        // Set saved status
+        setFavorites({ [id]: savedRes.data.isSaved });
+
+        // Record view
+        if (token) {
+          try {
+            await axios.post(`/api/properties/${id}/view`, {}, config);
+          } catch (viewError) {
+            console.error('Error recording view:', viewError);
+          }
         }
-        
-        // Process media items to include both images and videos
-        const processedProperty = {
-          ...res.data,
-          media: [...(res.data.images || []), ...(res.data.videos || [])],
-          images: res.data.images || [],
-          videos: res.data.videos || []
-        };
-        
-        setProperty(processedProperty);
+
+        // Update seen properties in localStorage
+        const seenProperties = JSON.parse(localStorage.getItem("seenProperties") || "[]");
+        if (!seenProperties.includes(id)) {
+          const updatedSeenProperties = [id, ...seenProperties.slice(0, 49)]; // Keep only last 50
+          localStorage.setItem("seenProperties", JSON.stringify(updatedSeenProperties));
+        }
+
       } catch (error) {
         console.error("Error fetching property:", error);
-        setError(error.response?.data?.message || error.message || 'Failed to load property details');
-        toast.error(error.response?.data?.message || 'Failed to load property details');
+        if (error.response?.status === 404) {
+          setError("Property not found");
+        } else {
+          setError(error.response?.data?.message || "Failed to load property");
+        }
       } finally {
         setLoading(false);
       }
@@ -101,28 +135,37 @@ const Viewdetails = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        toast.error('Please login to add favorites');
+        toast.error('Please login to save properties');
         return navigate('/login');
       }
       
-      const newFavoriteStatus = !favorites[id];
-      setFavorites(prev => ({ ...prev, [id]: newFavoriteStatus }));
+      const isCurrentlySaved = favorites[id];
       
-      await axios.post(
-        `http://localhost:5000/api/properties/${id}/favorite`,
-        { isFavorite: newFavoriteStatus },
-        {
+      if (isCurrentlySaved) {
+        // Unsave property
+        await axios.delete(`/api/properties/save/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
-        }
-      );
-      
-      toast.success(newFavoriteStatus ? 'Added to favorites' : 'Removed from favorites');
+        });
+        
+        setFavorites(prev => ({ ...prev, [id]: false }));
+        toast.success('Property removed from saved');
+      } else {
+        // Save property
+        await axios.post(`/api/properties/save/${id}`, {}, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        setFavorites(prev => ({ ...prev, [id]: true }));
+        toast.success('Property saved successfully');
+      }
     } catch (error) {
-      console.error("Error updating favorite:", error);
-      toast.error(error.response?.data?.message || 'Failed to update favorite');
-      setFavorites(prev => ({ ...prev, [id]: !prev[id] }));
+      console.error("Error toggling favorite:", error);
+      const errorMessage = error.response?.data?.message || 'Failed to update saved property';
+      toast.error(errorMessage);
     }
   };
 
@@ -150,7 +193,12 @@ const Viewdetails = () => {
       toast.error('Owner phone number not available');
       return;
     }
-    window.open(`tel:${property.ownerphone}`);
+    const userRole = localStorage.getItem('role');
+    if (userRole === 'tenant') {
+      window.open(`tel:${property.ownerphone}`);
+    } else {
+      setShowSignupPopup(true);
+    }
   };
 
   const isVideo = (mediaItem) => {
@@ -745,18 +793,7 @@ const Viewdetails = () => {
                     <FiUser className="text-purple-800 mr-2 flex-shrink-0" />
                     <span className="font-semibold text-purple-800">{property.ownerName || 'Not specified'}</span>
                   </div>
-                  <div className="flex items-center">
-                    <FiPhone className="text-purple-800 mr-2 flex-shrink-0" />
-                    <span className="font-semibold text-purple-800">
-                      {property.ownerphone ? (
-                        <a href={`tel:${property.ownerphone}`} className="hover:underline">
-                          {property.ownerphone}
-                        </a>
-                      ) : (
-                        'Not specified'
-                      )}
-                    </span>
-                  </div>
+                
                   <div>
                     <p className="text-purple-800 font-bold">Preferred Tenant</p>
                     <p className="font-semibold text-purple-800">{property.Gender || 'Not specified'}</p>
@@ -954,6 +991,24 @@ const Viewdetails = () => {
                 ))}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showSignupPopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+            <h2 className="text-lg font-bold mb-4 text-purple-800">Sign Up Required</h2>
+            <p className="mb-6">Please sign up from <span className="font-semibold text-purple-700">'Rent a Property'</span> before calling the owner.</p>
+            <button
+              onClick={() => {
+                setShowSignupPopup(false);
+                navigate('/signup');
+              }}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded"
+            >
+              OK
+            </button>
           </div>
         </div>
       )}
