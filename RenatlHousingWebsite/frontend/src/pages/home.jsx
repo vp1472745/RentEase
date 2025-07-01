@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import Footer from "../component/footer.jsx";
+import { motion, AnimatePresence } from "framer-motion";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay, EffectFade, Navigation } from "swiper/modules";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import Footer from "../component/footer.jsx";
 import SearchBar from "../pages/search.jsx";
-import housingbanner from "../assets/bn.jpg"
-import hotel from "../assets/hotel.jpg"
-import Hp from "../component/horizontalproperty.jsx"
+import housingbanner from "../assets/bn.jpg";
 import { useLocation } from "react-router-dom";
-
 import {
   CreditCard,
   Diamond,
@@ -18,13 +15,8 @@ import {
   Receipt,
   Wrench,
   Award,
-  Headphones,
-  Lightbulb,
-  DollarSign,
-  CheckCircle,
-  Users,
-  Key,
-  List,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 
 import "swiper/css";
@@ -32,10 +24,55 @@ import "swiper/css/pagination";
 import "swiper/css/effect-fade";
 import "swiper/css/navigation";
 
-import heroBackground from "../assets/hotel.jpg"; // Assuming you have a good hero image
-import howItWorks1 from "../assets/hotel.jpg"; // Placeholder images for how it works
-import howItWorks2 from "../assets/hotel.jpg";
-import howItWorks3 from "../assets/hotel.jpg";
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2,
+      when: "beforeChildren",
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut",
+    },
+  },
+};
+
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { duration: 0.8, ease: "easeInOut" },
+  },
+};
+
+const slideUp = {
+  hidden: { y: 50, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.6, ease: "easeOut" },
+  },
+};
+
+const scaleUp = {
+  hidden: { scale: 0.95, opacity: 0 },
+  visible: {
+    scale: 1,
+    opacity: 1,
+    transition: { duration: 0.5, ease: "easeOut" },
+  },
+};
 
 // Services Data
 const services = [
@@ -71,25 +108,45 @@ const features = [
     title: "Rewarding Way to Find Home",
     description: "Discover your ideal rental property swiftly with our intuitive and powerful search tools.",
   },
-
 ];
 
 // How It Works Data
 const howItWorksSteps = [
   {
-    image: howItWorks1,
-    title: "1. Find Your Perfect Home with Ease ",
+    title: "1. Find Your Perfect Home with Ease",
     description: "Use our advanced filters and intelligent search to discover rental properties that fit your lifestyle, budget, and location – all in one place.",
   },
   {
-    image: howItWorks2,
     title: "2. Connect with Owners",
     description: "Directly contact property owners without any brokerage fees.",
   },
   {
-    image: howItWorks3,
     title: "3. Move In & Settle",
     description: "Finalize your agreement and move into your new home with ease.",
+  },
+];
+
+// Testimonials Data
+const testimonials = [
+  {
+    quote: "RentEase made finding my dream apartment incredibly easy. The filters are precise, and connecting with owners was a breeze. Highly recommended!",
+    name: "John Doe",
+    role: "Tenant in Mumbai",
+  },
+  {
+    quote: "As a property owner, I've never had such an easy time finding quality tenants. The platform is intuitive and saves me so much time.",
+    name: "Sarah Johnson",
+    role: "Property Owner in Delhi",
+  },
+  {
+    quote: "The zero brokerage model is a game changer. I saved over ₹50,000 in fees compared to traditional brokers. Will never go back!",
+    name: "Rahul Sharma",
+    role: "Tenant in Bangalore",
+  },
+  {
+    quote: "The rent receipt generator alone is worth using the platform. It's saved me hours of paperwork every year.",
+    name: "Priya Patel",
+    role: "Tenant in Hyderabad",
   },
 ];
 
@@ -103,6 +160,7 @@ const getMediaUrl = (mediaItem) => {
 
 function Home() {
   const [properties, setProperties] = useState([]);
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -119,278 +177,376 @@ function Home() {
     fetchProperties();
   }, []);
 
-  // Removed the problematic window.location.reload() useEffect
+  // Auto-rotate testimonials
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div className="w-full min-h-screen bg-gray-50">
+    <div className="w-full min-h-screen bg-gray-50 overflow-hidden">
       {/* Hero Section */}
       <div
-        className="relative flex flex-col items-center justify-center h-[70vh] sm:h-[75vh] md:h-[85vh] lg:h-[90vh] text-center text-white px-4 sm:px-6 lg:px-8"
+        className="relative flex flex-col items-center justify-center min-h-[80vh] sm:min-h-[85vh] md:min-h-[90vh] lg:min-h-[95vh] text-center text-white px-4 sm:px-6 lg:px-8 overflow-hidden py-20 sm:py-0"
         style={{
           backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.4)), url(${housingbanner})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
       >
-        <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.h1
+        <motion.div 
+          className="absolute inset-0 bg-black/20"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+        />
+        
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-center min-h-[60vh] sm:min-h-[70vh] md:min-h-[80vh]">
+          <motion.div
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-2xl sm:text-3xl md:text-2xl lg:text-7xl font-extrabold text-white mb-4 drop-shadow-lg"
-          >
-            <p className="text"> Discover Your Ideal Room or Home for Rent</p>
-          </motion.h1>
-          {/* <motion.p
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="mt-2 text-lg sm:text-xl md:text-2xl font-medium text-white mb-8 drop-shadow-md"
+            className="mb-8 sm:mb-12"
           >
-            Rent hassle-free homes across major cities. Find the perfect place, effortlessly.
-          </motion.p> */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight">
+              Discover Your Ideal <span className="text-purple-300">Home</span>
+            </h1>
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-medium text-white/90 max-w-3xl mx-auto px-2">
+              Find the perfect rental property with zero brokerage fees
+            </p>
+          </motion.div>
+          
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            transition={{ duration: 0.8, delay: 0.4, type: "spring" }}
             className="w-full max-w-4xl mx-auto"
           >
             <SearchBar />
           </motion.div>
         </div>
+        
+        <motion.div 
+          className="absolute bottom-6 sm:bottom-10 left-1/2 transform -translate-x-1/2"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1, duration: 0.8 }}
+        >
+          <div className="animate-bounce w-6 h-6 sm:w-8 sm:h-8 border-4 border-white rounded-full"></div>
+        </motion.div>
       </div>
 
-      {/* Housing Edge Section (Services) */}
-      {/* <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-white shadow-lg rounded-lg mt-20 relative ">
-        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-purple-800 text-center mb-4">
-          RentEase Edge
-        </h2>
-        <p className="text-center text-gray-600 mb-10 text-base sm:text-lg md:text-xl">
-          Unlock a superior rental experience with our unique offerings.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {services.map(({ title, description, icon, link }, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-white border border-purple-200 rounded-xl p-6 md:p-8 flex flex-col items-center text-center transition-all duration-300 hover:shadow-xl hover:border-purple-400 cursor-pointer"
-              onClick={() => navigate(link)}
-            >
-              <div className="mb-4">{icon}</div>
-              <h3 className="text-xl md:text-2xl font-semibold text-gray-800 mb-2">{title}</h3>
-              <p className="text-gray-600 mt-2 text-base md:text-lg">{description}</p>
-              <Link to={link} className="text-purple-600 hover:text-purple-800 font-semibold mt-4 text-base md:text-lg flex items-center">
-                Learn More <span className="ml-1 text-purple-600">→</span>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-      </section> */}
-
       {/* How It Works Section */}
-      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-purple-800 text-center mb-4">
-          How RentEase Works
-        </h2>
-        <p className="text-center text-gray-600 mb-12 text-base sm:text-lg md:text-xl max-w-3xl mx-auto">
-          Simple steps to finding your next rental home or listing your property.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-12 max-w-6xl mx-auto">
-          {howItWorksSteps.map((step, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.2 }}
-              className="flex flex-col items-center text-center p-6 bg-white rounded-xl shadow-md border border-gray-200"
-            >
-              <img src={step.image} alt={step.title} className="w-32 h-32 object-contain mb-6" />
-              <h3 className="text-xl md:text-2xl font-semibold text-gray-800 mb-3">{step.title}</h3>
-              <p className="text-gray-600 text-balance  md:text-lg">{step.description}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-      {/* Featured Properties Section (using Swiper) */}
       <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-white">
-        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-purple-800 mb-6 md:mb-8 text-center">
-          Featured Properties
-        </h2>
-        <p className="text-center text-gray-600 mb-12 text-base sm:text-lg md:text-xl max-w-3xl mx-auto">
-          Explore hand-picked properties in top localities, updated daily.
-        </p>
-        {properties.length === 0 ? (
-          <p className="text-center text-gray-500 text-xl">No featured properties available at the moment. Check back soon!</p>
-        ) : (
-          <div className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-            <Swiper
-              modules={[Pagination, Navigation, Autoplay]}
-              slidesPerView={1}
-              spaceBetween={20}
-              navigation={{
-                nextEl: '.swiper-button-next',
-                prevEl: '.swiper-button-prev',
-              }}
-              pagination={{ clickable: true }}
-              autoplay={{ delay: 3000, disableOnInteraction: false }}
-              breakpoints={{
-                640: { slidesPerView: 2, spaceBetween: 30 },
-                768: { slidesPerView: 2, spaceBetween: 30 },
-                1024: { slidesPerView: 3, spaceBetween: 40 },
-              }}
-              className="w-full pb-12"
-            >
-              {properties.slice(0, 9).map((property) => ( // Limiting to 9 for featured
-                <SwiperSlide key={property._id}>
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className="bg-white rounded-lg shadow-xl overflow-hidden border border-gray-100 h-full flex flex-col"
-                  >
-                    <img
-                      src={getMediaUrl(property.images?.[0]) || "https://via.placeholder.com/400x300?text=No+Image"}
-                      alt={property.title}
-                      className="h-56 sm:h-64 w-full object-cover"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "https://via.placeholder.com/400x300?text=Image+Not+Available";
-                      }}
-                    />
-                    <div className="p-5 flex flex-col flex-grow">
-                      <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-2 line-clamp-1">{property.title}</h3>
-                      <p className="text-gray-600 text-base md:text-lg mb-3 line-clamp-2"><HomeIcon size={16} className="inline-block mr-1 text-purple-600" /> {property.city}, {property.state}</p>
-                      <p className="text-purple-700 font-extrabold text-2xl mb-3">₹{property.monthlyRent?.toLocaleString()}/month</p>
-                      <div className="flex flex-wrap gap-2 text-sm text-gray-700 mb-4">
-                        {property.bhkType && <span className="bg-gray-100 rounded-full px-3 py-1">{Array.isArray(property.bhkType) ? property.bhkType.join(", ") : property.bhkType}</span>}
-                        {property.furnishType && <span className="bg-gray-100 rounded-full px-3 py-1">{Array.isArray(property.furnishType) ? property.furnishType.join(", ") : property.furnishType}</span>}
-                        {property.propertyType && <span className="bg-gray-100 rounded-full px-3 py-1">{Array.isArray(property.propertyType) ? property.propertyType.join(", ") : property.propertyType}</span>}
-                      </div>
-                      <button
-                        onClick={() => navigate(`/property/${property._id}`)}
-                        className="mt-auto w-full bg-purple-700 text-white py-3 rounded-lg hover:bg-purple-800 transition-colors duration-300 text-base font-semibold"
-                      >
-                        View Details
-                      </button>
-                    </div>
-                  </motion.div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
-            {/* Custom Navigation Buttons (Optional, if default nav isn't enough) */}
-            <div className="swiper-button-prev absolute left-0 top-1/2 -translate-y-1/2 bg-white rounded-full p-3 shadow-md cursor-pointer z-10 hidden md:block"></div>
-            <div className="swiper-button-next absolute right-0 top-1/2 -translate-y-1/2 bg-white rounded-full p-3 shadow-md cursor-pointer z-10 hidden md:block"></div>
-          </div>
-        )}
-        <div className="text-center mt-12">
-          <Link 
-            to="/properties" 
-            className="inline-block bg-purple-800 text-white font-semibold py-3 px-8 rounded-full hover:bg-purple-900 transition-colors duration-300 text-lg shadow-lg"
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={containerVariants}
+            className="text-center mb-16"
           >
-            View All Properties
-          </Link>
+            <motion.h2 variants={itemVariants} className="text-4xl md:text-5xl font-bold text-purple-800 mb-4">
+              How It Works
+            </motion.h2>
+            <motion.p variants={itemVariants} className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Simple steps to finding your next rental home or listing your property.
+            </motion.p>
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={containerVariants}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12"
+          >
+            {howItWorksSteps.map((step, index) => (
+              <motion.div
+                key={index}
+                variants={itemVariants}
+                whileHover={{ y: -10 }}
+                className="bg-gray-50 p-8 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md"
+              >
+                <div className="flex items-center mb-6">
+                  <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-xl mr-4">
+                    {index + 1}
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-800">{step.title}</h3>
+                </div>
+                <p className="text-gray-600">{step.description}</p>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
-      {/* Why Use RentEase Section (Features) */}
-      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-gray-100">
-        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-center text-purple-800 mb-6 md:mb-8">
-          Why Choose RentEase?
-        </h2>
-        <p className="text-center text-gray-600 mb-12 text-base sm:text-lg md:text-xl max-w-3xl mx-auto">
-          We are committed to providing the best rental experience for everyone.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8 md:gap-10 max-w-5xl mx-auto">
-          {features.map(({ icon, title, description }, index) => (
+      {/* Featured Properties Section */}
+      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={containerVariants}
+            className="text-center mb-16"
+          >
+            <motion.h2 variants={itemVariants} className="text-4xl md:text-5xl font-bold text-purple-800 mb-4">
+              Featured Properties
+            </motion.h2>
+            <motion.p variants={itemVariants} className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Explore hand-picked properties in top localities, updated daily.
+            </motion.p>
+          </motion.div>
+
+          {properties.length === 0 ? (
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center text-gray-500 text-xl"
+            >
+              No featured properties available at the moment. Check back soon!
+            </motion.p>
+          ) : (
             <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.15 }}
-              className="bg-white p-8 rounded-xl shadow-lg flex flex-col items-center text-center border border-gray-100 transition-all duration-300 hover:shadow-xl"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={containerVariants}
             >
-              <div className="mb-5">{icon}</div>
-              <h3 className="text-xl md:text-2xl font-semibold text-gray-800 mb-3">{title}</h3>
-              <p className="text-gray-600 text-base md:text-lg">{description}</p>
+              <Swiper
+                modules={[Pagination, Navigation, Autoplay]}
+                slidesPerView={1}
+                spaceBetween={30}
+                navigation={{
+                  nextEl: '.property-swiper-next',
+                  prevEl: '.property-swiper-prev',
+                }}
+                pagination={{ 
+                  clickable: true,
+                  el: '.property-pagination',
+                  type: 'bullets',
+                }}
+                autoplay={{ 
+                  delay: 5000, 
+                  disableOnInteraction: false,
+                  pauseOnMouseEnter: true,
+                }}
+                breakpoints={{
+                  640: { slidesPerView: 2 },
+                  1024: { slidesPerView: 3 },
+                }}
+                className="relative"
+              >
+                {properties.slice(0, 9).map((property) => (
+                  <SwiperSlide key={property._id}>
+                    <motion.div
+                      variants={itemVariants}
+                      whileHover={{ scale: 1.02 }}
+                      className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 h-full flex flex-col"
+                    >
+                      <div className="relative h-64 overflow-hidden">
+                        <img
+                          src={getMediaUrl(property.images?.[0]) || "https://via.placeholder.com/400x300?text=No+Image"}
+                          alt={property.title}
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "https://via.placeholder.com/400x300?text=Image+Not+Available";
+                          }}
+                        />
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                          <h3 className="text-xl font-bold text-white line-clamp-1">{property.title}</h3>
+                          <p className="text-white/90 text-sm"><HomeIcon size={14} className="inline mr-1" /> {property.city}, {property.state}</p>
+                        </div>
+                      </div>
+                      <div className="p-5 flex flex-col flex-grow">
+                        <div className="flex justify-between items-start mb-3">
+                          <span className="text-purple-700 font-bold text-2xl">₹{property.monthlyRent?.toLocaleString()}/mo</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2 text-sm text-gray-700 mb-4">
+                          {property.bhkType && <span className="bg-gray-100 rounded-full px-3 py-1">{property.bhkType}</span>}
+                          {property.furnishType && <span className="bg-gray-100 rounded-full px-3 py-1">{property.furnishType}</span>}
+                          {property.propertyType && <span className="bg-gray-100 rounded-full px-3 py-1">{property.propertyType}</span>}
+                        </div>
+                        <button
+                          onClick={() => navigate(`/property/${property._id}`)}
+                          className="mt-auto w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg transition-all duration-300 font-medium flex items-center justify-center"
+                        >
+                          View Details
+                          <ChevronRight size={18} className="ml-1" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+
+              <div className="flex justify-between items-center mt-8">
+                <div className="property-pagination flex justify-center gap-2"></div>
+                <div className="flex gap-4">
+                  <button className="property-swiper-prev w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center text-purple-600 hover:bg-purple-50 transition-colors">
+                    <ChevronLeft size={24} />
+                  </button>
+                  <button className="property-swiper-next w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center text-purple-600 hover:bg-purple-50 transition-colors">
+                    <ChevronRight size={24} />
+                  </button>
+                </div>
+              </div>
             </motion.div>
-          ))}
+          )}
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="text-center mt-16"
+          >
+            <Link 
+              to="/properties" 
+              className="inline-flex items-center px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
+            >
+              Browse All Properties
+              <ChevronRight size={20} className="ml-2" />
+            </Link>
+          </motion.div>
         </div>
       </section>
 
-      {/* Call to Action: List Your Property */}
-      <section className="py-16 md:py-24 bg-purple-800 text-white text-center px-4 sm:px-6 lg:px-8">
-        <motion.h2
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4"
-        >
-          Have a Property to List?
-        </motion.h2>
-        <motion.p
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
-          className="text-base sm:text-lg md:text-xl mb-8 max-w-3xl mx-auto"
-        >
-          Join RentEase today and connect with thousands of potential tenants effortlessly. List your property for free!
-        </motion.p>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7, delay: 0.4 }}
-        >
-          <Link 
-            to="/add-property" 
-            className="inline-block bg-white text-purple-800 font-semibold py-3 px-8 rounded-full hover:bg-gray-100 transition-colors duration-300 text-lg shadow-lg"
+      {/* Features Section */}
+      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={containerVariants}
+            className="text-center mb-16"
           >
-            List Your Property Now
-          </Link>
-        </motion.div>
+            <motion.h2 variants={itemVariants} className="text-4xl md:text-5xl font-bold text-purple-800 mb-4">
+              Why Choose RentEase?
+            </motion.h2>
+            <motion.p variants={itemVariants} className="text-lg text-gray-600 max-w-3xl mx-auto">
+              We are committed to providing the best rental experience for everyone.
+            </motion.p>
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={containerVariants}
+            className="grid grid-cols-1 md:grid-cols-2 gap-12"
+          >
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                variants={itemVariants}
+                whileHover={{ y: -5 }}
+                className="bg-gray-50 p-8 rounded-xl border border-gray-100 transition-all duration-300 hover:shadow-md"
+              >
+                <div className="flex items-start">
+                  <div className="bg-purple-100 p-3 rounded-lg mr-6">
+                    {feature.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2">{feature.title}</h3>
+                    <p className="text-gray-600">{feature.description}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-center text-purple-800 mb-6 md:mb-8">
-          What Our Users Say
-        </h2>
-        <p className="text-center text-gray-600 mb-12 text-base sm:text-lg md:text-xl max-w-3xl mx-auto">
-          Hear from our satisfied tenants and property owners.
-        </p>
-        <Swiper
-          modules={[Pagination, Autoplay]}
-          slidesPerView={1}
-          spaceBetween={30}
-          autoplay={{ delay: 5000, disableOnInteraction: false }}
-          pagination={{ clickable: true }}
-          breakpoints={{
-            640: { slidesPerView: 1, spaceBetween: 30 },
-            768: { slidesPerView: 2, spaceBetween: 40 },
-            1024: { slidesPerView: 3, spaceBetween: 50 },
-          }}
-          className="max-w-7xl mx-auto pb-12"
+      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-purple-800 text-white">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={containerVariants}
+            className="text-center mb-16"
+          >
+            <motion.h2 variants={itemVariants} className="text-4xl md:text-5xl font-bold mb-4">
+              What Our Users Say
+            </motion.h2>
+            <motion.p variants={itemVariants} className="text-lg text-purple-200 max-w-3xl mx-auto">
+              Hear from our satisfied tenants and property owners.
+            </motion.p>
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="relative h-64"
+          >
+            <AnimatePresence mode="wait">
+              {testimonials.map((testimonial, index) => (
+                activeTestimonial === index && (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -50 }}
+                    transition={{ duration: 0.5 }}
+                    className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 sm:px-8 md:px-16"
+                  >
+                    <div className="text-2xl md:text-3xl font-light italic mb-8">
+                      "{testimonial.quote}"
+                    </div>
+                    <div className="font-bold text-xl">{testimonial.name}</div>
+                    <div className="text-purple-300">{testimonial.role}</div>
+                  </motion.div>
+                )
+              ))}
+            </AnimatePresence>
+          </motion.div>
+
+          <div className="flex justify-center gap-3 mt-8">
+            {testimonials.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setActiveTestimonial(index)}
+                className={`w-3 h-3 rounded-full transition-all ${activeTestimonial === index ? 'bg-white w-6' : 'bg-white/30'}`}
+                aria-label={`Go to testimonial ${index + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-gray-900 text-white">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={containerVariants}
+          className="max-w-5xl mx-auto text-center"
         >
-          {[1, 2, 3, 4, 5].map((item, index) => (
-            <SwiperSlide key={index}>
-              <motion.div
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white p-8 rounded-xl shadow-lg border border-gray-100 text-center flex flex-col h-full"
-              >
-                <p className="text-gray-700 text-lg mb-6 flex-grow">
-                  "RentEase made finding my dream apartment incredibly easy. The filters are precise, and connecting with owners was a breeze. Highly recommended!"
-                </p>
-                <div className="mt-auto">
-                  <div className="font-bold text-purple-800 text-xl">John Doe {item}</div>
-                  <div className="text-gray-500 text-sm">Tenant in Mumbai</div>
-                </div>
-              </motion.div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+          <motion.h2 variants={itemVariants} className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
+            Ready to Find Your Perfect Home?
+          </motion.h2>
+          <motion.p variants={itemVariants} className="text-lg text-gray-300 mb-8 max-w-3xl mx-auto">
+            Join thousands of satisfied renters who found their ideal home with RentEase.
+          </motion.p>
+          <motion.div variants={itemVariants}>
+            <Link
+              to="/properties"
+              className="inline-flex items-center px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-full transition-all duration-300 shadow-lg hover:shadow-xl text-lg"
+            >
+              Browse Properties Now
+              <ChevronRight size={20} className="ml-2" />
+            </Link>
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* Footer */}

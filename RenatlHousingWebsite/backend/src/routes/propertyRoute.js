@@ -7,10 +7,14 @@ import {
   getOwnerProperties,
   deleteProperty,
   recordPropertyView,
-  
+  saveProperty,
+  unsaveProperty,
+  getSavedProperties,
+  checkSavedProperty
 } from "../controller/propertyController.js";
 import { authMiddleware, ownerOnly ,adminOnly, ownerOrAdmin} from "../middleware/authMiddleware.js";
-import uploadMiddleware from "../middleware/multerMiddleware.js";
+import { v2 as cloudinary } from "cloudinary";
+import multer from "multer";
 import Property from "../models/property.js";
 import { readFile } from "fs/promises";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -34,6 +38,30 @@ let popularLocalitiesData = {};
     console.error("❌ Error loading JSON:", error);
   }
 })();
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Configure multer for temporary file storage
+const storage = multer.memoryStorage();
+const uploadMiddleware = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept images and videos
+    if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image and video files are allowed!'), false);
+    }
+  }
+});
 
 // ✅ AI Text Formatting Endpoint
 router.post("/format-description", authMiddleware, async (req, res) => {
@@ -120,12 +148,10 @@ router.get("/search", async (req, res) => {
 
     const properties = await Property.find(filter);
 
-    if (!properties.length) {
-      return res.status(404).json({ message: "No properties found with given filters" });
-    }
-
+    // Return empty array instead of 404 for better UX
     res.json(properties);
   } catch (error) {
+    console.error("❌ Search error:", error);
     res.status(500).json({ message: "Server Error" });
   }
 });
@@ -176,7 +202,13 @@ router.get('/viewed', authMiddleware, async (req, res) => {
   }
 });
 
-// ✅ Get Property By ID - MUST be after /viewed route
+// ✅ Get User's Saved Properties
+router.get("/saved", authMiddleware, getSavedProperties);
+
+// ✅ Check if property is saved by user
+router.get("/saved/:propertyId", authMiddleware, checkSavedProperty);
+
+// ✅ Get Property By ID - MUST be after /saved route
 router.get('/:id', async (req, res) => {
   try {
     const property = await Property.findById(req.params.id);
@@ -262,22 +294,112 @@ router.put("/:id", authMiddleware, ownerOrAdmin, async (req, res) => {
         : [req.body.facilities.toLowerCase()];
     }
 
+    // Handle nearby places - fix the data structure
+    if (req.body.nearby) {
+      console.log('📍 Processing nearby places:', req.body.nearby);
+      try {
+        req.body.nearby = req.body.nearby
+          .map(place => {
+            // If place is a string or has character keys, convert it to proper object
+            if (typeof place === 'string') {
+              return { name: place, distance: "1", unit: "km" };
+            }
+            
+            // If place has character keys (0, 1, 2, etc.), it's a split string
+            if (place['0'] !== undefined) {
+              const name = Object.keys(place)
+                .filter(key => !isNaN(parseInt(key)))
+                .sort((a, b) => parseInt(a) - parseInt(b))
+                .map(key => place[key])
+                .join('');
+              
+              return {
+                name: name.replace(/\([^)]*\)/g, '').trim(), // Remove parentheses content
+                distance: place.distance || "1",
+                unit: place.unit || "km"
+              };
+            }
+            
+            // If it's already a proper object, return as is
+            return {
+              name: place.name || "",
+              distance: place.distance || "1",
+              unit: place.unit || "km"
+            };
+          })
+          .filter(place => place.name && place.name.trim() !== ""); // Remove empty entries
+        console.log('✅ Final processed nearby places:', req.body.nearby);
+      } catch (error) {
+        console.error('❌ Error processing nearby places:', error);
+        console.log('🔄 Setting nearby to empty array due to processing error');
+        req.body.nearby = []; // Set to empty array if processing fails
+      }
+    }
+
+    // Handle images and videos - ensure they have the correct structure
+    if (req.body.images) {
+      console.log('🖼️ Processing images:', req.body.images);
+      req.body.images = req.body.images.map(img => {
+        if (typeof img === 'string') {
+          console.log('📝 Converting string image to object:', img);
+          return { url: img, type: 'image' };
+        }
+        console.log('📝 Processing image object:', img);
+        return {
+          url: img.url,
+          type: img.type || 'image',
+          public_id: img.public_id
+        };
+      });
+      console.log('✅ Final processed images:', req.body.images);
+    }
+
+    if (req.body.videos) {
+      console.log('🎥 Processing videos:', req.body.videos);
+      req.body.videos = req.body.videos.map(vid => {
+        if (typeof vid === 'string') {
+          console.log('📝 Converting string video to object:', vid);
+          return { url: vid, type: 'video' };
+        }
+        console.log('📝 Processing video object:', vid);
+        return {
+          url: vid.url,
+          type: vid.type || 'video',
+          public_id: vid.public_id
+        };
+      });
+      console.log('✅ Final processed videos:', req.body.videos);
+    }
+
     console.log('🔧 Processed update data:', req.body);
 
     // Update property with validation
-    const updatedProperty = await Property.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    try {
+      const updatedProperty = await Property.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        { new: true, runValidators: true }
+      );
 
-    console.log('✅ Property updated successfully');
+      console.log('✅ Property updated successfully');
+      console.log('📊 Updated property images count:', updatedProperty.images?.length || 0);
+      console.log('📊 Updated property videos count:', updatedProperty.videos?.length || 0);
 
-    res.status(200).json({ 
-      success: true,
-      message: "Property updated successfully",
-      property: updatedProperty 
-    });
+      res.status(200).json({ 
+        success: true,
+        message: "Property updated successfully",
+        property: updatedProperty 
+      });
+    } catch (updateError) {
+      console.error("❌ Database update error:", updateError);
+      console.error("❌ Validation errors:", updateError.errors);
+      res.status(400).json({ 
+        success: false,
+        message: "Failed to update property in database",
+        error: updateError.message,
+        validationErrors: updateError.errors
+      });
+    }
 
   } catch (error) {
     console.error("❌ Update Property Error:", error);
@@ -316,18 +438,62 @@ router.delete("/:id", authMiddleware, ownerOrAdmin, async (req, res) => {
   }
 });
 
-// ✅ Image Upload Route
-router.post("/upload", uploadMiddleware.array("images", 10), (req, res) => {
+// ✅ Image Upload Route - Updated to use Cloudinary
+router.post("/upload", uploadMiddleware.array("images", 10), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: "No files uploaded" });
     }
 
-    const imageUrls = req.files.map((file) => file.path);
-    res.status(200).json({ imageUrls });
+    const uploadedFiles = [];
+    
+    for (const file of req.files) {
+      try {
+        // Convert buffer to base64
+        const b64 = Buffer.from(file.buffer).toString('base64');
+        const dataURI = `data:${file.mimetype};base64,${b64}`;
+        
+        // Determine resource type
+        const resourceType = file.mimetype.startsWith('image/') ? 'image' : 'video';
+        
+        // Upload to Cloudinary
+        const result = await cloudinary.uploader.upload(dataURI, {
+          folder: 'rent_ease/properties',
+          resource_type: resourceType,
+          allowed_formats: resourceType === 'image' ? ['jpg', 'jpeg', 'png', 'gif', 'webp'] : ['mp4', 'mov', 'avi', 'webm'],
+          transformation: resourceType === 'image' ? [
+            { width: 1200, height: 800, crop: 'limit' }
+          ] : undefined
+        });
+
+        uploadedFiles.push({
+          url: result.secure_url,
+          public_id: result.public_id,
+          type: resourceType
+        });
+        
+      } catch (uploadError) {
+        console.error(`Error uploading ${file.originalname}:`, uploadError);
+        return res.status(500).json({ 
+          message: `Failed to upload ${file.originalname}`,
+          error: uploadError.message 
+        });
+      }
+    }
+
+    res.status(200).json({ 
+      success: true,
+      message: "Files uploaded successfully",
+      files: uploadedFiles
+    });
+    
   } catch (error) {
     console.error("❌ Upload Error:", error);
-    res.status(500).json({ message: "Image upload failed", error });
+    res.status(500).json({ 
+      success: false,
+      message: "Upload failed", 
+      error: error.message 
+    });
   }
 });
 
@@ -359,137 +525,10 @@ router.post("/api/properties/videos", async (req, res) => {
 });
 
 // ✅ Save Property
-router.post("/save/:propertyId", authMiddleware, async (req, res) => {
-  try {
-    const { propertyId } = req.params;
-    const userId = req.user._id;
-
-    // Check if property exists
-    const property = await Property.findById(propertyId);
-    if (!property) {
-      return res.status(404).json({ message: "Property not found" });
-    }
-
-    // Check if already saved
-    const existingSave = await SaveProperty.findOne({ user: userId, property: propertyId });
-    if (existingSave) {
-      return res.status(400).json({ message: "Property already saved" });
-    }
-
-    // Save property
-    const savedProperty = new SaveProperty({
-      user: userId,
-      property: propertyId
-    });
-
-    await savedProperty.save();
-
-    // Update user's savedProperties array
-    await User.findByIdAndUpdate(userId, {
-      $addToSet: { savedProperties: propertyId }
-    });
-
-    res.status(201).json({ 
-      success: true, 
-      message: "Property saved successfully" 
-    });
-  } catch (error) {
-    console.error("❌ Error saving property:", error);
-    res.status(500).json({ 
-      message: "Failed to save property",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
+router.post("/save/:propertyId", authMiddleware, saveProperty);
 
 // ✅ Unsave Property
-router.delete("/save/:propertyId", authMiddleware, async (req, res) => {
-  try {
-    const { propertyId } = req.params;
-    const userId = req.user._id;
-
-    // Remove from SaveProperty collection
-    const result = await SaveProperty.findOneAndDelete({ 
-      user: userId, 
-      property: propertyId 
-    });
-
-    if (!result) {
-      return res.status(404).json({ message: "Saved property not found" });
-    }
-
-    // Remove from user's savedProperties array
-    await User.findByIdAndUpdate(userId, {
-      $pull: { savedProperties: propertyId }
-    });
-
-    res.status(200).json({ 
-      success: true, 
-      message: "Property unsaved successfully" 
-    });
-  } catch (error) {
-    console.error("❌ Error unsaving property:", error);
-    res.status(500).json({ 
-      message: "Failed to unsave property",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
-
-// ✅ Get User's Saved Properties
-router.get("/saved", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user._id;
-
-    // Get saved properties with populated property details
-    const savedProperties = await SaveProperty.find({ user: userId })
-      .populate({
-        path: 'property',
-        select: '-__v',
-        populate: {
-          path: 'owner',
-          select: 'name email phone'
-        }
-      })
-      .sort({ savedAt: -1 });
-
-    // Extract property data
-    const properties = savedProperties
-      .map(sp => sp.property)
-      .filter(Boolean); // Remove any null properties
-
-    res.json(properties);
-  } catch (error) {
-    console.error("❌ Error fetching saved properties:", error);
-    res.status(500).json({ 
-      message: "Failed to fetch saved properties",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
-
-// ✅ Check if property is saved by user
-router.get("/saved/:propertyId", authMiddleware, async (req, res) => {
-  try {
-    const { propertyId } = req.params;
-    const userId = req.user._id;
-
-    const savedProperty = await SaveProperty.findOne({ 
-      user: userId, 
-      property: propertyId 
-    });
-
-    res.json({ 
-      isSaved: !!savedProperty 
-    });
-  } catch (error) {
-    console.error("❌ Error checking saved property:", error);
-    res.status(500).json({ 
-      message: "Failed to check saved property",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
+router.delete("/save/:propertyId", authMiddleware, unsaveProperty);
 
 router.post('/search-log', authMiddleware, async (req, res) => {
   try {

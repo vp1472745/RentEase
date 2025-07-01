@@ -94,7 +94,10 @@ export default function PropertyCard({ property = {} }) {
             <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-gray-700 mb-6">
               <div className="flex items-center"><FaBed className="mr-3 text-purple-500" /><span>{bhkType} Bedrooms</span></div>
               <div className="flex items-center"><FaBath className="mr-3 text-purple-500" /><span>2 Bathrooms</span></div>
-              <div className="flex items-center"><FaRulerCombined className="mr-3 text-purple-500" /><span>{area} sq.ft</span></div>
+              <div className="flex items-center"><FaRulerCombined className="mr-3 text-purple-500" /><span>{area
+                
+                
+                } sq.ft</span></div>
               <div className="flex items-center"><FaCouch className="mr-3 text-purple-500" /><span>{furnishType}</span></div>
             </div>
 

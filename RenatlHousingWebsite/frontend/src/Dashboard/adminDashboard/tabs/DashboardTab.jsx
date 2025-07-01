@@ -465,46 +465,7 @@ const DashboardTab = () => {
         </div>
       </div>
 
-      {/* Recent User Searches Section */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-10">
-        <h2 className="text-2xl font-bold text-gray-800 p-4">Recent User Searches</h2>
-        {loadingSearchLogs ? (
-          <div className="flex items-center justify-center h-24">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
-          </div>
-        ) : errorSearchLogs ? (
-          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg">{errorSearchLogs}</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Search Term</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {searchLogs.length > 0 ? searchLogs.map((log) => (
-                  <tr key={log._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{log.userId?.name || 'Guest'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{log.userId?.email || 'Guest'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{log.searchTerm}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.timestamp ? new Date(log.timestamp).toLocaleString() : ''}</td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
-                      No recent searches found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+
     </div>
   );
 };

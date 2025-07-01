@@ -18,6 +18,8 @@ import {
   FaTwitter,
   FaYoutube,
 } from 'react-icons/fa';
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
 
 // Import images
 import pheart from '../assets/HP.png';
@@ -45,12 +47,62 @@ const MobileMenu = ({
   const [isQuickSearchOpen, setIsQuickSearchOpen] = useState(false);
   const [isHousingOpen, setIsHousingOpen] = useState(false);
   const [isServicesOpen, setIsServicesOpen] = useState(false);
+  const [isSavedPropertiesOpen, setIsSavedPropertiesOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState("Contacted");
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [savedProperties, setSavedProperties] = useState([]);
+  const [savedPropertiesLoading, setSavedPropertiesLoading] = useState(false);
   const navigate = useNavigate();
 
   // Debug log to check if isOpen prop is received
   console.log("MobileMenu isOpen prop:", isOpen);
+
+  // Fetch saved properties
+  const fetchSavedProperties = async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      setSavedPropertiesLoading(true);
+      const token = localStorage.getItem("token");
+      const response = await axios.get("/api/properties/saved", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setSavedProperties(response.data || []);
+    } catch (error) {
+      console.error("Error fetching saved properties:", error);
+      toast.error("Failed to load saved properties");
+    } finally {
+      setSavedPropertiesLoading(false);
+    }
+  };
+
+  // Handle unsave property
+  const handleUnsaveProperty = async (propertyId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`/api/properties/save/${propertyId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      // Remove from local state
+      setSavedProperties(prev => prev.filter(prop => prop._id !== propertyId));
+      toast.success("Property removed from saved list");
+    } catch (error) {
+      console.error("Error unsaving property:", error);
+      toast.error("Failed to remove property from saved list");
+    }
+  };
+
+  // Fetch saved properties when menu opens and user is authenticated
+  useEffect(() => {
+    if (isOpen && isAuthenticated) {
+      fetchSavedProperties();
+    }
+  }, [isOpen, isAuthenticated]);
 
   // Prevent body scroll when menu is open
   useEffect(() => {
@@ -86,6 +138,14 @@ const MobileMenu = ({
     onClose();
   };
 
+  // Helper function to get media URL
+  const getMediaUrl = (mediaItem) => {
+    if (!mediaItem) return null;
+    if (typeof mediaItem === 'string') return mediaItem;
+    if (mediaItem.url) return mediaItem.url;
+    return null;
+  };
+
   return (
     <>
       {/* Backdrop */}
@@ -117,15 +177,8 @@ const MobileMenu = ({
           {/* Menu Content */}
           <div className="flex-1 overflow-y-auto py-4">
             <div className="px-6 space-y-4">
-              {/* Main Navigation Items */}
-              {/* <Link
-                to="/premium"
-                onClick={handleMenuClick}
-                className="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <IoDiamondOutline size={20} className="text-purple-600 mr-3" />
-                <span className="text-gray-800 font-medium">Premium</span>
-              </Link> */}
+            
+      
 
               <Link
                 to="/PayRent"
@@ -136,20 +189,6 @@ const MobileMenu = ({
                 <span className="text-gray-800 font-medium">Download APP</span>
               </Link>
 
-              <div className="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                <img
-                  src={pheart}
-                  className="w-5 h-5 object-contain mr-3"
-                  alt="Save"
-                />
-                <Link
-                  to="/profile?tab=myactivity"
-                  onClick={handleMenuClick}
-                  className="text-gray-800 font-medium"
-                >
-                  Save
-                </Link>
-              </div>
 
               <div className="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
                 <img
@@ -195,35 +234,104 @@ const MobileMenu = ({
                     <span className="text-gray-800 font-medium">My Profile</span>
                   </Link>
 
-                  {/* My Activity */}
-                  <Link
-                    to="/profile?tab=myactivity"
-                    onClick={handleMenuClick}
-                    className="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <FaRegFileAlt size={20} className="text-blue-600 mr-3" />
-                    <span className="text-gray-800 font-medium">My Activity</span>
-                  </Link>
+                  {/* Saved Properties */}
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => setIsSavedPropertiesOpen(!isSavedPropertiesOpen)}
+                      className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center">
+                        <FiHeart size={20} className="text-red-500 mr-3" />
+                        <span className="text-gray-800 font-medium">Saved Properties</span>
+                        {savedProperties.length > 0 && (
+                          <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                            {savedProperties.length}
+                          </span>
+                        )}
+                      </div>
+                      <MdOutlineKeyboardArrowUp
+                        size={16}
+                        className={`transition-transform ${isSavedPropertiesOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    
+                    {isSavedPropertiesOpen && (
+                      <div className="ml-6 space-y-2">
+                        {savedPropertiesLoading ? (
+                          <div className="flex items-center justify-center p-4">
+                            <div className="w-6 h-6 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+                          </div>
+                        ) : savedProperties.length === 0 ? (
+                          <div className="p-4 text-center text-gray-500">
+                            <FiHeart size={24} className="mx-auto mb-2 text-gray-300" />
+                            <p className="text-sm">No saved properties yet</p>
+                          </div>
+                        ) : (
+                          savedProperties.slice(0, 5).map((property) => (
+                            <div key={property._id} className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+                              <div className="flex items-start space-x-3">
+                                <img
+                                  src={getMediaUrl(property.images?.[0]) || "https://via.placeholder.com/60x60?text=No+Image"}
+                                  alt={property.title}
+                                  className="w-12 h-12 rounded object-cover flex-shrink-0"
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = "https://via.placeholder.com/60x60?text=Image+Not+Available";
+                                  }}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="text-sm font-medium text-gray-800 truncate">
+                                    {property.title}
+                                  </h4>
+                                  <p className="text-xs text-gray-500">
+                                    {property.city}, {property.state}
+                                  </p>
+                                  <p className="text-sm font-semibold text-purple-600">
+                                    ₹{property.monthlyRent?.toLocaleString()}/mo
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleUnsaveProperty(property._id);
+                                  }}
+                                  className="text-red-500 hover:text-red-700 p-1"
+                                  title="Remove from saved"
+                                >
+                                  <X size={16} />
+                                </button>
+                              </div>
+                              <div className="mt-2 flex space-x-2">
+                                <button
+                                  onClick={() => {
+                                    navigate(`/property/${property._id}`);
+                                    handleMenuClick();
+                                  }}
+                                  className="flex-1 bg-purple-600 text-white text-xs py-1 px-2 rounded hover:bg-purple-700 transition-colors"
+                                >
+                                  View Details
+                                </button>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                        {savedProperties.length > 5 && (
+                          <Link
+                            to="/profile?tab=savedProperties"
+                            onClick={handleMenuClick}
+                            className="block text-center text-purple-600 text-sm py-2 hover:text-purple-700"
+                          >
+                            View All Saved Properties ({savedProperties.length})
+                          </Link>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
-                  {/* My Transactions */}
-                  <Link
-                    to="/profile?tab=myTransactions"
-                    onClick={handleMenuClick}
-                    className="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <FaRegFileAlt size={20} className="text-green-600 mr-3" />
-                    <span className="text-gray-800 font-medium">My Transactions</span>
-                  </Link>
+              
 
-                  {/* My Reviews */}
-                  <Link
-                    to="/profile?tab=myReviews"
-                    onClick={handleMenuClick}
-                    className="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <SlStar size={20} className="text-yellow-600 mr-3" />
-                    <span className="text-gray-800 font-medium">My Reviews</span>
-                  </Link>
+   
+
 
                   {/* Quick Links */}
                   <div className="space-y-2">
@@ -287,59 +395,7 @@ const MobileMenu = ({
                     )}
                   </div>
 
-                  {/* Housing Edge */}
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => setIsHousingOpen(!isHousingOpen)}
-                      className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center">
-                        <FaRegLightbulb size={20} className="text-orange-600 mr-3" />
-                        <span className="text-gray-800 font-medium">Housing Edge</span>
-                      </div>
-                      <MdOutlineKeyboardArrowUp
-                        size={16}
-                        className={`transition-transform ${isHousingOpen ? "rotate-180" : ""}`}
-                      />
-                    </button>
-                    
-                    {isHousingOpen && (
-                      <div className="ml-6 space-y-2">
-                        <Link
-                          to="/pay-rent"
-                          onClick={handleMenuClick}
-                          className="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                          <img src={protection} alt="Pay Rent" className="w-5 h-5 mr-3" />
-                          <span className="text-gray-700">Pay Rent</span>
-                        </Link>
-                        <Link
-                          to="/premium"
-                          onClick={handleMenuClick}
-                          className="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                          <IoDiamondOutline size={18} className="text-gray-600 mr-3" />
-                          <span className="text-gray-700">Housing Premium</span>
-                        </Link>
-                        <Link
-                          to="/receipted"
-                          onClick={handleMenuClick}
-                          className="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                          <IoReceiptOutline size={18} className="text-gray-600 mr-3" />
-                          <span className="text-gray-700">Rent Receipt</span>
-                        </Link>
-                        <Link
-                          to="/housingProtect"
-                          onClick={handleMenuClick}
-                          className="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                          <img src={protection} alt="Housing Protect" className="w-5 h-5 mr-3" />
-                          <span className="text-gray-700">Housing Protect</span>
-                        </Link>
-                      </div>
-                    )}
-                  </div>
+            
 
                   {/* Services */}
                   <div className="space-y-2">
@@ -380,14 +436,7 @@ const MobileMenu = ({
                   </div>
 
                   {/* Other Menu Items */}
-                  <Link
-                    to="/reviews"
-                    onClick={handleMenuClick}
-                    className="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <CiBellOn size={20} className="text-yellow-600 mr-3" />
-                    <span className="text-gray-800 font-medium">Unsubscribe Alert</span>
-                  </Link>
+             
 
                   <Link
                     to="/Fraud"
@@ -398,13 +447,7 @@ const MobileMenu = ({
                     <span className="text-gray-800 font-medium">Report a Fraud</span>
                   </Link>
 
-                  <button
-                    onClick={handleMenuClick}
-                    className="flex items-center w-full p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <HiOutlineQuestionMarkCircle size={20} className="text-blue-600 mr-3" />
-                    <span className="text-gray-800 font-medium">Visit Help Center</span>
-                  </button>
+
 
                   {/* Logout */}
                   <button

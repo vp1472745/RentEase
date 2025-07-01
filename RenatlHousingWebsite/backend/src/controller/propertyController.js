@@ -1,4 +1,7 @@
 import Property from "../models/property.js";
+import SaveProperty from "../models/SaveProperty.js";
+import User from "../models/user.js";
+import PropertyView from "../models/viewDetails.js";
 
 // ✅ Add New Property (Owner Only)
 export const addProperty = async (req, res) => {
@@ -307,6 +310,28 @@ export const updateProperty = async (req, res) => {
     const restrictedFields = ['owner', '_id', 'createdAt', '__v'];
     restrictedFields.forEach(field => delete req.body[field]);
 
+    // Handle date formatting for availableFrom
+    if (req.body.availableFrom) {
+      const dateValue = new Date(req.body.availableFrom);
+      if (isNaN(dateValue.getTime())) {
+        return res.status(400).json({ 
+          message: "Invalid date format for availableFrom" 
+        });
+      }
+      req.body.availableFrom = dateValue;
+    }
+
+    // Convert string numbers to actual numbers
+    const numericFields = ['monthlyRent', 'securityDeposit', 'maintenanceCharges', 'rentalDurationMonths', 'area', 'floorNumber', 'totalFloors', 'ageOfProperty'];
+    numericFields.forEach(field => {
+      if (req.body[field] !== undefined && req.body[field] !== '') {
+        const numValue = Number(req.body[field]);
+        if (!isNaN(numValue)) {
+          req.body[field] = numValue;
+        }
+      }
+    });
+
     // Format data before update
     if (req.body.bhkType) {
       req.body.bhkType = Array.isArray(req.body.bhkType)
@@ -331,6 +356,35 @@ export const updateProperty = async (req, res) => {
         ? req.body.facilities.map(item => item.toLowerCase())
         : [req.body.facilities.toLowerCase()];
     }
+
+    // Handle images and videos - ensure they have the correct structure
+    if (req.body.images) {
+      req.body.images = req.body.images.map(img => {
+        if (typeof img === 'string') {
+          return { url: img, type: 'image' };
+        }
+        return {
+          url: img.url,
+          type: img.type || 'image',
+          public_id: img.public_id
+        };
+      });
+    }
+
+    if (req.body.videos) {
+      req.body.videos = req.body.videos.map(vid => {
+        if (typeof vid === 'string') {
+          return { url: vid, type: 'video' };
+        }
+        return {
+          url: vid.url,
+          type: vid.type || 'video',
+          public_id: vid.public_id
+        };
+      });
+    }
+
+    console.log('🔧 Processed update data:', req.body);
 
     const updatedProperty = await Property.findByIdAndUpdate(
       req.params.id,
@@ -412,21 +466,170 @@ export const getOwnerProperties = async (req, res) => {
 // Endpoint example: POST /api/properties/:id/view
 export const recordPropertyView = async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id);
+    const { propertyId } = req.params;
+    const userId = req.user?._id;
+
+    // Update view count
+    await Property.findByIdAndUpdate(propertyId, { $inc: { viewCount: 1 } });
+
+    // Log view details if user is authenticated
+    if (userId) {
+      await PropertyView.create({
+        property: propertyId,
+        user: userId,
+        viewedAt: new Date()
+      });
+    }
+
+    res.status(200).json({ message: "View recorded successfully" });
+  } catch (error) {
+    console.error("❌ Record View Error:", error);
+    res.status(500).json({ message: "Failed to record view" });
+  }
+};
+
+// ✅ Save Property
+export const saveProperty = async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+    const userId = req.user._id;
+
+    // Check if property exists
+    const property = await Property.findById(propertyId);
     if (!property) {
       return res.status(404).json({ message: "Property not found" });
     }
 
-    // Increment the view count (initialize to 0 if it does not exist)
-    property.viewCount = (property.viewCount || 0) + 1;
-    await property.save();
+    // Check if already saved
+    const existingSave = await SaveProperty.findOne({ user: userId, property: propertyId });
+    if (existingSave) {
+      return res.status(200).json({ 
+        success: true,
+        message: "Property already saved",
+        alreadySaved: true
+      });
+    }
 
-    res.status(200).json({
-      message: "View count updated successfully",
-      viewCount: property.viewCount,
+    // Save property
+    const savedProperty = new SaveProperty({
+      user: userId,
+      property: propertyId
+    });
+
+    await savedProperty.save();
+
+    // Update user's savedProperties array
+    await User.findByIdAndUpdate(userId, {
+      $addToSet: { savedProperties: propertyId }
+    });
+
+    res.status(201).json({ 
+      success: true, 
+      message: "Property saved successfully" 
     });
   } catch (error) {
-    console.error("❌ Record View Error:", error.message);
-    res.status(500).json({ message: "Server Error", error: error.message });
+    console.error("❌ Error saving property:", error);
+    res.status(500).json({ 
+      message: "Failed to save property",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// ✅ Unsave Property
+export const unsaveProperty = async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+    const userId = req.user._id;
+    
+    // Remove from SaveProperty collection
+    const result = await SaveProperty.findOneAndDelete({ 
+      user: userId, 
+      property: propertyId 
+    });
+
+    if (!result) {
+      return res.status(404).json({ message: "Saved property not found" });
+    }
+
+    // Remove from user's savedProperties array
+    await User.findByIdAndUpdate(userId, {
+      $pull: { savedProperties: propertyId }
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      message: "Property unsaved successfully" 
+    });
+  } catch (error) {
+    console.error("❌ Error unsaving property:", error);
+    res.status(500).json({ 
+      message: "Failed to unsave property",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// ✅ Get User's Saved Properties
+export const getSavedProperties = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    console.log("🔍 Fetching saved properties for user:", userId);
+    
+    // Get saved properties with populated property details
+    const savedProperties = await SaveProperty.find({ user: userId })
+      .populate({
+        path: 'property',
+        select: '-__v',
+        populate: {
+          path: 'owner',
+          select: 'name email phone'
+        }
+      })
+      .sort({ savedAt: -1 });
+
+    console.log("📦 Found saved properties:", savedProperties.length);
+
+    // Extract property data
+    const properties = savedProperties
+      .map(sp => sp.property)
+      .filter(Boolean); // Remove any null properties
+
+    console.log("✅ Returning properties:", properties.length);
+    res.json(properties);
+  } catch (error) {
+    console.error("❌ Error fetching saved properties:", error);
+    console.error("❌ Error details:", {
+      message: error.message,
+      stack: error.stack,
+      userId: req.user?._id
+    });
+    res.status(500).json({ 
+      message: "Failed to fetch saved properties",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// ✅ Check if property is saved by user
+export const checkSavedProperty = async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+    const userId = req.user._id;
+    
+    const savedProperty = await SaveProperty.findOne({ 
+      user: userId, 
+      property: propertyId 
+    });
+
+    res.json({ 
+      isSaved: !!savedProperty 
+    });
+  } catch (error) {
+    console.error("❌ Error checking saved property:", error);
+    res.status(500).json({ 
+      message: "Failed to check saved property",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };

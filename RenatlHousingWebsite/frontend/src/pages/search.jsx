@@ -34,6 +34,8 @@ import GN_N from "../assets/GNN.png";
 import GN_H from "../assets/GNH.png";
 import CN from "../assets/CN.png";
 import CH from "../assets/CH.png";
+import CHHIN_b from "../assets/junnardeo1.png"
+import CHHIN_w from "../assets/junnardeo2.png" 
 
 import PopularLocalities from "../pages/popularlocality.jsx";
 import popularLocalitiesData from "../data/popularLocalities.js";
@@ -54,6 +56,10 @@ const cities = [
   { name: "Gaziyabad", image_N: G_N, image_H: G_H },
   { name: "GreaterNoida", image_N: GN_N, image_H: GN_H },
   { name: "Coimbatore", image_N: CN, image_H: CH },
+  { name: "Chhindwara", image_N: CN, image_H: CH },
+  { name: "Junnardeo", image_N: CHHIN_b, image_H: CHHIN_w},
+  { name: "Seoni", image_N: CN, image_H: CH },
+  { name: "Parasia", image_N: CN, image_H: CH },
 ];
 
 // const propertyCategories = [
@@ -70,6 +76,30 @@ const SearchBar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hoveredCity, setHoveredCity] = useState(null);
   const navigate = useNavigate();
+
+  // Function to log search activity
+  const logSearchActivity = (searchTerm) => {
+    const name = localStorage.getItem('name');
+    const email = localStorage.getItem('email');
+    API.post(
+      "/api/user/search-log",
+      {
+        searchTerm: searchTerm,
+        device: navigator.userAgent,
+        name,
+        email,
+      }
+    )
+    .then(res => console.log('Search log response:', res.data))
+    .catch(err => console.error('Search log error:', err));
+  };
+
+  // Function to handle city selection
+  const handleCitySelect = (selectedCity) => {
+    setCity(selectedCity);
+    setIsModalOpen(false);
+    // Remove automatic navigation and logging - let user click search button
+  };
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -92,19 +122,7 @@ const SearchBar = () => {
     navigate(`/properties?${params.toString()}`);
 
     // Log search activity
-    const name = localStorage.getItem('name');
-    const email = localStorage.getItem('email');
-    API.post(
-      "/api/user/search-log",
-      {
-        searchTerm: locality,
-        device: navigator.userAgent,
-        name,
-        email,
-      }
-    )
-    .then(res => console.log('Search log response:', res.data))
-    .catch(err => console.error('Search log error:', err));
+    logSearchActivity(locality || city);
   };
 
   const handleKeyPress = (e) => {
@@ -177,10 +195,7 @@ const SearchBar = () => {
                 {cities.map((item, index) => (
                   <div
                     key={index}
-                    onClick={() => {
-                      setCity(item.name);
-                      setIsModalOpen(false);
-                    }}
+                    onClick={() => handleCitySelect(item.name)}
                     onMouseEnter={() => setHoveredCity(item.name)}
                     onMouseLeave={() => setHoveredCity(null)}
                     className="flex flex-col items-center cursor-pointer w-28 p-3 rounded-xl hover:bg-purple-50 transition"

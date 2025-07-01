@@ -29,7 +29,7 @@ const Sidebar = ({ activeTab, setActiveTab, onClose }) => {
     ];
 
     return (
-        <div className="w-64 lg:w-72 bg-white shadow-lg h-[635px] flex flex-col fixed lg:relative -z-100">
+        <div className="w-64 lg:w-72 bg-white shadow-lg h-screen lg:h-auto flex flex-col">
             {/* Mobile Header */}
             <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-200 bg-white">
                 <h1 className="text-xl font-bold text-purple-600">Admin Panel</h1>

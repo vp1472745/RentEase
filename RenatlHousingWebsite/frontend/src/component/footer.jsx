@@ -75,7 +75,7 @@ const Footer = () => {
             <div>
               <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
               <ul className="text-gray-300 text-sm space-y-2">
-                <li>Email: <a href="mailto:support@rentease.com" className="hover:text-yellow-400">renteasecom6@gmail.com</a></li>
+                <li>Email: <a href="mailto:Rentify1611@gmail.com" className="hover:text-yellow-400">Rentify1611@gmail.com</a></li>
                 <li>Phone: <a href="tel:+911234567890" className="hover:text-yellow-400">+91 6268923703</a></li>
                 <li>Address: Junnardeo, India</li>
               </ul>
@@ -86,10 +86,10 @@ const Footer = () => {
               <h3 className="text-lg font-semibold mb-4">Follow Us</h3>
               <div className="flex gap-4 mt-2">
                 <a href="https://www.instagram.com/v_i_n_e_e_t_9630?igsh=MXR3cTFnMWllMXh0Yg==" target="_blank" rel="noopener noreferrer" className="bg-pink-600 p-2 rounded-full hover:bg-pink-500 transition"><FaInstagram size={22} /></a>
-                <a href="https://wa.me/6267109834" target="_blank" rel="noopener noreferrer" className="bg-green-600 p-2 rounded-full hover:bg-green-500 transition"><FaWhatsapp size={22} /></a>
-                <a href="#" className="bg-blue-600 p-2 rounded-full hover:bg-blue-500 transition"><FaFacebook size={22} /></a>
-                <a href="#" className="bg-sky-500 p-2 rounded-full hover:bg-sky-400 transition"><FaTwitter size={22} /></a>
-                <a href="#" className="bg-blue-800 p-2 rounded-full hover:bg-blue-700 transition"><FaLinkedin size={22} /></a>
+                <a href="https://wa.me/6268923703" target="_blank" rel="noopener noreferrer" className="bg-green-600 p-2 rounded-full hover:bg-green-500 transition"><FaWhatsapp size={22} /></a>
+                {/* <a href="#" className="bg-blue-600 p-2 rounded-full hover:bg-blue-500 transition"><FaFacebook size={22} /></a>
+                <a href="#" className="bg-sky-500 p-2 rounded-full hover:bg-sky-400 transition"><FaTwitter size={22} /></a> */}
+                <a href="https://www.linkedin.com/in/vineet-pancheshwar-2b152126b/" className="bg-blue-800 p-2 rounded-full hover:bg-blue-700 transition"><FaLinkedin size={22} /></a>
               </div>
             </div>
           </div>

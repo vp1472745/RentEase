@@ -11,7 +11,18 @@ import {
   FiPhone,
   FiSearch,
   FiFilter,
+  FiMapPin,
+  FiHome,
+  FiLayers,
+  FiUsers,
+  FiDollarSign,
+  FiCalendar,
+  FiStar,
+  FiEye,
+  FiArrowRight
 } from "react-icons/fi";
+import { FaBed, FaBath, FaRulerCombined, FaWhatsapp } from "react-icons/fa";
+import { IoMdClose } from "react-icons/io";
 
 function Properties() {
   const [properties, setProperties] = useState([]);
@@ -22,8 +33,9 @@ function Properties() {
   const [currentProperty, setCurrentProperty] = useState(null);
   const [favorites, setFavorites] = useState({});
   const [seenProperties, setSeenProperties] = useState([]);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [showSeenProperties, setShowSeenProperties] = useState(false);
+  const [error, setError] = useState(null);
+  const [showSignupPopup, setShowSignupPopup] = useState(false);
 
   // Search filters
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,8 +47,9 @@ function Properties() {
   const [coupleFriendlyFilter, setCoupleFriendlyFilter] = useState("");
   const [priceRange, setPriceRange] = useState(["", ""]);
   const [showFilters, setShowFilters] = useState(false);
-  const [showSeenProperties, setShowSeenProperties] = useState(false);
-  const [error, setError] = useState(null);
+
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Load saved properties on component mount
   useEffect(() => {
@@ -75,9 +88,9 @@ function Properties() {
     setCityFilter(searchParams.get("city") || "");
     setPropertyTypeFilter(searchParams.get("propertyType") || ""); 
     setLocalityFilter(searchParams.get("popularLocality") || searchParams.get("address") || "");
-    setBhkFilter(searchParams.get("bhk") || ""); // Ensure bhkFilter is read from URL
-    setTenantFilter(searchParams.get("tenant") || ""); // Ensure tenantFilter is read from URL
-    setCoupleFriendlyFilter(searchParams.get("coupleFriendly") || ""); // Ensure coupleFriendlyFilter is read from URL
+    setBhkFilter(searchParams.get("bhk") || "");
+    setTenantFilter(searchParams.get("tenant") || "");
+    setCoupleFriendlyFilter(searchParams.get("coupleFriendly") || "");
 
     const minPriceParam = searchParams.get("minPrice");
     const maxPriceParam = searchParams.get("maxPrice");
@@ -99,7 +112,6 @@ function Properties() {
           }
         } : {};
 
-        // Determine which endpoint to call based on active search parameters
         const hasSearchParams = Array.from(searchParams.keys()).some(key => 
             key !== "tab" && searchParams.get(key) !== "" && searchParams.get(key) !== "0"
         );
@@ -109,7 +121,6 @@ function Properties() {
 
         if (hasSearchParams) {
           endpoint = '/api/properties/search';
-          // Map frontend filter states to backend search parameters
           requestParams = {
             searchTerm: searchParams.get("searchTerm") || "",
             city: searchParams.get("city") || "",
@@ -120,10 +131,8 @@ function Properties() {
             coupleFriendly: searchParams.get("coupleFriendly") || "",
             minPrice: minPriceParam,
             maxPrice: maxPriceParam,
-            // Add other parameters as needed by your backend /search route
           };
         } else {
-          // If no specific search, just fetch all properties (or based on initial URL params)
           requestParams = {
             city: searchParams.get("city") || "",
             address: searchParams.get("locality") || "",
@@ -131,8 +140,6 @@ function Properties() {
             popularLocality: searchParams.get("popularLocality") || "",
           };
         }
-
-        console.log(`📡 Fetching from: ${endpoint} with params:`, requestParams);
 
         const res = await axios.get(endpoint, {
           ...config,
@@ -152,10 +159,8 @@ function Properties() {
             }))
           : [];
 
-        console.log('Fetched properties:', propertiesData);
         setProperties(propertiesData);
 
-        // Load seen properties
         const savedSeenProperties = localStorage.getItem("seenProperties");
         if (savedSeenProperties) {
           const seenIds = JSON.parse(savedSeenProperties);
@@ -175,13 +180,18 @@ function Properties() {
         let errorMessage = "Failed to load properties";
         
         if (error.response) {
-          console.error("Error response:", error.response.data);
+          // Handle 404 (no properties found) gracefully
+          if (error.response.status === 404) {
+            console.log("No properties found for the given filters");
+            setProperties([]);
+            setFilteredProperties([]);
+            // Don't show error toast for no results - this is expected behavior
+            return;
+          }
           errorMessage = error.response.data.message || errorMessage;
         } else if (error.request) {
-          console.error("No response received:", error.request);
           errorMessage = "Server not responding. Please try again later.";
         } else {
-          console.error("Error setting up request:", error.message);
           errorMessage = error.message || errorMessage;
         }
         
@@ -196,7 +206,6 @@ function Properties() {
     fetchProperties();
   }, [location.search]);
 
-  // This useEffect will run applyFilters when filter states or properties change
   useEffect(() => {
     if (!showSeenProperties) {
       applyFilters();
@@ -212,25 +221,10 @@ function Properties() {
     priceRange,
     properties, 
     showSeenProperties,
-    // Removed location.search as a direct dependency here. fetchProperties handles it.
   ]);
 
   const applyFilters = () => {
-    console.log("=== Applying Filters ===");
-    console.log("Initial properties for filtering:", properties);
-    console.log("Current filter states:", {
-      searchTerm,
-      cityFilter,
-      bhkFilter,
-      propertyTypeFilter,
-      localityFilter,
-      tenantFilter,
-      coupleFriendlyFilter,
-      priceRange,
-    });
-
     let filtered = Array.isArray(properties) ? [...properties] : [];
-    console.log("After initial copy:", filtered.length, "properties");
 
     if (searchTerm.trim() !== "") {
       const searchLower = searchTerm.toLowerCase();
@@ -240,14 +234,12 @@ function Properties() {
           property.description?.toLowerCase().includes(searchLower)
         );
       });
-      console.log("After searchTerm filter:", filtered.length, "properties");
     }
 
     if (cityFilter) {
       filtered = filtered.filter((property) =>
         property.city?.toLowerCase().includes(cityFilter.toLowerCase())
       );
-      console.log("After cityFilter filter:", filtered.length, "properties");
     }
 
     if (bhkFilter) {
@@ -255,7 +247,6 @@ function Properties() {
         (property) =>
           property.bhkType?.toString().toLowerCase() === bhkFilter.toLowerCase()
       );
-      console.log("After bhkFilter filter:", filtered.length, "properties");
     }
 
     if (propertyTypeFilter) {
@@ -264,7 +255,6 @@ function Properties() {
           property.propertyType?.toString().toLowerCase() ===
           propertyTypeFilter.toLowerCase()
       );
-      console.log("After propertyTypeFilter filter:", filtered.length, "properties");
     }
 
     if (localityFilter) {
@@ -276,23 +266,18 @@ function Properties() {
         (property.city &&
           property.city.toLowerCase().includes(localityFilter.toLowerCase()))
       );
-      console.log("After localityFilter filter:", filtered.length, "properties");
     }
 
     if (tenantFilter) {
       filtered = filtered.filter((property) => {
         if (!property.Gender) return false;
-        
-        // Handle both array and string cases for Gender
         const genderValues = Array.isArray(property.Gender) 
           ? property.Gender 
           : [property.Gender];
-          
         return genderValues.some(gender => 
           gender.toLowerCase().includes(tenantFilter.toLowerCase())
         );
       });
-      console.log("After tenantFilter filter:", filtered.length, "properties");
     }
 
     if (coupleFriendlyFilter) {
@@ -301,7 +286,6 @@ function Properties() {
           String(property.coupleFriendly || "").toLowerCase() === 
           coupleFriendlyFilter.toLowerCase()
       );
-      console.log("After coupleFriendlyFilter filter:", filtered.length, "properties");
     }
 
     filtered = filtered.filter((property) => {
@@ -314,12 +298,10 @@ function Properties() {
       } else if (max !== null) {
         return property.monthlyRent <= max;
       }
-      return true; // No price filter if both are empty
+      return true;
     });
-    console.log("After priceRange filter:", filtered.length, "properties");
 
     setFilteredProperties(filtered);
-    console.log("Final filtered properties set:", filtered.length, "properties");
   };
 
   const handleSearch = (searchParams) => {
@@ -335,7 +317,6 @@ function Properties() {
 
   const handleViewDetails = async (propertyId) => {
     try {
-      // Record view in backend if user is authenticated
       const token = localStorage.getItem("token");
       if (token) {
         await axios.post(
@@ -349,7 +330,6 @@ function Properties() {
         );
       }
 
-      // Add to local storage for all users
       const seenProperties = JSON.parse(
         localStorage.getItem("seenProperties") || "[]"
       );
@@ -360,8 +340,6 @@ function Properties() {
           JSON.stringify(updatedSeenProperties)
         );
         setSeenProperties(updatedSeenProperties);
-
-        // Notify Navbar of update
         window.dispatchEvent(
           new CustomEvent("seenPropertyAdded", {
             detail: { count: updatedSeenProperties.length },
@@ -372,7 +350,6 @@ function Properties() {
       navigate(`/property/${propertyId}`);
     } catch (error) {
       console.error("Error recording view:", error);
-      // Still navigate even if tracking fails
       navigate(`/property/${propertyId}`);
     }
   };
@@ -388,7 +365,6 @@ function Properties() {
       const isCurrentlySaved = favorites[propertyId];
       
       if (isCurrentlySaved) {
-        // Unsave property
         await axios.delete(`/api/properties/save/${propertyId}`, {
           headers: {
             Authorization: `Bearer ${token}`
@@ -402,20 +378,37 @@ function Properties() {
         
         toast.success('Property removed from saved');
       } else {
-        // Save property
-        await axios.post(`/api/properties/save/${propertyId}`, {}, {
-          headers: {
-            Authorization: `Bearer ${token}`
+        try {
+          const response = await axios.post(`/api/properties/save/${propertyId}`, {}, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+          
+          setFavorites((prev) => ({
+            ...prev,
+            [propertyId]: true,
+          }));
+          
+          if (response.data.alreadySaved) {
+            toast.info('Property is already saved');
+          } else {
+            toast.success('Property saved successfully');
           }
-        });
-        
-        setFavorites((prev) => ({
-          ...prev,
-          [propertyId]: true,
-        }));
-        
-        toast.success('Property saved successfully');
+        } catch (saveError) {
+          if (saveError.response?.status === 400 && saveError.response?.data?.message === "Property already saved") {
+            setFavorites((prev) => ({
+              ...prev,
+              [propertyId]: true,
+            }));
+            toast.info('Property is already saved');
+          } else {
+            throw saveError;
+          }
+        }
       }
+
+      window.dispatchEvent(new Event('savedPropertyUpdated'));
     } catch (error) {
       console.error('Error toggling favorite:', error);
       const errorMessage = error.response?.data?.message || 'Failed to update saved property';
@@ -465,37 +458,32 @@ function Properties() {
 
   const contactOwner = (phoneNumber) => {
     if (!phoneNumber) {
-      alert("Owner phone number not available");
+      toast.error("Owner phone number not available");
       return;
     }
-    window.open(`tel:${phoneNumber}`);
+    const userRole = localStorage.getItem('role');
+    if (userRole === 'tenant') {
+      window.open(`tel:${phoneNumber}`);
+    } else {
+      setShowSignupPopup(true);
+    }
   };
 
   const getMediaUrl = (mediaItem) => {
     if (!mediaItem) return null;
-    
-    // If mediaItem is a string (old format), return it directly
     if (typeof mediaItem === 'string') return mediaItem;
-    
-    // If mediaItem is an object with url property (new format), return the url
     if (mediaItem.url) return mediaItem.url;
-    
     return null;
   };
 
   const isVideo = (mediaItem) => {
     if (!mediaItem) return false;
-    
-    // If mediaItem is an object with type property
     if (typeof mediaItem === 'object' && mediaItem.type) {
       return mediaItem.type.toLowerCase() === 'video';
     }
-    
-    // If mediaItem is a string, check if it ends with video extension
     if (typeof mediaItem === 'string') {
       return /\.(mp4|webm|ogg)$/i.test(mediaItem);
     }
-    
     return false;
   };
 
@@ -530,36 +518,57 @@ function Properties() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <div className="bg-purple-800 w-full h-15"></div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Enhanced Header */}
+      <div className="bg-gradient-to-r from-purple-700 to-indigo-700 w-full h-16 shadow-md flex items-center justify-center">
+      </div>
 
-      {/* PropertySearchBox Component */}
-      {!showSeenProperties && (
-        <PropertySearchBox
-          onSearch={handleSearch}
-          initialSearchTerm={searchTerm}
-          initialCity={cityFilter}
-          initialBhk={bhkFilter}
-          initialPropertyType={propertyTypeFilter}
-          initialLocality={localityFilter}
-          initialTenant={tenantFilter}
-          initialCoupleFriendly={coupleFriendlyFilter}
-          initialMinPrice={priceRange[0] !== "" ? Number(priceRange[0]) : 0}
-          initialMaxPrice={priceRange[1] !== "" ? Number(priceRange[1]) : Infinity}
-        />
-      )}
+      {/* Main Content Container */}
+      <div className="container mx-auto px-4 py-8">
+        {/* Search Box Section */}
+        {!showSeenProperties && (
+          <div className="mb-8">
+            <PropertySearchBox
+              onSearch={handleSearch}
+              initialSearchTerm={searchTerm}
+              initialCity={cityFilter}
+              initialBhk={bhkFilter}
+              initialPropertyType={propertyTypeFilter}
+              initialLocality={localityFilter}
+              initialTenant={tenantFilter}
+              initialCoupleFriendly={coupleFriendlyFilter}
+              initialMinPrice={priceRange[0] !== "" ? Number(priceRange[0]) : 0}
+              initialMaxPrice={priceRange[1] !== "" ? Number(priceRange[1]) : Infinity}
+            />
+          </div>
+        )}
 
-      {/* Property Listings */}
-      <div className="container mx-auto px-4 py-4">
+        {/* Results Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">
+            {showSeenProperties ? "Recently Viewed" : "Available Properties"}
+            <span className="ml-2 bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
+              {filteredProperties.length}
+            </span>
+          </h2>
+          {filteredProperties.length > 0 && (
+            <div className="flex items-center text-sm text-gray-500">
+              <FiFilter className="mr-2" />
+              <span>Sorted by: Newest</span>
+            </div>
+          )}
+        </div>
+
+        {/* Property Listings */}
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-pulse text-center text-gray-600">
-              Loading properties...
+            <div className="flex flex-col items-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600 mb-4"></div>
+              <p className="text-gray-600">Loading properties...</p>
             </div>
           </div>
         ) : filteredProperties.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 max-w-5xl mx-auto pb-20">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
             {filteredProperties.map((property) => (
               <PropertyCard
                 key={property._id}
@@ -577,17 +586,28 @@ function Properties() {
             ))}
           </div>
         ) : (
-          <div className="flex justify-center items-center h-64">
-            <p className="text-center text-purple-800">
+          <div className="flex flex-col items-center justify-center h-96 bg-white rounded-xl shadow-sm p-6">
+            <FiHome className="text-5xl text-gray-300 mb-4" />
+            <h3 className="text-xl font-medium text-gray-700 mb-2">
+              {searchTerm ? "No matching properties found" : "No properties available"}
+            </h3>
+            <p className="text-gray-500 text-center max-w-md mb-4">
               {searchTerm
-                ? "No properties match your search"
-                : "No properties found"}
+                ? "Try adjusting your search filters or search for a different location"
+                : "Check back later or try a different location"}
             </p>
+            <button 
+              onClick={() => setShowFilters(true)}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              <FiFilter className="inline mr-2" />
+              Adjust Filters
+            </button>
           </div>
         )}
       </div>
 
-      {/* Image/Video Gallery Modal */}
+      {/* Gallery Modal */}
       {isGalleryOpen && currentProperty && (
         <GalleryModal
           currentProperty={currentProperty}
@@ -600,11 +620,30 @@ function Properties() {
           getMediaUrl={getMediaUrl}
         />
       )}
+
+      {/* Signup Popup */}
+      {showSignupPopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+            <h2 className="text-lg font-bold mb-4 text-purple-800">Sign Up Required</h2>
+            <p className="mb-6">Please sign up from <span className="font-semibold text-purple-700">'Rent a Property'</span> before calling the owner.</p>
+            <button
+              onClick={() => {
+                setShowSignupPopup(false);
+                navigate('/signup');
+              }}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-// Property Card Component
+// Enhanced Property Card Component
 function PropertyCard({
   property,
   favorites,
@@ -617,140 +656,145 @@ function PropertyCard({
   getMediaUrl,
   VideoPlayer,
 }) {
-  // Get first media item (image or video)
   const firstMedia = property.media?.[0] || property.images?.[0];
   const mediaUrl = getMediaUrl(firstMedia);
   const isVideoMedia = isVideo(firstMedia);
 
-  // Format Gender display
-  const formatGenderDisplay = () => {
-    if (!property.Gender) return "Any";
-    return Array.isArray(property.Gender) ? property.Gender.join(", ") : property.Gender;
-  };
-
-  // Format BHK Type display
-  const formatBhkDisplay = () => {
-    if (!property.bhkType) return "";
-    return Array.isArray(property.bhkType) ? property.bhkType.join(", ") : property.bhkType;
-  };
-
-  // Format Furnish Type display
-  const formatFurnishDisplay = () => {
-    if (!property.furnishType) return "";
-    return Array.isArray(property.furnishType) ? property.furnishType.join(", ") : property.furnishType;
-  };
-
-  // Format Property Type display
-  const formatPropertyTypeDisplay = () => {
-    if (!property.propertyType) return "";
-    return Array.isArray(property.propertyType) ? property.propertyType.join(", ") : property.propertyType;
-  };
-
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-      <div className="flex flex-col md:flex-row">
-        {/* Property Image/Video */}
-        <div className="relative md:w-2/5 h-48 md:h-auto">
-          {isVideoMedia ? (
-            <VideoPlayer
-              src={mediaUrl}
-              className="w-full h-full cursor-pointer"
-              onClick={() => openGallery(property, 0)}
-              thumbnail
-            />
-          ) : (
-            <img
-              src={mediaUrl || "https://via.placeholder.com/400x300?text=No+Image"}
-              alt={property.title}
-              className="w-full h-full object-cover cursor-pointer"
-              onClick={() => openGallery(property, 0)}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "https://via.placeholder.com/400x300?text=Image+Not+Available";
-              }}
-            />
-          )}
+    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100">
+      {/* Media Section with Badges */}
+      <div className="relative h-56 w-full">
+        {isVideoMedia ? (
+          <VideoPlayer
+            src={mediaUrl}
+            className="w-full h-full cursor-pointer"
+            onClick={() => openGallery(property, 0)}
+            thumbnail
+          />
+        ) : (
+          <img
+            src={mediaUrl || "https://via.placeholder.com/400x300?text=No+Image"}
+            alt={property.title}
+            className="w-full h-full object-cover cursor-pointer"
+            onClick={() => openGallery(property, 0)}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "https://via.placeholder.com/400x300?text=Image+Not+Available";
+            }}
+          />
+        )}
+        
+        {/* Favorite Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFavorite(property._id);
+          }}
+          className={`absolute top-3 right-3 p-2 rounded-full shadow-md ${
+            favorites[property._id] 
+              ? "bg-red-500 text-white" 
+              : "bg-white text-gray-400 hover:text-red-500"
+          } transition-colors`}
+        >
+          <FiHeart size={18} fill={favorites[property._id] ? "currentColor" : "none"} />
+        </button>
+        
+        {/* Price Badge */}
+        <div className="absolute bottom-3 left-3 bg-purple-600 text-white px-3 py-1 rounded-lg text-sm font-semibold shadow-md">
+          ₹{property.monthlyRent}/mo
         </div>
+      </div>
 
-        {/* Property Details */}
-        <div className="p-4 md:w-3/5">
-          <div className="flex justify-between items-start">
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">{property.title}</h3>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleFavorite(property._id);
-              }}
-              className={`p-2 rounded-full ${
-                favorites[property._id] ? "text-red-500" : "text-gray-400"
-              } hover:text-red-500 transition-colors`}
-            >
-              <FiHeart size={24} />
-            </button>
+      {/* Details Section */}
+      <div className="p-5">
+        {/* Title and Location */}
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-gray-800 mb-1 truncate">{property.title}</h3>
+          <div className="flex items-center text-gray-600 text-sm">
+            <FiMapPin className="mr-1 text-purple-600" size={14} />
+            <span className="truncate">{property.address}, {property.city}</span>
           </div>
-
-          <div className="space-y-2">
-            <p className="text-gray-600">
-              <span className="font-medium">Location:</span> {property.address}, {property.city}, {property.state}
-            </p>
-            <p className="text-gray-600">
-              <span className="font-medium">Property Type:</span> {formatPropertyTypeDisplay()}
-            </p>
-            <p className="text-gray-600">
-              <span className="font-medium">BHK Type:</span> {formatBhkDisplay()}
-            </p>
-            <p className="text-gray-600">
-              <span className="font-medium">Furnishing:</span> {formatFurnishDisplay()}
-            </p>
-            <p className="text-gray-600">
-              <span className="font-medium">Popular Locality:</span> {property.popularLocality}
-            </p>
-            <p className="text-gray-600">
-              <span className="font-medium">Available From:</span>{" "}
-              {new Date(property.availableFrom).toLocaleDateString()}
-            </p>
-            <p className="text-gray-600">
-              <span className="font-medium">Gender:</span> {formatGenderDisplay()}
-            </p>
+        </div>
+        
+        {/* Key Features Grid */}
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          <div className="flex flex-col items-center p-2 bg-gray-50 rounded-lg border border-gray-100">
+            <FaBed className="text-purple-600 mb-1" size={16} />
+            <span className="text-xs font-medium text-gray-700">{property.bhkType || "N/A"}</span>
+            <span className="text-xs text-gray-500">BHK</span>
           </div>
-
-          <div className="mt-4 flex justify-between items-center">
-            <div>
-              <p className="text-2xl font-bold text-purple-800">₹{property.monthlyRent}/month</p>
-              <p className="text-sm text-gray-500">Security Deposit: ₹{property.securityDeposit}</p>
-            </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  shareOnWhatsApp(property);
-                }}
-                className="p-2 text-gray-600 hover:text-green-600 transition-colors"
-                title="Share on WhatsApp"
-              >
-                <FiShare2 size={20} />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  contactOwner(property);
-                }}
-                className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
-                title="Contact Owner"
-              >
-                <FiPhone size={20} />
-              </button>
-            </div>
+      
+          <div className="flex flex-col items-center p-2 bg-gray-50 rounded-lg border border-gray-100">
+            <FaRulerCombined className="text-purple-600 mb-1" size={16} />
+            <span className="text-xs font-medium text-gray-700">{property.area || "N/A"}</span>
+            <span className="text-xs text-gray-500">sq.ft</span>
           </div>
-
+        </div>
+        
+        {/* Divider */}
+        <div className="border-t border-gray-100 my-3"></div>
+        
+        {/* Additional Info */}
+        <div className="grid grid-cols-2 gap-3 text-sm mb-5">
+          <div className="flex items-center text-gray-600">
+            <FiLayers className="mr-2 text-purple-600" size={14} />
+            <span className="truncate">{property.propertyType || "N/A"}</span>
+          </div>
+          <div className="flex items-center text-gray-600">
+            <FiUsers className="mr-2 text-purple-600" size={14} />
+            <span className="truncate">
+              {Array.isArray(property.Gender) 
+                ? property.Gender.join(", ") 
+                : property.Gender || "Any"}
+            </span>
+          </div>
+          <div className="flex items-center text-gray-600">
+            <FiDollarSign className="mr-2 text-purple-600" size={14} />
+            <span className="truncate">₹{property.securityDeposit || "N/A"}</span>
+          </div>
+          <div className="flex items-center text-gray-600">
+            <FiCalendar className="mr-2 text-purple-600" size={14} />
+            <span className="truncate">
+              {new Date(property.availableFrom).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+              })}
+            </span>
+          </div>
+        </div>
+        
+        {/* Action Buttons */}
+        <div className="flex justify-between space-x-3">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              shareOnWhatsApp(property);
+            }}
+            className="flex-1 flex items-center justify-center p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors border border-green-100"
+            title="Share on WhatsApp"
+          >
+            <FaWhatsapp size={16} />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              contactOwner(property);
+            }}
+            className="flex-1 flex items-center justify-center p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors border border-blue-100"
+            title="Contact Owner"
+          >
+            <FiPhone size={16} />
+          </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               handleViewDetails(property._id);
             }}
-            className="mt-4 w-full bg-purple-800 text-white py-2 rounded hover:bg-purple-700 transition-colors"
+            className="flex-1 flex items-center justify-center p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
-            View Details
+            <span className="text-sm">View</span>
+            <FiArrowRight className="ml-2" size={14} />
           </button>
         </div>
       </div>
@@ -758,7 +802,7 @@ function PropertyCard({
   );
 }
 
-// Gallery Modal Component
+// Enhanced Gallery Modal Component
 function GalleryModal({
   currentProperty,
   currentImageIndex,
@@ -770,68 +814,68 @@ function GalleryModal({
   getMediaUrl,
 }) {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex flex-col items-center justify-center p-4">
-      <button
-        onClick={closeGallery}
-        className="absolute top-4 right-4 text-white text-3xl hover:text-gray-300"
-      >
-        <FiX size={32} />
-      </button>
-
-      <div className="relative w-full max-w-4xl h-full max-h-[70vh] flex flex-col items-center justify-center">
-        <div className="w-full text-center mb-4">
-          <p className="text-white text-lg font-bold">
-            {currentProperty.title}
-          </p>
-        </div>
-
-        <div className="relative w-full h-full flex items-center justify-center">
-          <button
-            onClick={goToPrevImage}
-            className="absolute left-2 md:left-4 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 z-10"
-          >
-            <FiChevronLeft size={24} />
-          </button>
-
-          {isVideo(currentProperty.media[currentImageIndex]) ? (
-            <div className="w-full h-full flex items-center justify-center">
-              <video
-                className="max-w-full max-h-[70vh]"
-                controls
-                autoPlay
-                playsInline
-              >
-                <source
-                  src={getMediaUrl(currentProperty.media[currentImageIndex])}
-                  type="video/mp4"
-                />
-                Your browser does not support the video tag.
-              </video>
-            </div>
-          ) : (
-            <img
-              src={getMediaUrl(currentProperty.media[currentImageIndex])}
-              className="max-w-full max-h-[70vh] object-contain"
-              alt={`Property media ${currentImageIndex + 1}`}
-            />
-          )}
-
-          <button
-            onClick={goToNextImage}
-            className="absolute right-2 md:right-4 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 z-10"
-          >
-            <FiChevronRight size={24} />
-          </button>
-        </div>
+    <div className="fixed inset-0 bg-black bg-opacity-95 z-50 flex flex-col items-center justify-center p-4">
+      {/* Header */}
+      <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 bg-black bg-opacity-50">
+        <h3 className="text-white text-lg font-medium truncate max-w-[70%]">
+          {currentProperty.title}
+        </h3>
+        <button
+          onClick={closeGallery}
+          className="text-white hover:text-gray-300 transition-colors"
+        >
+          <IoMdClose size={28} />
+        </button>
       </div>
 
-      <div className="mt-4 text-white text-center">
-        <p className="text-lg">
-          {currentImageIndex + 1} / {currentProperty.media.length}
-        </p>
+      {/* Main Media Display */}
+      <div className="relative w-full max-w-5xl h-[70vh] flex items-center justify-center mt-12 mb-4">
+        <button
+          onClick={goToPrevImage}
+          className="absolute left-4 z-10 p-3 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+        >
+          <FiChevronLeft size={24} />
+        </button>
+
+        {isVideo(currentProperty.media[currentImageIndex]) ? (
+          <div className="w-full h-full flex items-center justify-center">
+            <video
+              className="max-w-full max-h-full rounded-lg shadow-xl"
+              controls
+              autoPlay
+              playsInline
+            >
+              <source
+                src={getMediaUrl(currentProperty.media[currentImageIndex])}
+                type="video/mp4"
+              />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        ) : (
+          <img
+            src={getMediaUrl(currentProperty.media[currentImageIndex])}
+            className="max-w-full max-h-full object-contain rounded-lg shadow-xl"
+            alt={`Property media ${currentImageIndex + 1}`}
+          />
+        )}
+
+        <button
+          onClick={goToNextImage}
+          className="absolute right-4 z-10 p-3 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+        >
+          <FiChevronRight size={24} />
+        </button>
       </div>
 
-      {/* Thumbnail navigation */}
+      {/* Counter */}
+      <div className="text-white text-sm mb-4 bg-black/50 px-3 py-1 rounded-full">
+        <span className="font-medium">{currentImageIndex + 1}</span>
+        <span className="mx-1">/</span>
+        <span>{currentProperty.media.length}</span>
+      </div>
+
+      {/* Thumbnail Navigation */}
       <div className="flex gap-2 overflow-x-auto max-w-full px-4 py-2">
         {currentProperty.media.map((item, index) => {
           const mediaUrl = getMediaUrl(item);
@@ -840,13 +884,15 @@ function GalleryModal({
           return (
             <div
               key={index}
-              className={`flex-shrink-0 cursor-pointer ${
-                currentImageIndex === index ? "ring-2 ring-purple-500" : ""
+              className={`flex-shrink-0 cursor-pointer transition-all duration-200 ${
+                currentImageIndex === index 
+                  ? "ring-2 ring-purple-500 rounded transform scale-105" 
+                  : "opacity-70 hover:opacity-100"
               }`}
               onClick={() => setCurrentImageIndex(index)}
             >
               {isVideoItem ? (
-                <div className="relative w-16 h-16">
+                <div className="relative w-16 h-16 rounded overflow-hidden">
                   <video
                     className="w-full h-full object-cover"
                     playsInline
@@ -855,9 +901,9 @@ function GalleryModal({
                   >
                     <source src={mediaUrl} type="video/mp4" />
                   </video>
-                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                     <svg
-                      className="w-4 h-4 text-white opacity-80"
+                      className="w-4 h-4 text-white"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -868,7 +914,7 @@ function GalleryModal({
               ) : (
                 <img
                   src={mediaUrl}
-                  className="w-16 h-16 object-cover"
+                  className="w-16 h-16 object-cover rounded"
                   alt={`Thumbnail ${index + 1}`}
                 />
               )}
@@ -880,7 +926,7 @@ function GalleryModal({
   );
 }
 
-// PropertySearchBox Component
+// Enhanced PropertySearchBox Component
 const PropertySearchBox = ({ 
   onSearch,
   initialSearchTerm = "",
@@ -941,16 +987,16 @@ const PropertySearchBox = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+    <div className="bg-white rounded-xl shadow-md p-6 mb-6 border border-gray-100">
       <form onSubmit={handleSearch}>
         {/* Main Search Bar */}
         <div className="relative mb-4">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FiSearch className="text-gray-500" />
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <FiSearch className="text-gray-400" />
           </div>
           <input
             type="text"
-            className="block w-full pl-10 pr-10 py-3 text-base border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 outline-none"
+            className="block w-full pl-12 pr-10 py-3 text-base border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-800 outline-none transition-all"
             placeholder="Search properties, locations, amenities..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -958,10 +1004,10 @@ const PropertySearchBox = ({
           {searchTerm && (
             <button
               type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              className="absolute inset-y-0 right-0 pr-4 flex items-center"
               onClick={() => setSearchTerm("")}
             >
-              <FiX className="text-gray-500 hover:text-gray-700" />
+              <IoMdClose className="text-gray-400 hover:text-gray-600" />
             </button>
           )}
         </div>
@@ -971,10 +1017,13 @@ const PropertySearchBox = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             {/* City Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                <FiMapPin className="mr-2 text-purple-600" />
+                City
+              </label>
               <input
                 type="text"
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 outline-none"
+                className="w-full px-4 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-800 outline-none transition-all"
                 placeholder="Enter city"
                 value={cityFilter}
                 onChange={(e) => setCityFilter(e.target.value)}
@@ -983,10 +1032,13 @@ const PropertySearchBox = ({
 
             {/* Locality Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Popular Localities</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                <FiHome className="mr-2 text-purple-600" />
+                Popular Localities
+              </label>
               <input
                 type="text"
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 outline-none"
+                className="w-full px-4 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-800 outline-none transition-all"
                 placeholder="Enter locality"
                 value={localityFilter}
                 onChange={(e) => setLocalityFilter(e.target.value)}
@@ -995,9 +1047,12 @@ const PropertySearchBox = ({
 
             {/* BHK Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">BHK Type</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                <FaBed className="mr-2 text-purple-600" />
+                BHK Type
+              </label>
               <select
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 outline-none"
+                className="w-full px-4 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-800 outline-none transition-all"
                 value={bhkFilter}
                 onChange={(e) => setBhkFilter(e.target.value)}
               >
@@ -1012,9 +1067,12 @@ const PropertySearchBox = ({
 
             {/* Property Type Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                <FiLayers className="mr-2 text-purple-600" />
+                Property Type
+              </label>
               <select
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 outline-none"
+                className="w-full px-4 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-800 outline-none transition-all"
                 value={propertyTypeFilter}
                 onChange={(e) => setPropertyTypeFilter(e.target.value)}
               >
@@ -1028,9 +1086,12 @@ const PropertySearchBox = ({
 
             {/* Tenant Preference Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tenant Preference</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                <FiUsers className="mr-2 text-purple-600" />
+                Tenant Preference
+              </label>
               <select
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 outline-none"
+                className="w-full px-4 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-800 outline-none transition-all"
                 value={tenantFilter}
                 onChange={(e) => setTenantFilter(e.target.value)}
               >
@@ -1045,25 +1106,23 @@ const PropertySearchBox = ({
 
             {/* Couple Friendly Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Couple Friendly</label>
-              <select
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 outline-none"
-                value={coupleFriendlyFilter}
-                onChange={(e) => setCoupleFriendlyFilter(e.target.value)}
-              >
-                <option value="">Any</option>
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-              </select>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                <FiStar className="mr-2 text-purple-600" />
+                Couple Friendly
+              </label>
+          
             </div>
 
             {/* Price Range */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Price Range (₹)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                <FiDollarSign className="mr-2 text-purple-600" />
+                Price Range (₹)
+              </label>
               <div className="flex items-center space-x-4">
                 <input
                   type="number"
-                  className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 outline-none"
+                  className="flex-1 px-4 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-800 outline-none transition-all"
                   placeholder="Min"
                   value={minPrice}
                   onChange={(e) => setMinPrice(e.target.value)}
@@ -1071,7 +1130,7 @@ const PropertySearchBox = ({
                 <span className="text-gray-400">to</span>
                 <input
                   type="number"
-                  className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-purple-800 outline-none"
+                  className="flex-1 px-4 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-800 outline-none transition-all"
                   placeholder="Max"
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(e.target.value)}
@@ -1086,24 +1145,26 @@ const PropertySearchBox = ({
         <div className="flex justify-between items-center">
           <button
             type="button"
-            className="text-purple-800 text-sm font-medium hover:text-purple-600"
+            className="flex items-center text-purple-700 text-sm font-medium hover:text-purple-800 transition-colors"
             onClick={() => setIsExpanded(!isExpanded)}
           >
+            <FiFilter className="mr-2" />
             {isExpanded ? 'Hide Filters' : 'Advanced Filters'}
           </button>
           
-          <div className="flex space-x-2">
+          <div className="flex space-x-3">
             <button
               type="button"
-              className="px-4 py-2 text-sm text-purple-800 border border-purple-800 rounded-lg hover:bg-purple-50"
+              className="px-5 py-2 text-sm font-medium text-purple-700 border border-purple-700 rounded-lg hover:bg-purple-50 transition-colors"
               onClick={clearFilters}
             >
-              Clear
+              Clear All
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm text-white bg-purple-800 rounded-lg hover:bg-purple-700"
+              className="px-5 py-2 text-sm font-medium text-white bg-purple-700 rounded-lg hover:bg-purple-800 transition-colors flex items-center"
             >
+              <FiSearch className="mr-2" />
               Search
             </button>
           </div>

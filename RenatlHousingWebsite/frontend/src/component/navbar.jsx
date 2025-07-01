@@ -61,6 +61,7 @@ import MobileMenu from "./MobileMenu.jsx";
 import { Eye, EyeOff } from "lucide-react";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { FaMapMarkerAlt, FaRupeeSign, FaBed, FaRulerCombined } from "react-icons/fa";
 
 function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -87,6 +88,11 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
   const [profileImage, setProfileImage] = useState(useri);
   const [seenProperties, setSeenProperties] = useState([]);
 
+  // Saved Properties State
+  const [savedProperties, setSavedProperties] = useState([]);
+  const [isSavedPropertiesOpen, setIsSavedPropertiesOpen] = useState(false);
+  const [savedPropertiesLoading, setSavedPropertiesLoading] = useState(false);
+
   // Form states for login
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [showLoginPassword, setShowLoginPassword] = useState(false);
@@ -111,6 +117,46 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
   const getInitial = () => {
     const name = user?.name || localStorage.getItem("name") || user?.email || localStorage.getItem("email") || "";
     return name.charAt(0).toUpperCase();
+  };
+
+  // Fetch saved properties
+  const fetchSavedProperties = async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      setSavedPropertiesLoading(true);
+      const token = localStorage.getItem("token");
+      const response = await axios.get("/api/properties/saved", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setSavedProperties(response.data || []);
+    } catch (error) {
+      console.error("Error fetching saved properties:", error);
+      toast.error("Failed to load saved properties");
+    } finally {
+      setSavedPropertiesLoading(false);
+    }
+  };
+
+  // Handle unsave property
+  const handleUnsaveProperty = async (propertyId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`/api/properties/save/${propertyId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      // Remove from local state
+      setSavedProperties(prev => prev.filter(prop => prop._id !== propertyId));
+      toast.success("Property removed from saved list");
+    } catch (error) {
+      console.error("Error unsaving property:", error);
+      toast.error("Failed to remove property from saved list");
+    }
   };
 
   // Fetch profile data (including image) when component mounts
@@ -144,6 +190,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
 
     if (isAuthenticated) {
       fetchProfile();
+      fetchSavedProperties();
     }
   }, [isAuthenticated]);
 
@@ -198,25 +245,13 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
           setSeenProperties(response.data);
           setSeenCount(response.data.length);
         } else {
-          console.warn(
-            "Invalid response format for seen properties:",
-            response.data
-          );
-          // Fallback to just using the IDs
-          setSeenProperties(seenProperties.map((id) => ({ _id: id })));
-          setSeenCount(seenProperties.length);
+          setSeenCount(0);
+          setSeenProperties([]);
         }
       } catch (error) {
-        console.error(
-          "Error fetching seen properties:",
-          error.response?.data || error.message
-        );
-        // Fallback to localStorage data
-        const seenProperties = JSON.parse(
-          localStorage.getItem("seenProperties") || "[]"
-        );
-        setSeenProperties(seenProperties.map((id) => ({ _id: id })));
-        setSeenCount(seenProperties.length);
+        console.error("Error fetching seen properties:", error);
+        setSeenCount(0);
+        setSeenProperties([]);
       }
     };
 
@@ -230,12 +265,19 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
       setSeenCount(seenProperties.length);
     };
 
+    // Listen for saved property updates
+    const handleSavedPropertyUpdate = () => {
+      fetchSavedProperties();
+    };
+
     window.addEventListener("seenPropertyAdded", handleSeenPropertyAdded);
+    window.addEventListener("savedPropertyUpdated", handleSavedPropertyUpdate);
 
     return () => {
       window.removeEventListener("seenPropertyAdded", handleSeenPropertyAdded);
+      window.removeEventListener("savedPropertyUpdated", handleSavedPropertyUpdate);
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, refresh]);
 
   // Close Auth & Profile Menu on Click Outside
   useEffect(() => {
@@ -351,7 +393,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
             : " text-white font-bold hover:text-gray-200"
         }`}
       >
-        <Home size={24} className="mr-2" /> RentEase.com
+        <Home size={24} className="mr-2" /> Rentify
       </Link>
       <div className="hidden md:flex items-center space-x-20">
 
@@ -438,18 +480,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                     <p className="text-gray-500 text-sm">
                       {user?.email || localStorage.getItem("email")}
                     </p>
-                    <Link to="/premium">
-                      <div
-                        className="flex"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <IoDiamondOutline className="mt-1" size={14} />
-                        <span className="mt-1 ml-1 text-[12px]">
-                          Upgrade to Premium{" "}
-                        </span>
-                        <RiArrowRightSLine className="mt-1 ml-1" size={19} />
-                      </div>
-                    </Link>
+                    
                   </div>
                   <button
                     onClick={(e) => {
@@ -565,7 +596,152 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                   )}
                 </div>
 
+                {/* Saved Properties Section */}
+                <div
+                  className={`transition-all duration-700 ${
+                    isSavedPropertiesOpen ? "mb-2" : "mb-0"
+                  }`}
+                >
+                  <div
+                    className="relative hover:bg-purple-300 rounded-md"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsSavedPropertiesOpen(!isSavedPropertiesOpen);
+                        if (!isSavedPropertiesOpen) {
+                          fetchSavedProperties();
+                        }
+                      }}
+                      className="text-lg mt-2 transition flex items-center w-83 ml-2 text-black-800 hover:border-purple-800 hover:bg-purple-300 cursor-pointer rounded-md"
+                    >
+                      <FaRegHeart className="w-6 h-6 ml-1" />
+                      <span className="px-4 text-[16px] py-2 mr-auto text-purple-800 hover:text-black">
+                        Saved Properties ({savedProperties.length})
+                      </span>
+                      <MdOutlineKeyboardArrowUp
+                        size={16}
+                        className={`mr-2 ${
+                          isSavedPropertiesOpen ? "rotate-180" : ""
+                        } transition-transform ml-2`}
+                      />
+                    </button>
+                  </div>
 
+                  {isSavedPropertiesOpen && (
+                    <div
+                      className="mt-2 w-80 rounded-md py-2 max-h-96 overflow-y-auto"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {savedPropertiesLoading ? (
+                        <div className="flex justify-center items-center py-4">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+                        </div>
+                      ) : savedProperties.length > 0 ? (
+                        <div className="space-y-3">
+                          {savedProperties.map((property) => (
+                            <div
+                              key={property._id}
+                              className="flex items-center p-3 hover:bg-purple-50 rounded-lg cursor-pointer border border-gray-200 shadow-sm transition-all duration-200 hover:shadow-md"
+                              onClick={() => {
+                                navigate(`/property/${property._id}`);
+                                setIsProfileOpen(false);
+                                setIsSavedPropertiesOpen(false);
+                              }}
+                            >
+                              <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200">
+                                {property.media && property.media.length > 0 ? (
+                                  <img
+                                    src={typeof property.media[0] === 'string' ? property.media[0] : property.media[0].url}
+                                    alt={property.address}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                      e.target.nextSibling.style.display = 'flex';
+                                    }}
+                                  />
+                                ) : null}
+                                <div className="w-full h-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center" style={{ display: property.media && property.media.length > 0 ? 'none' : 'flex' }}>
+                                  <FaHome className="text-purple-500" size={20} />
+                                </div>
+                              </div>
+                              <div className="ml-3 flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                  <p className="font-semibold text-sm text-gray-900 truncate">
+                                    {property.address}
+                                  </p>
+                                  <div className="flex items-center space-x-1">
+                                    <FaRegHeart className="text-red-400" size={12} />
+                                    <span className="text-xs text-gray-500">Saved</span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center mt-1">
+                                  <FaMapMarkerAlt className="text-gray-400 mr-1" size={10} />
+                                  <p className="text-xs text-gray-500 truncate">
+                                    {property.city}, {property.state}
+                                  </p>
+                                </div>
+                                <div className="flex items-center justify-between mt-2">
+                                  <div className="flex items-center space-x-2">
+                                    <FaRupeeSign className="text-green-600" size={12} />
+                                    <p className="text-sm font-bold text-green-600">
+                                      {property.monthlyRent?.toLocaleString()}/month
+                                    </p>
+                                  </div>
+                                  {property.bhkType && (
+                                    <div className="flex items-center bg-purple-100 px-2 py-1 rounded-full">
+                                      <FaBed className="text-purple-600 mr-1" size={10} />
+                                      <span className="text-xs font-medium text-purple-700">
+                                        {Array.isArray(property.bhkType) ? property.bhkType[0] : property.bhkType}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                                {property.area && (
+                                  <div className="flex items-center mt-1">
+                                    <FaRulerCombined className="text-gray-400 mr-1" size={10} />
+                                    <p className="text-xs text-gray-500">
+                                      {property.area} sq.ft
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUnsaveProperty(property._id);
+                                }}
+                                className="ml-2 p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors"
+                                title="Remove from saved"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-gray-500">
+                          <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center">
+                            <FaRegHeart className="text-purple-400" size={24} />
+                          </div>
+                          <p className="text-sm font-medium text-gray-700 mb-1">No saved properties yet</p>
+                          <p className="text-xs text-gray-500">Save properties to see them here</p>
+                          <button
+                            onClick={() => {
+                              navigate('/properties');
+                              setIsProfileOpen(false);
+                              setIsSavedPropertiesOpen(false);
+                            }}
+                            className="mt-3 px-4 py-2 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 transition-colors"
+                          >
+                            Browse Properties
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 {/* Services Section */}
                 <div
@@ -632,20 +808,6 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                   )}
                 </div>
 
-                {/* Other menu items */}
-                <Link
-                  to="/reviews"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsProfileOpen(false);
-                  }}
-                  className="flex hover:border-purple-800 hover:bg-purple-300 rounded-md"
-                >
-                  <CiBellOn className="mt-2 ml-3" size={20} />
-                  <span className="block px-4 py-2 text-purple-800 hover:text-black">
-                    Unsubscribe Alert
-                  </span>
-                </Link>
 
                 <Link
                   to="/Fraud"
@@ -661,19 +823,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                   </span>
                 </Link>
 
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsProfileOpen(false);
-                  }}
-                  className="block w-80 ml-3 rounded-md text-left px-4 py-2 mt-3 text-black hover:border-purple-800 hover:bg-purple-300 flex items-center cursor-pointer border"
-                >
-                  <HiOutlineQuestionMarkCircle size={20} />
-                  <span className="ml-2 text-purple-800 hover:text-black">
-                    Visit Help Center
-                  </span>
-                  <RiArrowRightSLine className="mt-1 ml-30" size={19} />
-                </button>
+   
 
                 <button
                   onClick={(e) => {

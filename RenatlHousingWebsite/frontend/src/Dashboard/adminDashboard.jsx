@@ -74,9 +74,9 @@ const AdminDashboard = () => {
     }
 
     return (
-        <>
+        <div className="min-h-screen bg-gray-50">
             {/* Top Bar */}
-            <div className='bg-purple-600 w-full h-15 fixed top-0 z-40 flex items-center justify-between px-4 lg:px-6'>
+            <div className='bg-purple-600 w-full h-16 fixed top-0 z-50 flex items-center justify-between px-4 lg:px-6 shadow-md'>
                 <div className="flex items-center">
                     <button
                         onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -91,14 +91,14 @@ const AdminDashboard = () => {
             {/* Mobile Overlay */}
             {sidebarOpen && (
                 <div 
-                    className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
                     onClick={() => setSidebarOpen(false)}
                 ></div>
             )}
 
-            <div className="flex min-h-screen bg-gray-50 pt-15">
+            <div className="flex pt-16">
                 {/* Sidebar */}
-                <div className={`fixed lg:static inset-y-0 left-0 z-40 transform ${
+                <div className={`fixed lg:static inset-y-0 left-0 z-50 transform ${
                     sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 } lg:translate-x-0 transition-transform duration-300 ease-in-out`}>
                     <Sidebar 
@@ -115,7 +115,7 @@ const AdminDashboard = () => {
                     </div>
                 </main>
             </div>
-        </>
+        </div>
     );
 };
 

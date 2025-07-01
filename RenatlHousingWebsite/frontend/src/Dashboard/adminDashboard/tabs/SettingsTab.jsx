@@ -225,7 +225,6 @@ const SettingsTab = () => {
                                             )}
                                         </button>
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Name</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Email</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Type</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Search Term</th>
@@ -248,7 +247,6 @@ const SettingsTab = () => {
                                                 )}
                                             </button>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{log.userName || log.userId?.name || 'Guest'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{log.userEmail || log.userId?.email || 'Guest'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{log.userType || log.userId?.role || 'N/A'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 flex items-center">{log.searchTerm}</td>

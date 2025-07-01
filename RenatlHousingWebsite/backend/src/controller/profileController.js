@@ -22,7 +22,7 @@ export const getUserProfile = async (req, res) => {
 
 export const updateUserProfile = async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, phone } = req.body;
     const user = await User.findById(req.user._id);
 
     if (!user) {
@@ -32,6 +32,7 @@ export const updateUserProfile = async (req, res) => {
     // Update basic fields
     if (name) user.name = name;
     if (email) user.email = email;
+    if (phone) user.phone = phone;
 
     // Handle image upload
     if (req.file) {
@@ -55,6 +56,7 @@ export const updateUserProfile = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         profileImage: user.profileImage
       }
     });

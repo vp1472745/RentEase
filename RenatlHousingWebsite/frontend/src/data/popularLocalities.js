@@ -13,7 +13,11 @@ const popularLocalitiesData = {
   Indore: ["Vijay Nagar", "Rajwada", "Saket Nagar", "Palasia", "Sudama Nagar"],
   Gaziyabad: ["Indirapuram", "Raj Nagar Extension", "Vaishali", "Kaushambi", "Crossings Republik"],
   GreaterNoida: ["Jaypee Greens", "Knowledge Park", "Zeta 1", "Ecotech 3", "Sigma 4", "Surajpur"],
-  Coimbatore: ["RS Puram", "Peelamedu", "Saibaba Colony", "Gandhipuram", "Race Course"]
+  Coimbatore: ["RS Puram", "Peelamedu", "Saibaba Colony", "Gandhipuram", "Race Course"],
+  Chhindwara:["Hindustan Liver","Chhindwara Station","PG College"],
+  Junnardeo:["new colony","Purani Basti","kali Mandir"],
+  Parasia:["Police Station","Railway Station","Bus Station"],
+  Seoni:["College","Police Station","Chowk"]
 };
 
 // ✅ Correct Export

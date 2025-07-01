@@ -350,9 +350,7 @@ const Viewdetails = () => {
     return (
       <div className={`relative ${className}`}>
         <video
-          className="w-full h-10
-          
-          object-cover"
+          className="w-full h-full object-cover"
           onClick={onClick}
           playsInline
           loop={!thumbnail}
@@ -554,7 +552,7 @@ const Viewdetails = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-purple-800">₹{property.monthlyRent?.toLocaleString() || '0'}</p>
+                    <p className="text-2xl font-bold text-purple-800">₹{property.monthlyRent?.toLocaleString() || '0'}/month</p>
                     <p className="text-sm text-purple-800 font-semibold">Added on {property.createdAt ? new Date(property.createdAt).toLocaleDateString() : 'N/A'}</p>
                   </div>
                 </div>
@@ -571,6 +569,41 @@ const Viewdetails = () => {
                       {bhk}
                     </span>
                   ))}
+                </div>
+
+                {/* Price Details Card */}
+                <div className="bg-purple-100 rounded-lg p-4 mb-6">
+                  <h3 className="text-lg font-bold text-purple-800 mb-3">Price Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center">
+                      <FiDollarSign className="text-purple-800 mr-2" />
+                      <div>
+                        <p className="text-sm text-purple-600">Monthly Rent</p>
+                        <p className="font-bold text-purple-800">₹{property.monthlyRent?.toLocaleString() || '0'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <FiDollarSign className="text-purple-800 mr-2" />
+                      <div>
+                        <p className="text-sm text-purple-600">Security Deposit</p>
+                        <p className="font-bold text-purple-800">₹{property.securityDeposit?.toLocaleString() || '0'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <FiTool className="text-purple-800 mr-2" />
+                      <div>
+                        <p className="text-sm text-purple-600">Maintenance</p>
+                        <p className="font-bold text-purple-800">₹{property.maintenanceCharges?.toLocaleString() || '0'}/month</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <FiClock className="text-purple-800 mr-2" />
+                      <div>
+                        <p className="text-sm text-purple-600">Minimum Stay</p>
+                        <p className="font-bold text-purple-800">{property.rentalDurationMonths || '0'} months</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Tab Navigation */}
@@ -613,19 +646,6 @@ const Viewdetails = () => {
                       <div className="flex items-center cursor-pointer">
                         <FiCheck className="mr-2" />
                         Amenities
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('ratings')}
-                      className={`px-4 py-2 font-medium text-sm focus:outline-none whitespace-nowrap ${
-                        activeTab === 'ratings'
-                          ? 'border-b-2 border-purple-800 text-purple-800 font-bold'
-                          : 'text-purple-800 font-bold'
-                      }`}
-                    >
-                      <div className="flex items-center cursor-pointer">
-                        <FiStar className="mr-2" />
-                        Ratings & Reviews
                       </div>
                     </button>
                   </div>
@@ -770,16 +790,6 @@ const Viewdetails = () => {
                       </div>
                     </div>
                   )}
-
-                  {activeTab === 'ratings' && (
-                    <div className="text-center py-8">
-                      <h3 className="text-lg font-semibold mb-2">Ratings & Reviews</h3>
-                      <p className="text-gray-500">No reviews yet. Be the first to review!</p>
-                      <button className="mt-4 px-4 py-2 bg-purple-800 cursor-pointer text-white rounded hover:bg-purple-700">
-                        Write a Review
-                      </button>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -796,7 +806,7 @@ const Viewdetails = () => {
                 
                   <div>
                     <p className="text-purple-800 font-bold">Preferred Tenant</p>
-                    <p className="font-semibold text-purple-800">{property.Gender || 'Not specified'}</p>
+                    <p className="font-semibold text-purple-800">{property.Gender?.join(', ') || 'Not specified'}</p>
                   </div>
                 </div>
 
@@ -838,42 +848,7 @@ const Viewdetails = () => {
                 </div>
               </div>
 
-              {/* Sidebar */}
-              <div className="bg-white rounded-xl shadow-md p-6">
-                <div className="bg-purple-200 p-4 rounded-lg text-center w-full mb-4">
-                  <p className="text-purple-800 font-semibold">Get Zero Brokerage properties with <span className="text-pink-600 font-bold">💎 Premium</span></p>
-                  <p className="text-purple-800">50% Off expiring in <span className="bg-purple-300 px-2 py-1 rounded text-sm font-bold">{formatTime(timeLeft)}</span></p>
-                </div>
-                
-                <div className="w-full">
-                  <h2 className="text-lg font-bold text-purple-800">Get our Free App  <br /><span className="text-green-500">⭐ 4.6</span> <span className="text-purple-800">200 downloads</span></h2>
-                  <div className="my-4 flex justify-center">
-                    <img src="/qr-code-placeholder.png" alt="QR Code" className="w-32 h-32" />
-                  </div>
-                  <p className="text-purple-800 font-semibold">Scan the QR code to Download the App</p>
-                  <div className="mt-4">
-                    <p className="text-purple-800 font-semibold">Get App Download Links via SMS</p>
-                    <div className="flex items-center mt-2 border border-purple-800 rounded-lg overflow-hidden">
-                      <input
-                        type="text"
-                        placeholder="Enter your Mobile Number"
-                        className="flex-1 px-3 py-2 outline-none text-purple-800 font-semibold"
-                      />
-                      <button className="bg-purple-800 px-4 py-3 rounded-md">
-                        <IoMdSend className="text-white" />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex justify-around mt-4">
-                    <button className="flex items-center space-x-2 bg-purple-800 text-white px-4 py-2 rounded-lg">
-                      <FaGooglePlay /> <span>Google Play</span>
-                    </button>
-                    <button className="flex items-center space-x-2 bg-purple-800 text-white px-4 py-2 rounded-lg">
-                      <FaApple /> <span>App Store</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
+         
             </div>
           </div>
         </div>

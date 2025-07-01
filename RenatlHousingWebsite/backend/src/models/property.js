@@ -16,56 +16,62 @@ const propertySchema = new mongoose.Schema(
           required: true,
           validate: {
             validator: function(v) {
-              return v.match(/^http(s)?:\/\/.+\..+/) !== null;
+              // More robust URL validation that handles Cloudinary URLs
+              return /^https?:\/\/.+\..+/.test(v) && v.includes('cloudinary.com');
             },
-            message: props => `${props.value} is not a valid image URL!`
+            message: props => `${props.value} is not a valid Cloudinary image URL!`
           }
         },
         type: {
           type: String,
-          default: ""
+          default: "image"
+        },
+        public_id: {
+          type: String,
+          required: false // Optional for images
         }
       }],
       set: function(images) {
         // Convert plain strings to objects
         return images.map(img => 
           typeof img === 'string' 
-            ? { url: img, type: '' } 
+            ? { url: img, type: 'image' } 
             : img
         );
       }
     },
 
- // In your Property model (backend)
- videos: {
-  type: [{
-    url: { 
-      type: String, 
-      required: true,
+    // Video schema
+    videos: {
+      type: [{
+        url: { 
+          type: String, 
+          required: true,
+          validate: {
+            validator: function(v) {
+              // More robust URL validation that handles Cloudinary URLs
+              return /^https?:\/\/.+\..+/.test(v) && v.includes('cloudinary.com');
+            },
+            message: props => `${props.value} is not a valid Cloudinary video URL!`
+          }
+        },
+        public_id: { 
+          type: String, 
+          required: false // Made optional to handle existing data
+        },
+        type: { 
+          type: String, 
+          default: "video" 
+        }
+      }],
       validate: {
         validator: function(v) {
-          return /^https?:\/\/.+\..+/.test(v);
+          // Allow empty array or array with valid video objects
+          return v.every(video => video.url);
         },
-        message: props => `${props.value} is not a valid video URL!`
+        message: "Videos must have valid URLs"
       }
     },
-    public_id: { 
-      type: String, 
-      required: true 
-    },
-    type: { 
-      type: String, 
-      default: "video" 
-    }
-  }],
-  validate: {
-    validator: function(v) {
-      // Allow empty array or array with valid video objects
-      return v.every(video => video.url && video.public_id);
-    },
-    message: "Videos must have both URL and public_id"
-  }
-},
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -164,7 +170,13 @@ const propertySchema = new mongoose.Schema(
 
     
     nearby: {
-      type: [String],},
+      type: [{
+        name: { type: String, required: false },
+        distance: { type: String, required: false },
+        unit: { type: String, default: "km", enum: ["km", "m"] }
+      }],
+      default: []
+    },
 
 
   

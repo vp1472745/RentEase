@@ -3,13 +3,31 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom"; // ✅ Navigation के लिए Import
 import { VscGoToSearch } from "react-icons/vsc";
 import popularLocalitiesData from "../data/popularLocalities.js"; // ✅ JSON File Import
+import API from '../lib/axios';
 
-const PopularLocalities = ({ selectedCity }) => {
+const PopularLocalities = ({ selectedCity, onSelect }) => {
   const scrollRef = useRef(null);
   const [localities, setLocalities] = useState([]);
   const [showLeftButton, setShowLeftButton] = useState(false);
   const [showRightButton, setShowRightButton] = useState(true);
   const navigate = useNavigate(); // ✅ Navigation Hook
+
+  // Function to log search activity
+  const logSearchActivity = (searchTerm) => {
+    const name = localStorage.getItem('name');
+    const email = localStorage.getItem('email');
+    API.post(
+      "/api/user/search-log",
+      {
+        searchTerm: searchTerm,
+        device: navigator.userAgent,
+        name,
+        email,
+      }
+    )
+    .then(res => console.log('Search log response:', res.data))
+    .catch(err => console.error('Search log error:', err));
+  };
 
   useEffect(() => {
     if (selectedCity) {
@@ -58,6 +76,14 @@ const PopularLocalities = ({ selectedCity }) => {
 
   // ✅ जब कोई locality select हो, तो `/properties` Page पर Redirect करो
   const handleLocalityClick = (locality) => {
+    // Log search activity
+    logSearchActivity(locality);
+    
+    // Call parent callback if provided
+    if (onSelect) {
+      onSelect(locality);
+    }
+    
     const params = new URLSearchParams();
     params.set("popularLocality", locality); // ✅ Popular Locality को URL में भेजो
     navigate(`/properties?${params.toString()}`); // ✅ Navigate to `/properties` with Query Params

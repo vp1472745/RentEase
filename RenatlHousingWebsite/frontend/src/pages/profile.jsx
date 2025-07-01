@@ -119,6 +119,7 @@ const Profile = () => {
     ownerphone: "",
     ownerName: "",
     Gender: [],
+    nearby: [],
     coupleFriendly: false,
     floorNumber: "",
     totalFloors: "",
@@ -300,6 +301,7 @@ const Profile = () => {
           ownerphone: response.data.ownerphone || "",
           ownerName: response.data.ownerName || "",
           Gender: response.data.Gender || [],
+          nearby: response.data.nearby || [],
           coupleFriendly: response.data.coupleFriendly || false,
           floorNumber: response.data.floorNumber || "",
           totalFloors: response.data.totalFloors || "",
@@ -423,42 +425,75 @@ const Profile = () => {
       return;
     }
 
-    const uploadData = new FormData();
-    files.forEach((file) => {
-      uploadData.append("images", file);
-    });
-
     try {
       setUploading(true);
-      const token = localStorage.getItem("token");
-      const res = await axios.post("/api/properties/upload", uploadData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const uploadedImages = [];
+      
+      for (const file of files) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          toast.error("Only image files are allowed");
+          continue;
+        }
 
-      const newImageUrls = res.data.imageUrls || [];
-      setEditFormData((prev) => ({
-        ...prev,
-        images: [
-          ...prev.images,
-          ...newImageUrls.map((url) => ({ url, type: "" })),
-        ],
-      }));
-      setPreviewImages((prev) => [...prev, ...newImageUrls]);
+        // Validate file size (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error("Image size should be less than 5MB");
+          continue;
+        }
+
+        try {
+          const uploadData = new FormData();
+          uploadData.append("file", file);
+          uploadData.append("upload_preset", "RentEase_Videos");
+          uploadData.append("cloud_name", "dkrrpzlbl");
+          uploadData.append("resource_type", "image");
+          
+          const response = await fetch(
+            "https://api.cloudinary.com/v1_1/dkrrpzlbl/image/upload",
+            {
+              method: "POST",
+              body: uploadData,
+            }
+          );
+
+          const data = await response.json();
+          
+          if (!response.ok) {
+            console.error("Cloudinary response:", data);
+            throw new Error(data.error?.message || "Upload failed");
+          }
+
+          if (data.secure_url) {
+            console.log("✅ Cloudinary upload successful:", {
+              filename: file.name,
+              cloudinaryUrl: data.secure_url,
+              publicId: data.public_id
+            });
+            uploadedImages.push({
+              url: data.secure_url,
+              public_id: data.public_id,
+              type: "image"
+            });
+          }
+        } catch (uploadError) {
+          console.error("Error uploading individual file:", uploadError);
+          toast.error(`Failed to upload ${file.name}: ${uploadError.message}`);
+          continue;
+        }
+      }
+
+      if (uploadedImages.length > 0) {
+        setEditFormData(prev => ({
+          ...prev,
+          images: [...prev.images, ...uploadedImages],
+        }));
+        setPreviewImages(prev => [...prev, ...uploadedImages.map(img => img.url)]);
+        toast.success(`Successfully uploaded ${uploadedImages.length} image(s)`);
+      }
     } catch (error) {
       console.error("Image upload failed:", error);
-      if (error.response?.status === 401) {
-        toast.error("Session expired. Please login again.");
-        localStorage.removeItem("token");
-        setTimeout(() => navigate("/login"));
-      } else {
-        toast.error(
-          error.response?.data?.message ||
-            "Failed to upload images. Please try again."
-        );
-      }
+      toast.error(error.message || "Failed to upload images");
     } finally {
       setUploading(false);
     }
@@ -541,9 +576,33 @@ const Profile = () => {
         furnishType: editFormData.furnishType.map((item) => item.toLowerCase()),
         facilities: editFormData.facilities.map((item) => item.toLowerCase()),
 
-        images: editFormData.images,
-        videos: editFormData.videos,
+        // Ensure images and videos have proper structure
+        images: editFormData.images
+          .filter(img => img.url && img.url.includes('cloudinary.com'))
+          .map(img => ({
+            url: img.url.trim(),
+            type: img.type?.trim() || "image",
+            public_id: img.public_id
+          })),
+        videos: editFormData.videos
+          .filter(vid => vid.url && vid.url.includes('cloudinary.com'))
+          .map(vid => ({
+            url: vid.url.trim(),
+            type: vid.type?.trim() || "video",
+            public_id: vid.public_id
+          })),
+        nearby: editFormData.nearby || [],
       };
+
+      console.log("🚀 Profile.jsx - Submitting to backend:", {
+        propertyId: editingProperty._id,
+        imageCount: submitData.images?.length || 0,
+        videoCount: submitData.videos?.length || 0,
+        imageUrls: submitData.images?.map(img => img.url) || [],
+        videoUrls: submitData.videos?.map(vid => vid.url) || []
+      });
+
+      console.log("📤 Complete submit data:", JSON.stringify(submitData, null, 2));
 
       const response = await axios.put(
         `http://localhost:5000/api/properties/${editingProperty._id}`,
@@ -551,15 +610,31 @@ const Profile = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      console.log("✅ Backend response:", response.data);
       toast.success("Property updated successfully!");
       setEditingProperty(null);
       fetchOwnerProperties();
     } catch (error) {
-      console.error("Submission Error:", error);
+      console.error("❌ Submission Error:", error);
+      console.error("❌ Error response:", error.response?.data);
+      console.error("❌ Error status:", error.response?.status);
+      
       if (error.response?.status === 401) {
         toast.error("Session expired. Please login again.");
         localStorage.removeItem("token");
         setTimeout(() => navigate("/login"));
+      } else if (error.response?.data?.validationErrors) {
+        // Handle validation errors from our updated backend
+        const errorMessages = Object.values(error.response.data.validationErrors)
+          .map(err => err.message || err)
+          .join(", ");
+        toast.error(`Validation errors: ${errorMessages}`);
+      } else if (error.response?.data?.errors) {
+        // Handle server-side validation errors
+        const errorMessages = Object.values(error.response.data.errors)
+          .map(err => err.message || err)
+          .join(", ");
+        toast.error(`Validation errors: ${errorMessages}`);
       } else {
         toast.error(
           error.response?.data?.message ||
@@ -2162,6 +2237,8 @@ const Profile = () => {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors duration-200"
                     />
                   </div>
+
+        
 
         
                 </div>
