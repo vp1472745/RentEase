@@ -378,49 +378,53 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
 
   return (
     <nav
-      className={`fixed top-0 left-0 w-full p-4 flex justify-between items-center z-40 h-15 transition-all duration-1000 ease-in-out ${
+      className={`fixed top-0 left-0 w-full px-6 py-4 flex justify-between items-center z-40 transition-all duration-500 ease-in-out ${
         isScrolled
-          ? "bg-white shadow-md h-16 rounded-br-4xl rounded-bl-4xl"
-          : " "
+          ? "bg-white/95 backdrop-blur-md shadow-lg h-16 border-b border-gray-100"
+          : "bg-transparent"
       }`}
     >
       <Link
         to="/"
         onClick={handleHomeClick}
-        className={` text-[20px] flex items-center transition ${
+        className={`text-2xl font-bold flex items-center transition-all duration-300 ${
           isScrolled
-            ? "text-purple-800 hover:text-purple-400"
-            : " text-white font-bold hover:text-gray-200"
+            ? "text-gray-900 hover:text-purple-600"
+            : "text-white hover:text-purple-200"
         }`}
       >
-        <Home size={24} className="mr-2" /> Rentify
+        <Home size={28} className="mr-3" /> 
+        <span className="font-extrabold tracking-wide">Rentify</span>
       </Link>
       <div className="hidden md:flex items-center space-x-20">
 
         <Link
           to="/PayRent"
-          className={` text-[20px] flex items-center hover:text-gray-200 transition ${
+          className={`text-lg font-semibold flex items-center transition-all duration-300 ${
             isScrolled
-              ? "text-purple-800 hover:text-purple-400"
-              : " text-white font-bold"
+              ? "text-gray-700 hover:text-purple-600"
+              : "text-white hover:text-purple-200"
           }`}
         >
-          Download APP
+          <span className="relative">
+            Download APP
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-purple-600 transition-all duration-300 group-hover:w-full"></span>
+          </span>
         </Link>
 
 
-        <div className="flex items-center">
+        <div className="flex items-center space-x-2">
           <img
             src={isScrolled ? FP : FW}
-            className="w-6 h-6 object-contain transition-all duration-300 mr-1 mt-[3px]"
+            className="w-5 h-5 object-contain transition-all duration-300"
             alt="Save"
           />
           <Link
             to="/add-property"
-            className={` text-[20px] flex items-center  transition ${
+            className={`text-lg font-semibold flex items-center transition-all duration-300 ${
               isScrolled
-                ? "text-purple-800  hover:text-purple-400"
-                : "text-white font-bold  hover:text-gray-200"
+                ? "text-gray-700 hover:text-purple-600"
+                : "text-white hover:text-purple-200"
             }`}
           >
             List Property
@@ -434,7 +438,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                 e.stopPropagation();
                 setIsProfileOpen(!isProfileOpen);
               }}
-              className="relative w-10 cursor-pointer h-10 flex items-center justify-center rounded-full overflow-hidden border-2 border-white"
+              className="relative w-12 h-12 cursor-pointer flex items-center justify-center rounded-full overflow-hidden border-2 border-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
             >
               {profileImage && profileImage !== useri ? (
                 <img
@@ -443,14 +447,14 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center rounded-full bg-purple-700 text-white font-bold text-xl border">
+                <div className="w-full h-full flex items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-purple-800 text-white font-bold text-xl border shadow-inner">
                   {getInitial()}
                 </div>
               )}
             </button>
             {isProfileOpen && (
               <div
-                className="absolute right-0 mt-2 w-90 bg-white shadow-lg rounded-lg py-2 overflow-y-auto max-h-130 custom-scrollbar"
+                className="absolute right-0 mt-3 w-96 bg-white shadow-2xl rounded-2xl py-4 overflow-y-auto max-h-[600px] custom-scrollbar border border-gray-100"
                 onClick={(e) => {
                   if (e.target === e.currentTarget) {
                     setIsProfileOpen(false);
@@ -458,29 +462,28 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                 }}
               >
                 <div
-                  className="px-4 py-2 flex items-center"
+                  className="px-6 py-4 flex items-center border-b border-gray-100"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {profileImage && profileImage !== useri ? (
                     <img
                       src={profileImage}
                       alt="Profile"
-                      className="w-12 h-12 rounded-full object-cover border"
+                      className="w-14 h-14 rounded-full object-cover border-2 border-gray-200 shadow-md"
                     />
                   ) : (
-                    <div className="w-12 h-12 flex items-center justify-center rounded-full bg-purple-700 text-white font-bold text-2xl border">
+                    <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-purple-800 text-white font-bold text-2xl border-2 border-gray-200 shadow-md">
                       {getInitial()}
                     </div>
                   )}
-                  <div className="ml-3">
-                    <p className="font-semibold mt-2 flex items-center">
+                  <div className="ml-4 flex-1">
+                    <p className="font-bold text-lg text-gray-900 flex items-center">
                       {user?.name || localStorage.getItem("name")}
-                      <FaBriefcase className="ml-2 text-purple-700" size={18} />
+                      <FaBriefcase className="ml-2 text-purple-600" size={16} />
                     </p>
-                    <p className="text-gray-500 text-sm">
+                    <p className="text-gray-500 text-sm mt-1">
                       {user?.email || localStorage.getItem("email")}
                     </p>
-                    
                   </div>
                   <button
                     onClick={(e) => {
@@ -488,16 +491,16 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                       navigate("/profile");
                       setIsProfileOpen(false);
                     }}
-                    className="mr-2 text-gray-600 hover:text-gray-900"
+                    className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-full transition-all duration-300"
                   >
-                    <Edit size={20} className="cursor-pointer mb-9 " />
+                    <Edit size={20} className="cursor-pointer" />
                   </button>
                 </div>
-                <div className="border-t my-2"></div>
+                <div className="border-t border-gray-100 my-3"></div>
 
   
 
-                <div className="my-2"></div>
+                <div className="my-3"></div>
 
 
           
@@ -511,7 +514,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                   }`}
                 >
                   <div
-                    className="relative hover:bg-purple-300 rounded-md"
+                    className="relative hover:bg-purple-50 rounded-lg transition-all duration-300"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
@@ -519,24 +522,26 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                         e.stopPropagation();
                         setIsQuickSearchOpen(!isQuickSearchOpen);
                       }}
-                      className="text-lg mt-2 transition flex items-center w-83 ml-2 text-black-800 hover:text-black cursor-pointer"
+                      className="w-full text-left px-4 py-3 transition-all duration-300 flex items-center justify-between text-gray-700 hover:text-purple-600 cursor-pointer font-medium"
                     >
-                      <img src={cursor} alt="" className="w-6" />
-                      <span className="px-4 py-2 text-[16px] mr-40 text-purple-800 hover:text-black">
-                        Quick Link
-                      </span>
+                      <div className="flex items-center">
+                        <img src={cursor} alt="" className="w-5 h-5 mr-3" />
+                        <span className="text-base font-semibold">
+                          Quick Link
+                        </span>
+                      </div>
                       <MdOutlineKeyboardArrowUp
-                        size={16}
+                        size={18}
                         className={`${
                           isQuickSearchOpen ? "rotate-180" : ""
-                        } transition-transform ml-5`}
+                        } transition-transform duration-300 text-gray-400`}
                       />
                     </button>
                   </div>
 
                   {isQuickSearchOpen && (
                     <div
-                      className="mt-2 w-80 h-22 rounded-md py-2 flex flex-wrap gap-2 p-2"
+                      className="mt-3 px-4 py-3 flex flex-wrap gap-3"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <Link
@@ -545,7 +550,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                           e.stopPropagation();
                           setIsProfileOpen(false);
                         }}
-                        className="flex flex-col h-18 items-center p-2 hover:border-purple-800 border-3 hover:bg-purple-50 rounded"
+                        className="flex flex-col items-center p-3 hover:bg-purple-50 rounded-xl border border-gray-200 hover:border-purple-300 transition-all duration-300 min-w-[80px]"
                       >
                         <img src={house} className="w-6 h-6 mr-2" alt="" />
                         <span className="text-sm text-center w-15 mt-3 text-black-800">
@@ -558,7 +563,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                           e.stopPropagation();
                           setIsProfileOpen(false);
                         }}
-                        className="flex flex-col items-center p-2 h-17 rounded hover:border-purple-800 border-3 hover:bg-purple-50"
+                        className="flex flex-col items-center p-3 hover:bg-purple-50 rounded-xl border border-gray-200 hover:border-purple-300 transition-all duration-300 min-w-[80px]"
                       >
                         <img src={property} className="w-6 h-6 mr-2" alt="" />
                         <span className="text-sm text-center flex-col text-black-800 mt-2">
@@ -571,7 +576,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                           e.stopPropagation();
                           setIsProfileOpen(false);
                         }}
-                        className="flex flex-col items-center p-2hover:border-purple-800 border-3 hover:bg-purple-50 hover:border-purple-800 rounded h-17 w-20"
+                        className="flex flex-col items-center p-3 hover:bg-purple-50 rounded-xl border border-gray-200 hover:border-purple-300 transition-all duration-300 min-w-[80px]"
                       >
                         <HiOutlineNewspaper size={32} />
                         <span className="text-sm text-center text-black-800 mt-2">
@@ -584,7 +589,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                           e.stopPropagation();
                           setIsProfileOpen(false);
                         }}
-                        className="flex flex-col items-center h-18 w-20 p-2 hover:border-purple-800 border-3 hover:bg-purple-50 rounded"
+                        className="flex flex-col items-center p-3 hover:bg-purple-50 rounded-xl border border-gray-200 hover:border-purple-300 transition-all duration-300 min-w-[80px]"
                       >
                         <IoSearch size={24} />
                         <span className="text-sm text-center text-black-800 mt-2">
@@ -888,10 +893,10 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
           <div className="relative" ref={authMenuRef}>
             <button
               onClick={() => navigate("/signup")}
-              className={` text-[20px] flex items-center  transition cursor-pointer ${
+              className={`px-6 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 ${
                 isScrolled
-                  ? "text-purple-800  hover:text-purple-400"
-                  : "text-white font-bold  hover:text-gray-200"
+                  ? "bg-gradient-to-r from-purple-600 to-purple-700"
+                  : "bg-gradient-to-r from-purple-600 to-purple-700"
               }`}
             >
               Create Account
@@ -904,8 +909,8 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
       <div className="md:hidden">
         <button
           onClick={toggleMobileMenu}
-          className={`p-2 rounded-lg transition-colors ${
-            isScrolled ? "text-purple-800 hover:bg-purple-100" : "text-white hover:bg-white/10"
+          className={`p-3 rounded-xl transition-all duration-300 ${
+            isScrolled ? "text-gray-700 hover:bg-gray-100 hover:text-purple-600" : "text-white hover:bg-white/20"
           }`}
           aria-label="Toggle mobile menu"
         >
