@@ -1,15 +1,8 @@
 import multer from "multer";
 import path from "path";
 
-// Disk storage configuration
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/"); // Ensure 'uploads/' exists
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
+// Remove disk storage, use memory storage
+const storage = multer.memoryStorage();
 
 // File filter for images (jpeg, jpg, png)
 const fileFilter = (req, file, cb) => {
@@ -30,4 +23,4 @@ const upload = multer({
   fileFilter: fileFilter,
 });
 
-export default upload; 
+export default upload;

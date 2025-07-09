@@ -1,13 +1,6 @@
 import User from "../models/user.js";
 import { v2 as cloudinary } from "cloudinary";
 
-// Configure Cloudinary
-cloudinary.config({ 
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
 export const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
@@ -36,14 +29,14 @@ export const updateUserProfile = async (req, res) => {
 
     // Handle image upload
     if (req.file) {
-      // Upload to Cloudinary
-      const result = await cloudinary.uploader.upload(req.file.path, {
+      // Upload to Cloudinary using buffer (no file path)
+      const b64 = Buffer.from(req.file.buffer).toString('base64');
+      const dataURI = `data:${req.file.mimetype};base64,${b64}`;
+      const result = await cloudinary.uploader.upload(dataURI, {
         folder: "rent-ease/profiles",
         use_filename: true,
         unique_filename: false
       });
-
-      // Update profile image URL
       user.profileImage = result.secure_url;
     }
 

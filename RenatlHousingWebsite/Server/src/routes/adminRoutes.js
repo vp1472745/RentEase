@@ -1,7 +1,5 @@
 import express from "express";
 import multer from "multer";
-import { v2 as cloudinary } from "cloudinary";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
 import { registerAdmin, loginAdmin, logoutAdmin, getAdminProfile , getAllUsers,deleteUser,getAllProperty, getAllProperties} from "../controller/adminController.js";
 import { adminOnly, authMiddleware } from "../middleware/authMiddleware.js";
 import jwt from "jsonwebtoken";
@@ -30,24 +28,7 @@ const upload = multer({
     }
 });
 
-// Configure Cloudinary
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
-// Configure Cloudinary storage
-const cloudinaryStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: "rent_ease/admin_profiles",
-    allowed_formats: ["jpg", "jpeg", "png", "gif"],
-    transformation: [{ width: 500, height: 500, crop: "limit" }]
-  }
-});
-
-// Image upload endpoint
+// Image upload endpoint (now uploads to Cloudinary directly, not using multer-storage-cloudinary)
 router.post('/upload-image', upload.single('image'), async (req, res) => {
     try {
         console.log('📤 Image upload request received');
@@ -91,48 +72,19 @@ router.post('/upload-image', upload.single('image'), async (req, res) => {
             });
         });
 
-        // Wait for upload with timeout
-        const result = await Promise.race([
-            uploadPromise,
-            new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Upload timeout')), 30000)
-            )
-        ]);
-
-        res.json({
+        const result = await uploadPromise;
+        res.status(200).json({
             success: true,
-            imageUrl: result.secure_url,
-            publicId: result.public_id
+            message: 'Image uploaded successfully',
+            url: result.secure_url,
+            public_id: result.public_id
         });
-
     } catch (error) {
-        console.error('❌ Image upload error:', error);
-        
-        // Handle specific error types
-        if (error.message === 'Upload timeout') {
-            return res.status(504).json({
-                success: false,
-                message: 'Image upload timed out. Please try again.'
-            });
-        }
-        
-        if (error.message === 'Only image files are allowed!') {
-            return res.status(400).json({
-                success: false,
-                message: error.message
-            });
-        }
-
-        if (error.code === 'LIMIT_FILE_SIZE') {
-            return res.status(400).json({
-                success: false,
-                message: 'File size too large. Maximum size is 5MB.'
-            });
-        }
-
+        console.error('❌ Error uploading image:', error);
         res.status(500).json({
             success: false,
-            message: 'Error uploading image. Please try again.'
+            message: 'Error uploading image',
+            error: error.message
         });
     }
 });

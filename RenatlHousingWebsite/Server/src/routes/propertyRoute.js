@@ -13,7 +13,6 @@ import {
   checkSavedProperty
 } from "../controller/propertyController.js";
 import { authMiddleware, ownerOnly ,adminOnly, ownerOrAdmin} from "../middleware/authMiddleware.js";
-import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
 import Property from "../models/property.js";
 import { readFile } from "fs/promises";
@@ -38,13 +37,6 @@ let popularLocalitiesData = {};
     console.error("Error loading JSON:", error);
   }
 })();
-
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
 
 // Configure multer for temporary file storage
 const storage = multer.memoryStorage();
