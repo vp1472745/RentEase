@@ -17,15 +17,20 @@ import fraudRoutes from "./src/routes/fraudRoutes.js";
 import AdminRegister from "./src/routes/adminRoutes.js";
 import searchLogRoutes from "./src/routes/searchLogRoutes.js";
 import connectDB from "./src/config/db.js";
-import cloudinary from './src/config/cloudinaryConfig.js';
-
+import cloudinary from "./src/config/cloudinaryConfig.js";
 
 // Initialize Express App
 const app = express();
 
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: [
+      "http://localhost:5173",
+      "http://roommilega.in",
+      "https://roommilega.in",
+      "http://www.roommilega.in",
+      "https://www.roommilega.in",
+    ],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -36,7 +41,6 @@ app.use(express.json({ limit: "500mb" }));
 app.use(express.urlencoded({ limit: "500mb", extended: true }));
 app.use(cookieParser());
 
-
 //  Timeout Handling
 const UPLOAD_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 app.use((req, res, next) => {
@@ -45,9 +49,8 @@ app.use((req, res, next) => {
   next();
 });
 
-
 //UNCOMMENT if not working
-// Serve Uploaded Files as Static Files 
+// Serve Uploaded Files as Static Files
 app.use("/uploads", express.static("uploads"));
 app.use("/uploads/videos", express.static("uploads/videos"));
 
@@ -91,8 +94,6 @@ app.post("/api/auth/verify-phone-otp", (req, res) => {
   }
 });
 
-
-
 // 🔹 Route to Handle Image Uploads
 // app.post(
 //   "/api/properties/upload",
@@ -108,13 +109,11 @@ app.post("/api/auth/verify-phone-otp", (req, res) => {
 //   }
 // );
 
-
 // Initialize server only after DB connection
 const startServer = async () => {
   try {
     // Load environment variables
     // Connect to MongoDB first
-    
 
     // Initialize passport
     app.use(passport.initialize());
@@ -169,7 +168,7 @@ const startServer = async () => {
     });
 
     // Test Cloudinary configuration route
-    app.get('/api/test-cloudinary', async (req, res) => {
+    app.get("/api/test-cloudinary", async (req, res) => {
       try {
         const result = await cloudinary.api.resources({ max_results: 1 });
         res.json({ success: true, result });
@@ -180,16 +179,14 @@ const startServer = async () => {
 
     // Start server
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, async() => {
+    app.listen(PORT, async () => {
       console.log(`Server running on port ${PORT}`);
       try {
         await connectDB();
         await cloudinary.api.resources({ max_results: 1 });
         console.log("Cloudinary Connected");
-        
       } catch (error) {
         console.log(error.message);
-        
       }
     });
   } catch (error) {
