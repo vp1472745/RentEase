@@ -130,7 +130,7 @@ const startServer = async () => {
     app.use("/api/user", searchLogRoutes);
 
     // Test endpoint
-    app.get("/api/test", (req, res) => {
+    app.get("/", (req, res) => {
       res.status(200).json({
         status: "success",
         message: "Backend server is running",
