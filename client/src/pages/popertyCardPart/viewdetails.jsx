@@ -36,7 +36,11 @@ const Viewdetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [favorites, setFavorites] = useState({});
+  const [favorites, setFavorites] = useState(() => {
+    // Load saved properties from localStorage
+    const saved = JSON.parse(localStorage.getItem('savedProperties') || '{}');
+    return saved;
+  });
   const [activeTab, setActiveTab] = useState('overview');
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [modalImageIndex, setModalImageIndex] = useState(0);
@@ -84,17 +88,12 @@ const Viewdetails = () => {
         });
 
         // Set saved status
-        setFavorites({ [id]: savedRes.data.isSaved });
+        setFavorites(prev => {
+          const saved = JSON.parse(localStorage.getItem('savedProperties') || '{}');
+          return { ...prev, ...saved };
+        });
 
-        // Record view
-        if (token) {
-          try {
-            await axios.post(`/api/properties/${id}/view`, {}, config);
-          } catch (viewError) {
-            console.error('Error recording view:', viewError);
-          }
-        }
-
+    
         // Update seen properties in localStorage
         const seenProperties = JSON.parse(localStorage.getItem("seenProperties") || "[]");
         if (!seenProperties.includes(id)) {
@@ -131,42 +130,13 @@ const Viewdetails = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const toggleFavorite = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Please login to save properties');
-        return navigate('/login');
-      }
-      
-      const isCurrentlySaved = favorites[id];
-      
-      if (isCurrentlySaved) {
-        // Unsave property
-        await axios.delete(`/api/properties/save/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        
-        setFavorites(prev => ({ ...prev, [id]: false }));
-        toast.success('Property removed from saved');
-      } else {
-        // Save property
-        await axios.post(`/api/properties/save/${id}`, {}, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        
-        setFavorites(prev => ({ ...prev, [id]: true }));
-        toast.success('Property saved successfully');
-      }
-    } catch (error) {
-      console.error("Error toggling favorite:", error);
-      const errorMessage = error.response?.data?.message || 'Failed to update saved property';
-      toast.error(errorMessage);
-    }
+  const toggleFavorite = () => {
+    setFavorites(prev => {
+      const updated = { ...prev, [id]: !prev[id] };
+      localStorage.setItem('savedProperties', JSON.stringify(updated));
+      return updated;
+    });
+    toast.success(favorites[id] ? 'Property removed from saved' : 'Property saved successfully');
   };
 
   const shareOnWhatsApp = () => {

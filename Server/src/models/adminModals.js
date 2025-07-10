@@ -13,10 +13,7 @@ const adminSchema = new mongoose.Schema({
         trim: true,
         lowercase: true
     },
-    image: {
-        type: String,
-        default: "" // Default empty string for image URL/path
-    },
+ 
     
     phone: {
         type: String,

@@ -25,14 +25,15 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",
       "http://roommilega.in",
       "https://roommilega.in",
       "http://www.roommilega.in",
       "https://www.roommilega.in",
+      ...(process.env.NODE_ENV === "development"
+        ? ["http://localhost:5173", "http://localhost:3000"]
+        : []),
     ],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 // Middleware
@@ -41,18 +42,28 @@ app.use(express.json({ limit: "500mb" }));
 app.use(express.urlencoded({ limit: "500mb", extended: true }));
 app.use(cookieParser());
 
-//  Timeout Handling
-const UPLOAD_TIMEOUT = 10 * 60 * 1000; // 10 minutes
-app.use((req, res, next) => {
-  req.setTimeout(UPLOAD_TIMEOUT);
-  res.setTimeout(UPLOAD_TIMEOUT);
-  next();
-});
 
-//UNCOMMENT if not working
-// Serve Uploaded Files as Static Files
-app.use("/uploads", express.static("uploads"));
-app.use("/uploads/videos", express.static("uploads/videos"));
+app.use(passport.initialize());
+
+// Register routes
+app.use("/api/admin", AdminRegister);
+app.use("/api/auth", authRoutes);
+app.use("/api/auth/google", googleAuthRoutes);
+app.use("/api/properties", propertyRoutes);
+app.use("/api/videos", videoRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/view-details", Viewdetails);
+app.use("/api/fraud", fraudRoutes);
+app.use("/api/user", searchLogRoutes);
+
+// Test endpoint
+app.get("/", (req, res) => {
+  res.status(200).json({
+    status: "success",
+    message: "Backend server is running",
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // Twilio OTP Setup
 const client = twilio(
@@ -94,106 +105,14 @@ app.post("/api/auth/verify-phone-otp", (req, res) => {
   }
 });
 
-// 🔹 Route to Handle Image Uploads
-// app.post(
-//   "/api/properties/upload",
-//   imageUpload.array("images", 5),
-//   (req, res) => {
-//     if (!req.files || req.files.length === 0)
-//       return res.status(400).json({ message: "❌ No files uploaded" });
-
-//     const imageUrls = req.files.map(
-//       (file) => `http://localhost:5000/uploads/${file.filename}`
-//     );
-//     res.json({ imageUrls });
-//   }
-// );
-
-// Initialize server only after DB connection
-const startServer = async () => {
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, "0.0.0.0", async () => {
+  console.log(`Server running on port ${PORT}`);
   try {
-    // Load environment variables
-    // Connect to MongoDB first
-
-    // Initialize passport
-    app.use(passport.initialize());
-
-    // Register routes
-    app.use("/api/admin", AdminRegister);
-    app.use("/api/auth", authRoutes);
-    app.use("/api/auth/google", googleAuthRoutes);
-    app.use("/api/properties", propertyRoutes);
-    app.use("/api/videos", videoRoutes);
-    app.use("/api/profile", profileRoutes);
-    app.use("/api/view-details", Viewdetails);
-    app.use("/api/fraud", fraudRoutes);
-    app.use("/api/user", searchLogRoutes);
-
-    // Test endpoint
-    app.get("/", (req, res) => {
-      res.status(200).json({
-        status: "success",
-        message: "Backend server is running",
-        timestamp: new Date().toISOString(),
-      });
-    });
-
-    // Database test endpoint
-    app.get("/api/test-db", async (req, res) => {
-      try {
-        if (mongoose.connection.readyState !== 1) {
-          throw new Error("Database not connected");
-        }
-
-        const adminCount = await mongoose.connection.db
-          .collection("admins")
-          .countDocuments();
-
-        res.status(200).json({
-          status: "success",
-          message: "Database connection verified",
-          database: {
-            state: "connected",
-            adminCount,
-            host: mongoose.connection.host,
-          },
-        });
-      } catch (error) {
-        res.status(500).json({
-          status: "error",
-          message: "Database connection test failed",
-          error: error.message,
-        });
-      }
-    });
-
-    // Test Cloudinary configuration route
-    app.get("/api/test-cloudinary", async (req, res) => {
-      try {
-        const result = await cloudinary.api.resources({ max_results: 1 });
-        res.json({ success: true, result });
-      } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-      }
-    });
-
-    // Start server
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT,'0.0.0.0', async () => {
-      console.log(`Server running on port ${PORT}`);
-      try {
-        await connectDB();
-        await cloudinary.api.resources({ max_results: 1 });
-        console.log("Cloudinary Connected");
-      } catch (error) {
-        console.log(error.message);
-      }
-    });
+    await connectDB();
+    await cloudinary.api.resources({ max_results: 1 });
+    console.log("Cloudinary Connected");
   } catch (error) {
-    console.error("Failed to start server:", error);
-    process.exit(1);
+    console.log(error.message);
   }
-};
-
-// Start the server
-startServer();
+});

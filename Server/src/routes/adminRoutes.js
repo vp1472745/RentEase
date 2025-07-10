@@ -28,67 +28,12 @@ const upload = multer({
     }
 });
 
-// Image upload endpoint (now uploads to Cloudinary directly, not using multer-storage-cloudinary)
-router.post('/upload-image', upload.single('image'), async (req, res) => {
-    try {
-        console.log('📤 Image upload request received');
-        
-        if (!req.file) {
-            console.error('❌ No file uploaded');
-            return res.status(400).json({ 
-                success: false, 
-                message: 'No file uploaded' 
-            });
-        }
-
-        // Log file details
-        console.log('File details:', {
-            originalname: req.file.originalname,
-            mimetype: req.file.mimetype,
-            size: `${(req.file.size / 1024 / 1024).toFixed(2)}MB`
-        });
-
-        // Convert buffer to base64
-        const b64 = Buffer.from(req.file.buffer).toString('base64');
-        const dataURI = `data:${req.file.mimetype};base64,${b64}`;
-
-        // Upload to Cloudinary with timeout
-        const uploadPromise = new Promise((resolve, reject) => {
-            cloudinary.uploader.upload(dataURI, {
-                folder: 'admin_profiles',
-                resource_type: 'auto',
-                timeout: 30000 // 30 second timeout
-            }, (error, result) => {
-                if (error) {
-                    console.error('❌ Cloudinary upload error:', error);
-                    reject(error);
-                } else {
-                    console.log('✅ Cloudinary upload successful:', {
-                        url: result.secure_url,
-                        public_id: result.public_id
-                    });
-                    resolve(result);
-                }
-            });
-        });
-
-        const result = await uploadPromise;
-        res.status(200).json({
-            success: true,
-            message: 'Image uploaded successfully',
-            url: result.secure_url,
-            public_id: result.public_id
-        });
-    } catch (error) {
-        console.error('❌ Error uploading image:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error uploading image',
-            error: error.message
-        });
-    }
+router.get("/test", (req, res) => {
+  res.status(200).json({
+    status: "success",
+    message: "Backend is connected successfully 🚀",
+  });
 });
-
 // Public routes
 router.post("/register", registerAdmin);
 router.post("/login", loginAdmin);

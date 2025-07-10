@@ -152,7 +152,6 @@ const Profile = () => {
   // Initialize speech recognition
   useEffect(() => {
     if (!("webkitSpeechRecognition" in window)) {
-     
       return;
     }
 
@@ -419,7 +418,7 @@ const Profile = () => {
       const uploadedImages = [];
       for (const file of files) {
         // Validate file type
-        if (!file.type.startsWith('image/')) {
+        if (!file.type.startsWith("image/")) {
           toast.error("Only image files are allowed");
           continue;
         }
@@ -450,9 +449,11 @@ const Profile = () => {
             uploadedImages.push({
               url: data.secure_url,
               public_id: data.public_id,
-              type: "image"
+              type: "image",
             });
-            setUploadProgress(prev => Math.min(prev + (100 / files.length), 100));
+            setUploadProgress((prev) =>
+              Math.min(prev + 100 / files.length, 100)
+            );
           }
         } catch (uploadError) {
           console.error("Error uploading individual file:", uploadError);
@@ -465,12 +466,19 @@ const Profile = () => {
           ...prev,
           images: [...prev.images, ...uploadedImages],
         }));
-        setPreviewImages((prev) => [...prev, ...uploadedImages.map(img => img.url)]);
-        toast.success(`Successfully uploaded ${uploadedImages.length} image(s)`);
+        setPreviewImages((prev) => [
+          ...prev,
+          ...uploadedImages.map((img) => img.url),
+        ]);
+        toast.success(
+          `Successfully uploaded ${uploadedImages.length} image(s)`
+        );
       }
     } catch (error) {
       console.error("Image upload failed:", error);
-      toast.error(error.message || "Failed to upload images. Please try again.");
+      toast.error(
+        error.message || "Failed to upload images. Please try again."
+      );
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -512,9 +520,11 @@ const Profile = () => {
             uploadedVideos.push({
               url: data.secure_url,
               public_id: data.public_id,
-              type: "video"
+              type: "video",
             });
-            setUploadProgress(prev => Math.min(prev + (100 / files.length), 100));
+            setUploadProgress((prev) =>
+              Math.min(prev + 100 / files.length, 100)
+            );
           }
         } catch (uploadError) {
           console.error("Error uploading individual video:", uploadError);
@@ -527,12 +537,19 @@ const Profile = () => {
           ...prev,
           videos: [...prev.videos, ...uploadedVideos],
         }));
-        setPreviewVideos((prev) => [...prev, ...uploadedVideos.map(v => v.url)]);
-        toast.success(`Successfully uploaded ${uploadedVideos.length} video(s)`);
+        setPreviewVideos((prev) => [
+          ...prev,
+          ...uploadedVideos.map((v) => v.url),
+        ]);
+        toast.success(
+          `Successfully uploaded ${uploadedVideos.length} video(s)`
+        );
       }
     } catch (error) {
       console.error("Video upload failed:", error);
-      toast.error(error.message || "Failed to upload videos. Please try again.");
+      toast.error(
+        error.message || "Failed to upload videos. Please try again."
+      );
     } finally {
       setUploadingVideos(false);
       setUploadProgress(0);
@@ -580,16 +597,12 @@ const Profile = () => {
         nearby: editFormData.nearby || [],
       };
 
-
-
-
       const response = await axios.put(
         `/api/properties/${editingProperty._id}`,
         submitData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-     
       toast.success("Property updated successfully!");
       setEditingProperty(null);
       fetchOwnerProperties();
@@ -790,7 +803,9 @@ const Profile = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || errorData.message || "Profile update failed");
+        throw new Error(
+          errorData.error || errorData.message || "Profile update failed"
+        );
       }
 
       return await response.json();
@@ -836,54 +851,14 @@ const Profile = () => {
         error.message.includes("E11000 duplicate key error") &&
         error.message.includes("email")
       ) {
-        toast.error("This email is already registered. Please use a different email.");
+        toast.error(
+          "This email is already registered. Please use a different email."
+        );
       } else {
         toast.error(error.message || "Failed to update profile");
       }
     } finally {
       setIsLoading(false);
-    }
-  };
-  const handleViewDetails = async (propertyId) => {
-    try {
-      // Record view in backend if user is authenticated
-      const token = localStorage.getItem("token");
-      if (token) {
-        await axios.post(
-          `/api/properties/${propertyId}/view`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-      }
-
-      // Add to local storage for all users
-      const seenProperties = JSON.parse(
-        localStorage.getItem("seenProperties") || "[]"
-      );
-      if (!seenProperties.includes(propertyId)) {
-        const updatedSeenProperties = [...seenProperties, propertyId];
-        localStorage.setItem(
-          "seenProperties",
-          JSON.stringify(updatedSeenProperties)
-        );
-
-        // Notify Navbar of update
-        window.dispatchEvent(
-          new CustomEvent("seenPropertyAdded", {
-            detail: { count: updatedSeenProperties.length },
-          })
-        );
-      }
-
-      navigate(`/property/${propertyId}`);
-    } catch (error) {
-      console.error("Error recording view:", error);
-      // Still navigate even if tracking fails
-      navigate(`/property/${propertyId}`);
     }
   };
 
@@ -2005,7 +1980,7 @@ const Profile = () => {
                       {/* Action Buttons */}
                       <div className="flex space-x-3">
                         <button
-                          onClick={() => handleViewDetails(property._id)}
+                          onClick={() =>  navigate(`/property/${property._id}`)}
                           className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg font-medium transition-colors duration-200"
                         >
                           View Details

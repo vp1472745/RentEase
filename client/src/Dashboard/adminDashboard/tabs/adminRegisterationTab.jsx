@@ -11,7 +11,6 @@ const AdminRegister = () => {
   const fileInputRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [imagePreview, setImagePreview] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [backendStatus, setBackendStatus] = useState("checking"); // 'checking', 'connected', 'error'
   const [error, setError] = useState(""); // Add error state
@@ -32,7 +31,7 @@ const AdminRegister = () => {
     const testBackendConnection = async () => {
       try {
         console.log("🔄 Testing backend connection...");
-        const response = await axios.get("/api/test", {
+        const response = await axios.get("/api/admin/test", {
           timeout: 5000, // 5 second timeout
           headers: {
             'Accept': 'application/json',
@@ -65,7 +64,7 @@ const AdminRegister = () => {
     phone: "",
     password: "",
     confirmPassword: "",
-    image: null
+   
   });
 
   const [errors, setErrors] = useState({});
@@ -138,81 +137,6 @@ const AdminRegister = () => {
     }
   };
 
-  const handleImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
-    if (!validTypes.includes(file.type)) {
-      toast.error("Please upload a valid image file (JPEG, PNG, or GIF)");
-      return;
-    }
-
-    // Validate file size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image size should be less than 5MB");
-      return;
-    }
-
-    // Create preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result);
-    };
-    reader.readAsDataURL(file);
-
-    // Upload image immediately
-    try {
-      setUploading(true);
-      setError(null);
-      
-      const uploadData = new FormData();
-      uploadData.append("image", file);
-
-      const response = await axios.post("/api/admin/upload-image", uploadData, {
-        headers: {
-          "Content-Type": "multipart/form-data"
-        },
-        onUploadProgress: (progressEvent) => {
-          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          setUploadProgress(progress);
-          console.log(`📤 Upload progress: ${progress}%`);
-        }
-      });
-
-      if (response.data.imageUrl) {
-        setFormData(prev => ({
-          ...prev,
-          image: response.data.imageUrl
-        }));
-        toast.success("Image uploaded successfully");
-      } else {
-        throw new Error("No image URL in response");
-      }
-    } catch (error) {
-      console.error("Image upload failed:", error);
-      toast.error(error.response?.data?.message || "Failed to upload image. Please try again.");
-      setImagePreview(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    } finally {
-      setUploading(false);
-      setUploadProgress(0);
-    }
-  };
-
-  const removeImage = () => {
-    setImagePreview(null);
-    setFormData(prev => ({
-      ...prev,
-      image: null
-    }));
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -222,7 +146,7 @@ const AdminRegister = () => {
     
     // Check backend connection first
     try {
-      const response = await axios.get("/api/test");
+      const response = await axios.get("/api/admin/test");
       console.log("✅ Backend connection test:", response.data);
     } catch (error) {
       console.error("❌ Backend connection test failed:", error);
@@ -244,7 +168,7 @@ const AdminRegister = () => {
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
-        image: formData.image, // This is now the URL from the backend
+       
         role: "admin"
       };
 
@@ -455,61 +379,6 @@ const AdminRegister = () => {
                 )}
               </div>
 
-              {/* Profile Image Upload */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Profile Image
-                </label>
-                <div className="space-y-4">
-                  {/* Image Preview */}
-                  {imagePreview && (
-                    <div className="relative inline-block">
-                      <img
-                        src={imagePreview}
-                        alt="Profile preview"
-                        className="w-24 h-24 rounded-lg object-cover border-2 border-gray-200"
-                      />
-                      <button
-                        type="button"
-                        onClick={removeImage}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                      >
-                        <FiX className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Upload Progress */}
-                  {uploading && (
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${uploadProgress}%` }}
-                      ></div>
-                    </div>
-                  )}
-
-                  {/* Upload Button */}
-                  <div className="flex items-center space-x-4">
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <FiUpload className="w-4 h-4" />
-                      <span className="text-sm">Upload Image</span>
-                    </button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                    <span className="text-xs text-gray-500">JPEG, PNG, GIF up to 5MB</span>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Right Column */}
