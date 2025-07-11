@@ -792,28 +792,29 @@ const Profile = () => {
   };
 
   const updateProfile = async (formData) => {
-  try {
-    const response = await axios.put("/api/profile/update", formData, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
+    try {
+      const response = await axios.put("/api/profile/update", formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-    // Axios returns response.data directly
-    return response.data;
-  } catch (error) {
-    // Axios error handling
-    if (error.response && error.response.data) {
-      throw new Error(
-        error.response.data.error ||
-        error.response.data.message ||
-        "Profile update failed"
-      );
-    } else {
-      throw new Error(error.message || "Profile update failed");
+      // Axios returns response.data directly
+      return response.data;
+    } catch (error) {
+      // Axios error handling
+      if (error.response && error.response.data) {
+        throw new Error(
+          error.response.data.error ||
+            error.response.data.message ||
+            "Profile update failed"
+        );
+      } else {
+        throw new Error(error.message || "Profile update failed");
+      }
     }
-  }
-};
+  };
 
   const saveProfileDetails = async () => {
     setIsLoading(true);
@@ -828,7 +829,7 @@ const Profile = () => {
 
       const result = await updateProfile(formData);
       console.log(result);
-      
+
       // Update local state with new data
       setProfileImage(result.user.profileImage || previewImage);
       setName(result.user.name || tempName);
