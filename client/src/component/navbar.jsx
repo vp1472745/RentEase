@@ -390,6 +390,18 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
     setIsMobileMenuOpen(newState);
   };
 
+  useEffect(() => {
+    // Listen for session expiration event (dispatched from axios interceptor)
+    const handleSessionExpired = () => {
+      setIsAuthenticated(false);
+      setUser(null);
+    };
+    window.addEventListener('sessionExpired', handleSessionExpired);
+    return () => {
+      window.removeEventListener('sessionExpired', handleSessionExpired);
+    };
+  }, []);
+
   return (
     <nav
       className={`fixed top-0 left-0 w-full px-6 py-4 flex justify-between items-center z-40 transition-all duration-500 ease-in-out ${

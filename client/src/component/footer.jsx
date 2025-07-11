@@ -10,44 +10,7 @@ const bannerVariants = {
 const Footer = () => {
   return (
     <>
-      {/* Animated Banner Below Navbar */}
-      {/* <motion.div
-        className="bg-gradient-to-r from-yellow-400 via-red-500 to-purple-600 text-white text-center py-6 px-4 mb-0 ] mt-5"
-        initial="hidden"
-        whileInView="visible"
-        variants={bannerVariants}
-        viewport={{ once: true, amount: 0.3 }}
-      >
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
-          <motion.div
-            className="text-lg font-semibold"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 1 }}
-          >
-            🌟 Find Your Perfect Home With Ease! 🌟
-          </motion.div>
 
-          <motion.div
-            className="text-sm font-medium mt-2 md:mt-0"
-            initial={{ x: -50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 1 }}
-          >
-            🏡 Explore Thousands of Rental Listings Now!
-          </motion.div>
-
-          <motion.a
-            href="/comming"
-            className="bg-black text-yellow-400 px-6 py-2 rounded-lg font-semibold hover:bg-yellow-500 hover:text-black transition mt-2 md:mt-0"
-            initial={{ x: 50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 1 }}
-          >
-            Get Started
-          </motion.a>
-        </div>
-      </motion.div> */}
 
       {/* Footer Section */}
       <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-white pt-12 pb-6">

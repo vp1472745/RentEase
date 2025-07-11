@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "../lib/axios";
+import { FaRupeeSign } from "react-icons/fa";
 import { toast } from 'react-toastify';
 import {
   FiHeart,
@@ -749,7 +750,7 @@ function PropertyCard({
             </span>
           </div>
           <div className="flex items-center text-gray-600">
-            <FiDollarSign className="mr-2 text-purple-600" size={14} />
+            <FaRupeeSign className="mr-2 text-purple-600" size={14} />
             <span className="truncate">₹{property.securityDeposit || "N/A"}</span>
           </div>
           <div className="flex items-center text-gray-600">
@@ -779,7 +780,7 @@ function PropertyCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              contactOwner(property);
+              contactOwner(property.ownerphone);
             }}
             className="flex-1 flex items-center justify-center p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors border border-blue-100"
             title="Contact Owner"
@@ -1102,15 +1103,6 @@ const PropertySearchBox = ({
                 <option value="Working professional">Working Professional</option>
                 <option value="Single">Single</option>
               </select>
-            </div>
-
-            {/* Couple Friendly Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                <FiStar className="mr-2 text-purple-600" />
-                Couple Friendly
-              </label>
-          
             </div>
 
             {/* Price Range */}

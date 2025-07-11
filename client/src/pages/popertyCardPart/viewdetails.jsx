@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from '../../lib/axios';
 import { FaGooglePlay, FaApple } from "react-icons/fa";
+import { FaRupeeSign } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
 import {
   FiHeart,
@@ -546,14 +547,14 @@ const Viewdetails = () => {
                   <h3 className="text-lg font-bold text-purple-800 mb-3">Price Details</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center">
-                      <FiDollarSign className="text-purple-800 mr-2" />
+                      <FaRupeeSign className="text-purple-800 mr-2" />
                       <div>
                         <p className="text-sm text-purple-600">Monthly Rent</p>
                         <p className="font-bold text-purple-800">₹{property.monthlyRent?.toLocaleString() || '0'}</p>
                       </div>
                     </div>
                     <div className="flex items-center">
-                      <FiDollarSign className="text-purple-800 mr-2" />
+                      <FaRupeeSign className="text-purple-800 mr-2" />
                       <div>
                         <p className="text-sm text-purple-600">Security Deposit</p>
                         <p className="font-bold text-purple-800">₹{property.securityDeposit?.toLocaleString() || '0'}</p>
@@ -803,7 +804,7 @@ const Viewdetails = () => {
                   <h3 className="font-bold mb-3 text-purple-800">Property Highlights</h3>
                   <ul className="space-y-2">
                     <li className="flex items-center">
-                      <FiDollarSign className="text-purple-800 mr-2 flex-shrink-0" />
+                      <FaRupeeSign className="text-purple-800 mr-2 flex-shrink-0" />
                       <span className='text-purple-800 font-semibold'>Deposit: ₹{property.securityDeposit?.toLocaleString() || '0'}</span>
                     </li>
                     <li className="flex items-center">
@@ -825,120 +826,122 @@ const Viewdetails = () => {
       </div>
 
       {/* Image/Video Slider Modal */}
-      {isImageModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
-          <div className="relative w-200 h-[10px] flex flex-col -top-60 mb-50">
-            {/* Modal Header */}
-            <div className="flex justify-between items-center px-4 py-3 bg-black/50 rounded-t-lg">
-              <h3 className="text-white font-medium">
-                {modalImageIndex + 1} / {property.media?.length || 0} - 
-                {property.media?.[modalImageIndex]?.type || 'Property Media'}
-              </h3>
-              <button 
-                onClick={closeImageModal}
-                className="text-white hover:text-gray-300 transition p-2 cursor-pointer"
-                aria-label="Close modal"
-              >
-                <FiX size={24} />
-              </button>
-            </div>
+{isImageModalOpen && (
+  <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+    <div className="relative w-full max-w-3xl mx-auto flex flex-col">
+      {/* Modal Header */}
+      <div className="flex justify-between items-center px-4 py-3 bg-black/50 rounded-t-lg">
+        <h3 className="text-white font-medium">
+          {modalImageIndex + 1} / {property.media?.length || 0} - 
+          {property.media?.[modalImageIndex]?.type || 'Property Media'}
+        </h3>
+        <button 
+          onClick={closeImageModal}
+          className="text-white hover:text-gray-300 transition p-2 cursor-pointer"
+          aria-label="Close modal"
+        >
+          <FiX size={32} />
+        </button>
+      </div>
 
-            {/* Main Media Content */}
-            <div className="relative flex-1 flex flex-col items-center justify-center">
-              <button
-                onClick={goToPrevImage}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition z-10 cursor-pointer"
-                aria-label="Previous image"
-              >
-                <FiChevronLeft size={24} />
-              </button>
+      {/* Main Media Content */}
+      <div className="relative flex-1 flex flex-col items-center justify-center min-h-[400px]">
+        <button
+          onClick={goToPrevImage}
+          className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/70 text-white p-4 rounded-full hover:bg-purple-700 transition z-10 cursor-pointer border-2 border-white shadow-lg"
+          aria-label="Previous image"
+          style={{ fontSize: '2.5rem', minWidth: '56px', minHeight: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <FiChevronLeft size={40} />
+        </button>
 
-              <div className="h-full w-full flex items-center justify-center">
-                {property.media?.[modalImageIndex] ? (
-                  isVideo(property.media[modalImageIndex]) ? (
-                    <div className="relative w-full h-full">
-                      <video
-                        ref={el => videoRefs.current[modalImageIndex] = el}
-                        src={getMediaUrl(property.media[modalImageIndex])}
-                        className="w-full h-[500px] object-contain"
-                        controls
-                        autoPlay
-                        onPlay={handleVideoPlay(modalImageIndex)}
-                      />
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                        <div className="text-white flex items-center justify-center">
-                          <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                          </svg>
-                          <span>Video Tour</span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <img
-                      src={getMediaUrl(property.media[modalImageIndex]) || 'https://via.placeholder.com/800x600?text=Image+Not+Available'}
-                      alt={`Property Media ${modalImageIndex + 1}`}
-                      className="max-w-full max-h-full object-contain"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Available';
-                      }}
-                    />
-                  )
-                ) : (
-                  <div className="text-white">No media available</div>
-                )}
+        <div className="h-full w-full flex items-center justify-center">
+          {property.media?.[modalImageIndex] ? (
+            isVideo(property.media[modalImageIndex]) ? (
+              <div className="relative w-full h-full flex items-center justify-center">
+                <video
+                  ref={el => videoRefs.current[modalImageIndex] = el}
+                  src={getMediaUrl(property.media[modalImageIndex])}
+                  className="w-full max-h-[70vh] object-contain rounded-lg border border-white"
+                  controls
+                  autoPlay
+                  onPlay={handleVideoPlay(modalImageIndex)}
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                  <div className="text-white flex items-center justify-center">
+                    <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                    </svg>
+                    <span>Video Tour</span>
+                  </div>
+                </div>
               </div>
-
-              <button
-                onClick={goToNextImage}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition z-10 cursor-pointer"
-                aria-label="Next image"
-              >
-                <FiChevronRight size={24} />
-              </button>
-            </div>
-
-            {/* Thumbnail Navigation */}
-            <div className="px-4 py-3 bg-black/50 rounded-b-lg">
-              <div className="flex overflow-x-auto space-x-2 justify-center py-2">
-                {property.media?.map((mediaItem, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setModalImageIndex(index)}
-                    className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden transition-all ${
-                      index === modalImageIndex 
-                        ? 'ring-2 ring-white scale-110' 
-                        : 'opacity-70 hover:opacity-100'
-                    }`}
-                  >
-                    {isVideo(mediaItem) ? (
-                      <div className="relative w-full h-full">
-                        <video
-                          src={getMediaUrl(mediaItem)}
-                          className="w-full h-full object-cover"
-                          muted
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                          </svg>
-                        </div>
-                      </div>
-                    ) : (
-                      <img
-                        src={getMediaUrl(mediaItem)}
-                        alt={`Thumbnail ${index}`}
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+            ) : (
+              <img
+                src={getMediaUrl(property.media[modalImageIndex]) || 'https://via.placeholder.com/800x600?text=Image+Not+Available'}
+                alt={`Property Media ${modalImageIndex + 1}`}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg border border-white"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Available';
+                }}
+              />
+            )
+          ) : (
+            <div className="text-white">No media available</div>
+          )}
         </div>
-      )}
+
+        <button
+          onClick={goToNextImage}
+          className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/70 text-white p-4 rounded-full hover:bg-purple-700 transition z-10 cursor-pointer border-2 border-white shadow-lg"
+          aria-label="Next image"
+          style={{ fontSize: '2.5rem', minWidth: '56px', minHeight: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <FiChevronRight size={40} />
+        </button>
+      </div>
+
+      {/* Thumbnail Navigation */}
+      <div className="px-4 py-3 bg-black/50 rounded-b-lg">
+        <div className="flex overflow-x-auto space-x-2 justify-center py-2">
+          {property.media?.map((mediaItem, index) => (
+            <button
+              key={index}
+              onClick={() => setModalImageIndex(index)}
+              className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden transition-all ${
+                index === modalImageIndex 
+                  ? 'ring-2 ring-white scale-110' 
+                  : 'opacity-70 hover:opacity-100'
+              }`}
+            >
+              {isVideo(mediaItem) ? (
+                <div className="relative w-full h-full">
+                  <video
+                    src={getMediaUrl(mediaItem)}
+                    className="w-full h-full object-cover"
+                    muted
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                    </svg>
+                  </div>
+                </div>
+              ) : (
+                <img
+                  src={getMediaUrl(mediaItem)}
+                  alt={`Thumbnail ${index}`}
+                  className="w-full h-full object-cover"
+                />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
       {showSignupPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">

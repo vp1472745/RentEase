@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import API from '../lib/axios';
+import API from '../lib/axios.js';
 import Sidebar from './adminDashboard/Sidebar';
 import { FiMenu, FiX } from 'react-icons/fi';
 

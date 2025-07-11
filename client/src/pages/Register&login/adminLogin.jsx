@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "../../lib/axios"; // Make sure axios instance has withCredentials: true
+import axios from "../../lib/axios"; // Ensure this has withCredentials: true
 import { toast } from "react-toastify";
 import { FiUser, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import { FaUserShield } from "react-icons/fa";
@@ -23,19 +23,25 @@ const AdminLogin = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post(
-        "/api/admin/login",
-        formData,
-        { withCredentials: true }
-      );
-      if (response.data.success && response.data.admin.role === "admin") {
+      const response = await axios.post("/api/admin/login", formData, {
+        withCredentials: true,
+      });
+
+      console.log("Login response:", response.data); // Debug log
+
+      // Prefer 'admin', fallback to 'user', fallback to null
+      const user = response.data?.admin || response.data?.user || null;
+      console.log("User object:", user); // Debug log
+
+      if (user && user.role === "admin") {
         toast.success("Admin login successful!");
-        localStorage.setItem("adminInfo", JSON.stringify(response.data.admin));
+        localStorage.setItem("adminInfo", JSON.stringify(user));
         navigate("/admin/dashboard");
       } else {
-        toast.error("Not an admin user.");
+        toast.error("You are not authorized as an admin.");
       }
     } catch (err) {
+      console.error("Login Error:", err.response?.data || err.message);
       toast.error(err.response?.data?.message || "Login failed.");
     } finally {
       setLoading(false);
@@ -52,13 +58,17 @@ const AdminLogin = () => {
         >
           <FaUserShield className="mx-auto text-purple-600 text-4xl mb-2" />
           <h2 className="text-2xl font-bold text-gray-800">Admin Login</h2>
-          <p className="text-sm text-gray-500">Sign in to manage your dashboard</p>
+          <p className="text-sm text-gray-500">
+            Sign in to manage your dashboard
+          </p>
         </motion.div>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
             <div className="relative">
               <FiUser className="absolute top-2.5 left-3 text-gray-400" />
               <input
@@ -75,7 +85,9 @@ const AdminLogin = () => {
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
             <div className="relative">
               <FiLock className="absolute top-2.5 left-3 text-gray-400" />
               <input
@@ -98,14 +110,20 @@ const AdminLogin = () => {
           </div>
 
           {/* Error Message */}
-          {error && <p className="text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>}
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 p-2 rounded">
+              {error}
+            </p>
+          )}
 
           {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
             className={`w-full py-2 px-4 text-white rounded-md font-semibold transition duration-200 ${
-              loading ? "bg-purple-400 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700"
+              loading
+                ? "bg-purple-400 cursor-not-allowed"
+                : "bg-purple-600 hover:bg-purple-700"
             }`}
           >
             {loading ? "Logging in..." : "Login"}

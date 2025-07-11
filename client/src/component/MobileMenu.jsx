@@ -32,7 +32,7 @@ import {
   FaTwitter,
   FaYoutube,
 } from "react-icons/fa";
-import axios from "../lib/axios.js";
+import axios from "../lib/axios";
 import { toast } from "react-hot-toast";
 
 // Import images
@@ -173,7 +173,8 @@ const MobileMenu = ({
     };
   }, []);
 
-  const handleMenuClick = () => {
+  const handleMenuClick = (e) => {
+    e.stopPropagation();
     onClose();
   };
 
@@ -190,18 +191,19 @@ const MobileMenu = ({
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-[10]"
+          className="fixed inset-0 bg-black bg-opacity-40 z-[2000]"
           onClick={onClose}
         />
       )}
 
       {/* Mobile Menu */}
       <div
-        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-100 ${
+        className={`fixed top-0 left-0 w-screen h-screen bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-[3000] ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex flex-col h-full ">
+        <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 className="text-xl font-bold text-gray-800">Menu</h2>
@@ -214,8 +216,8 @@ const MobileMenu = ({
           </div>
 
           {/* Menu Content */}
-          <div className="flex-1 overflow-y-auto py-4  ">
-            <div className="px-6 space-y-4 ">
+          <div className="flex-1 overflow-y-auto py-4">
+            <div className="px-6 space-y-4">
               <Link
                 to="/PayRent"
                 onClick={handleMenuClick}
@@ -278,9 +280,10 @@ const MobileMenu = ({
                   {/* Saved Properties */}
                   <div className="space-y-2">
                     <button
-                      onClick={() =>
-                        setIsSavedPropertiesOpen(!isSavedPropertiesOpen)
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsSavedPropertiesOpen(!isSavedPropertiesOpen);
+                      }}
                       className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       <div className="flex items-center">
@@ -359,15 +362,15 @@ const MobileMenu = ({
                                 </button>
                               </div>
                               <div className="mt-2 flex space-x-2">
-                                <button
-                                  onClick={() => {
-                                    navigate(`/property/${property._id}`);
-                                    handleMenuClick();
-                                  }}
-                                  className="flex-1 bg-purple-600 text-white text-xs py-1 px-2 rounded hover:bg-purple-700 transition-colors"
-                                >
-                                  View Details
-                                </button>
+                               <button
+  onClick={() => {
+    navigate(`/property/${property._id}`);
+    onClose();
+  }}
+  className="flex-1 bg-purple-600 text-white text-xs py-1 px-2 rounded hover:bg-purple-700 transition-colors"
+>
+  View Details
+</button>
                               </div>
                             </div>
                           ))
@@ -388,7 +391,10 @@ const MobileMenu = ({
                   {/* Quick Links */}
                   <div className="space-y-2">
                     <button
-                      onClick={() => setIsQuickSearchOpen(!isQuickSearchOpen)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsQuickSearchOpen(!isQuickSearchOpen);
+                      }}
                       className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       <div className="flex items-center">
@@ -473,7 +479,10 @@ const MobileMenu = ({
                   {/* Services */}
                   <div className="space-y-2">
                     <button
-                      onClick={() => setIsServicesOpen(!isServicesOpen)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsServicesOpen(!isServicesOpen);
+                      }}
                       className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       <div className="flex items-center">
@@ -523,7 +532,6 @@ const MobileMenu = ({
                   </div>
 
                   {/* Other Menu Items */}
-
                   <Link
                     to="/Fraud"
                     onClick={handleMenuClick}
@@ -537,7 +545,8 @@ const MobileMenu = ({
 
                   {/* Logout */}
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       handleLogout();
                       handleMenuClick();
                     }}
@@ -550,7 +559,7 @@ const MobileMenu = ({
               ) : (
                 <div className="space-y-4">
                   {!isAuthenticated && (
-                    <div className="space-y-4">
+                    <>
                       <Link
                         to="/signup"
                         onClick={handleMenuClick}
@@ -559,7 +568,15 @@ const MobileMenu = ({
                         <FaUserPlus size={20} className="mr-3" />
                         <span className="font-medium">Create Account</span>
                       </Link>
-                    </div>
+                      <Link
+                        to="/login"
+                        onClick={handleMenuClick}
+                        className="flex items-center w-full p-3 rounded-lg border border-purple-600 text-purple-600 hover:bg-purple-50 transition-colors"
+                      >
+                        <FaSignInAlt size={20} className="mr-3" />
+                        <span className="font-medium">Login</span>
+                      </Link>
+                    </>
                   )}
                 </div>
               )}
@@ -571,13 +588,35 @@ const MobileMenu = ({
               <div className="space-y-3">
                 <h3 className="text-sm font-medium text-gray-600">Follow Us</h3>
                 <div className="flex space-x-4">
-                  <FaFacebook className="text-2xl text-blue-600 hover:text-blue-700 cursor-pointer" />
-                  <Link to="https://www.instagram.com/rentease_1611/">
+                 
+                  <a
+                    href="https://www.instagram.com/v_i_n_e_e_t_9630?igsh=MXR3cTFnMWllMXh0Yg=="
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <FaInstagram className="text-2xl text-pink-600 hover:text-pink-700 cursor-pointer" />
-                  </Link>
-                  <FaLinkedin className="text-2xl text-blue-700 hover:text-blue-800 cursor-pointer" />
-                  <FaTwitter className="text-2xl text-blue-400 hover:text-blue-500 cursor-pointer" />
-                  <FaYoutube className="text-2xl text-red-600 hover:text-red-700 cursor-pointer" />
+                  </a>
+                  <a
+                    href="https://linkedin.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <FaLinkedin className="text-2xl text-blue-700 hover:text-blue-800 cursor-pointer" />
+                  </a>
+                  <a
+                    href="https://twitter.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <FaTwitter className="text-2xl text-blue-400 hover:text-blue-500 cursor-pointer" />
+                  </a>
+                  <a
+                    href="https://youtube.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <FaYoutube className="text-2xl text-red-600 hover:text-red-700 cursor-pointer" />
+                  </a>
                 </div>
               </div>
 

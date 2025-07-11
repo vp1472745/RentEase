@@ -7,7 +7,6 @@ import { randomBytes } from "crypto";
 import OTP from "../models/otpModels.js";
 import UserSessionLog from "../models/userSessionLog.js";
 
-
 dotenv.config();
 
 // ✅ Nodemailer Configuration
@@ -64,7 +63,7 @@ export const signup = async (req, res) => {
     if (!email) return res.status(400).json({ msg: "Email is required" });
     if (await User.findOne({ email }))
       return res.status(400).json({ msg: "User already exists" });
-    
+
     const otp = generateOTP();
     await OTP.findOneAndUpdate(
       { email },
@@ -84,18 +83,31 @@ export const verifyOTP = async (req, res) => {
     const { otp, email, name, password, phone, role } = req.body;
     if (!otp || !email || !name || !password || !phone || !role)
       return res.status(400).json({ msg: "All fields are required" });
-    
+
     const otpEntry = await OTP.findOne({ email });
     if (!otpEntry) return res.status(400).json({ msg: "OTP not found" });
-    if (otpEntry.otp !== otp) return res.status(400).json({ msg: "Invalid OTP" });
-    if (new Date(otpEntry.expiration) < new Date()) return res.status(400).json({ msg: "OTP expired" });
+    if (otpEntry.otp !== otp)
+      return res.status(400).json({ msg: "Invalid OTP" });
+    if (new Date(otpEntry.expiration) < new Date())
+      return res.status(400).json({ msg: "OTP expired" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ name, email, password: hashedPassword, phone, role, isVerified: true });
+    const user = new User({
+      name,
+      email,
+      password: hashedPassword,
+      phone,
+      role,
+      isVerified: true,
+    });
     await user.save();
     await OTP.deleteOne({ email });
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+       { expiresIn: "7d" }
+    );
     res.json({ token, msg: "Account verified & created successfully", user });
   } catch (err) {
     res.status(500).json({ msg: "Server Error", error: err.message });
@@ -110,17 +122,28 @@ export const login = async (req, res) => {
       return res.status(400).json({ msg: "Email and password are required" });
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ msg: "Invalid email or password" });
-    console.log(user)
+    if (!user)
+      return res.status(401).json({ msg: "Invalid email or password" });
+    console.log(user);
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log(isMatch)
-    if (!isMatch) return res.status(401).json({ msg: "Invalid email or password" });
+    console.log(isMatch);
+    if (!isMatch)
+      return res.status(401).json({ msg: "Invalid email or password" });
 
-    if (!user.isVerified) return res.status(403).json({ msg: "Please verify your email first" });
+    if (!user.isVerified)
+      return res.status(403).json({ msg: "Please verify your email first" });
 
-    const token = jwt.sign({ userId: user._id, role: user.role,profileImage:user.profileImage}, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign(
+      { userId: user._id, role: user.role, profileImage: user.profileImage },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
     res.cookie("auth_token", token, { httpOnly: true, sameSite: "strict" });
-    res.json({ msg: "Login successful", token, user: { name: user.name, email: user.email, role: user.role } });
+    res.json({
+      msg: "Login successful",
+      token,
+      user: { name: user.name, email: user.email, role: user.role },
+    });
 
     // Log login event
     try {
@@ -129,17 +152,16 @@ export const login = async (req, res) => {
         userType: user.role,
         eventType: "login",
         device: req.headers["user-agent"],
-        timestamp: new Date()
+        timestamp: new Date(),
       }).save();
     } catch (logErr) {
       console.error("Failed to log login event:", logErr);
     }
   } catch (error) {
-    console.error("Server Error:", error);  // Log the error to server console
+    console.error("Server Error:", error); // Log the error to server console
     res.status(500).json({ msg: "Server Error", error: error.message });
   }
 };
-
 
 // ✅ Forgot Password Function (Send OTP for Reset Password)
 export const forgotPassword = async (req, res) => {
@@ -161,35 +183,38 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
-
-
 // ✅ Verify OTP for Password Reset
 export const verifyResetOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
-    if (!email || !otp) return res.status(400).json({ msg: "Email and OTP are required" });
+    if (!email || !otp)
+      return res.status(400).json({ msg: "Email and OTP are required" });
     const otpEntry = await OTP.findOne({ email });
     if (!otpEntry) return res.status(400).json({ msg: "OTP not found" });
-    if (otpEntry.otp !== otp) return res.status(400).json({ msg: "Invalid OTP" });
-    if (new Date(otpEntry.expiration) < new Date()) return res.status(400).json({ msg: "OTP expired" });
-    res.status(200).json({ msg: "OTP verified successfully. Proceed to reset password." });
+    if (otpEntry.otp !== otp)
+      return res.status(400).json({ msg: "Invalid OTP" });
+    if (new Date(otpEntry.expiration) < new Date())
+      return res.status(400).json({ msg: "OTP expired" });
+    res
+      .status(200)
+      .json({ msg: "OTP verified successfully. Proceed to reset password." });
   } catch (err) {
     res.status(500).json({ msg: "Server Error", error: err.message });
   }
 };
 
-
-
-
 // ✅ Reset Password Function
 export const resetPassword = async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
-    if (!email || !otp || !newPassword) return res.status(400).json({ msg: "All fields are required" });
+    if (!email || !otp || !newPassword)
+      return res.status(400).json({ msg: "All fields are required" });
     const otpEntry = await OTP.findOne({ email });
     if (!otpEntry) return res.status(400).json({ msg: "OTP not found" });
-    if (otpEntry.otp !== otp) return res.status(400).json({ msg: "Invalid OTP" });
-    if (new Date(otpEntry.expiration) < new Date()) return res.status(400).json({ msg: "OTP expired" });
+    if (otpEntry.otp !== otp)
+      return res.status(400).json({ msg: "Invalid OTP" });
+    if (new Date(otpEntry.expiration) < new Date())
+      return res.status(400).json({ msg: "OTP expired" });
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await User.findOneAndUpdate({ email }, { password: hashedPassword });
     await OTP.deleteOne({ email });
@@ -214,10 +239,12 @@ export const logout = (req, res) => {
       userType,
       eventType: "logout",
       device: req.headers["user-agent"],
-      timestamp: new Date()
-    }).save().catch((err) => {
-      console.error("Failed to log logout event:", err);
-    });
+      timestamp: new Date(),
+    })
+      .save()
+      .catch((err) => {
+        console.error("Failed to log logout event:", err);
+      });
   } catch (err) {
     console.error("Failed to log logout event:", err);
   }
@@ -228,26 +255,25 @@ export const logout = (req, res) => {
 // ✅ Get User Profile
 export const getUserProfile = async (req, res) => {
   try {
-      console.log("✅ API Hit: /profile");  // Debugging Step 1
-      
-      console.log("🔹 Token से आया हुआ User:", req.user);  // Debugging Step 2
-      
-      const user = await User.findById(req.user._id).select("-password");
+    console.log("✅ API Hit: /profile"); // Debugging Step 1
 
-      if (!user) {
-          console.log("❌ User Not Found in DB!");  // Debugging Step 3
-          return res.status(404).json({ message: "User not found" });
-      }
+    console.log("🔹 Token से आया हुआ User:", req.user); // Debugging Step 2
 
-      console.log("✅ User Found:", user);  // Debugging Step 4
+    const user = await User.findById(req.user._id).select("-password");
 
-      res.json(user);  // ✅ Successfully Sending User Data
+    if (!user) {
+      console.log("❌ User Not Found in DB!"); // Debugging Step 3
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    console.log("✅ User Found:", user); // Debugging Step 4
+
+    res.json(user); // ✅ Successfully Sending User Data
   } catch (error) {
-      console.log("❌ Error in getUserProfile:", error.message);
-      res.status(500).json({ message: "Server Error" });
+    console.log("❌ Error in getUserProfile:", error.message);
+    res.status(500).json({ message: "Server Error" });
   }
 };
-
 
 // ✅ Update User Profile
 export const updateUserProfile = async (req, res) => {
@@ -268,4 +294,3 @@ export const updateUserProfile = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-

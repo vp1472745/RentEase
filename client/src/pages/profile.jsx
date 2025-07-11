@@ -2097,27 +2097,34 @@ const Profile = () => {
             </div>
 
             {/* Save Changes Button */}
-            <div className="mt-8 flex justify-center">
-              <button
-                onClick={saveProfileDetails}
-                disabled={isLoading || imageLoading}
-                className={`px-8 py-3 rounded-lg font-medium transition-all duration-200 ${
-                  isLoading || imageLoading
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-purple-600 hover:bg-purple-700 text-white shadow-sm hover:shadow-md"
-                }`}
-              >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
-                    Saving Changes...
-                  </div>
-                ) : (
-                  "Save Changes"
-                )}
-              </button>
-            </div>
-
+<div className="mt-8 flex justify-center">
+  <button
+    onClick={() => {
+      // Get token from localStorage for session check
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      saveProfileDetails();
+    }}
+    disabled={isLoading || imageLoading}
+    className={`px-8 py-3 rounded-lg font-medium transition-all duration-200 ${
+      isLoading || imageLoading
+        ? "bg-gray-400 cursor-not-allowed"
+        : "bg-purple-600 hover:bg-purple-700 text-white shadow-sm hover:shadow-md"
+    }`}
+  >
+    {isLoading ? (
+      <div className="flex items-center">
+        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+        Saving Changes...
+      </div>
+    ) : (
+      "Save Changes"
+    )}
+  </button>
+</div>
             {/* Security Section */}
             <div className="mt-8 bg-white border border-gray-200 rounded-xl p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">

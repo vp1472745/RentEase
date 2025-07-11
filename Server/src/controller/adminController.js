@@ -76,58 +76,44 @@ export const loginAdmin = async (req, res) => {
     if (!email || !password)
       return res.status(400).json({ msg: "Email and password are required" });
 
-    const user = await User.findOne({ email });
-    if (!user)
+    // Use Admin model instead of User
+    const admin = await Admin.findOne({ email });
+    if (!admin)
       return res.status(401).json({ msg: "Invalid email or password" });
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch)
       return res.status(401).json({ msg: "Invalid email or password" });
-
-    if (!user.isVerified)
-      return res.status(403).json({ msg: "Please verify your email first" });
 
     // Generate JWT token valid for 30 days
     const token = jwt.sign(
       {
-        userId: user._id,
-        role: user.role,
-        profileImage: user.profileImage,
+        id: admin._id, // use 'id' for compatibility with middleware
+        role: admin.role,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "30d" } // 🔐 Token will be valid for 30 days
+      { expiresIn: "30d" }
     );
 
     // Set token in cookie valid for 30 days
     res.cookie("auth_token", token, {
       httpOnly: true,
-      sameSite: "strict",
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 🕒 30 days in milliseconds
+      sameSite: "lax", // changed from 'strict' to 'lax' for local dev
+      secure: false,    // set to true if using HTTPS
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
     res.json({
       msg: "Login successful",
       token,
-      user: {
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        profileImage: user.profileImage,
+      admin: {
+        _id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        phone: admin.phone,
+        role: admin.role,
       },
     });
-
-    // Log login event
-    try {
-      await new UserSessionLog({
-        userId: user._id,
-        userType: user.role,
-        eventType: "login",
-        device: req.headers["user-agent"],
-        timestamp: new Date(),
-      }).save();
-    } catch (logErr) {
-      console.error("Failed to log login event:", logErr);
-    }
   } catch (error) {
     console.error("Server Error:", error);
     res.status(500).json({ msg: "Server Error", error: error.message });
