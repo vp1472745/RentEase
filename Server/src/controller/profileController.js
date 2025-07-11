@@ -43,6 +43,9 @@ export const updateUserProfile = async (req, res) => {
       console.log("Cloudinary upload result:", result);
       user.profileImage = result.secure_url;
     }
+    else{
+      console.log("No file uploaded, keeping existing profile image.");
+    }
 
     await user.save();
 
