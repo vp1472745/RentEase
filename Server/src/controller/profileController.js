@@ -1,5 +1,5 @@
 import User from "../models/user.js";
-import { v2 as cloudinary } from "cloudinary";
+import cloudinary from "../config/cloudinaryConfig.js";
 
 export const getUserProfile = async (req, res) => {
   try {
@@ -32,11 +32,15 @@ export const updateUserProfile = async (req, res) => {
       // Upload to Cloudinary using buffer (no file path)
       const b64 = Buffer.from(req.file.buffer).toString('base64');
       const dataURI = `data:${req.file.mimetype};base64,${b64}`;
+      console.log("Uploading image to Cloudinary:", dataURI.slice(0, 30) + "...");
+      
       const result = await cloudinary.uploader.upload(dataURI, {
         folder: "rent-ease/profiles",
         use_filename: true,
         unique_filename: false
       });
+
+      console.log("Cloudinary upload result:", result);
       user.profileImage = result.secure_url;
     }
 
