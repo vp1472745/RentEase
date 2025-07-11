@@ -792,28 +792,28 @@ const Profile = () => {
   };
 
   const updateProfile = async (formData) => {
-    try {
-      const response = await fetch("http://localhost:4500/api/profile/update", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: formData,
-      });
+  try {
+    const response = await axios.put("/api/profile/update", formData, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || errorData.message || "Profile update failed"
-        );
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      throw error;
+    // Axios returns response.data directly
+    return response.data;
+  } catch (error) {
+    // Axios error handling
+    if (error.response && error.response.data) {
+      throw new Error(
+        error.response.data.error ||
+        error.response.data.message ||
+        "Profile update failed"
+      );
+    } else {
+      throw new Error(error.message || "Profile update failed");
     }
-  };
+  }
+};
 
   const saveProfileDetails = async () => {
     setIsLoading(true);
@@ -1980,7 +1980,7 @@ const Profile = () => {
                       {/* Action Buttons */}
                       <div className="flex space-x-3">
                         <button
-                          onClick={() =>  navigate(`/property/${property._id}`)}
+                          onClick={() => navigate(`/property/${property._id}`)}
                           className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg font-medium transition-colors duration-200"
                         >
                           View Details
@@ -2097,34 +2097,34 @@ const Profile = () => {
             </div>
 
             {/* Save Changes Button */}
-<div className="mt-8 flex justify-center">
-  <button
-    onClick={() => {
-      // Get token from localStorage for session check
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-      saveProfileDetails();
-    }}
-    disabled={isLoading || imageLoading}
-    className={`px-8 py-3 rounded-lg font-medium transition-all duration-200 ${
-      isLoading || imageLoading
-        ? "bg-gray-400 cursor-not-allowed"
-        : "bg-purple-600 hover:bg-purple-700 text-white shadow-sm hover:shadow-md"
-    }`}
-  >
-    {isLoading ? (
-      <div className="flex items-center">
-        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
-        Saving Changes...
-      </div>
-    ) : (
-      "Save Changes"
-    )}
-  </button>
-</div>
+            <div className="mt-8 flex justify-center">
+              <button
+                onClick={() => {
+                  // Get token from localStorage for session check
+                  const token = localStorage.getItem("token");
+                  if (!token) {
+                    navigate("/login");
+                    return;
+                  }
+                  saveProfileDetails();
+                }}
+                disabled={isLoading || imageLoading}
+                className={`px-8 py-3 rounded-lg font-medium transition-all duration-200 ${
+                  isLoading || imageLoading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-purple-600 hover:bg-purple-700 text-white shadow-sm hover:shadow-md"
+                }`}
+              >
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                    Saving Changes...
+                  </div>
+                ) : (
+                  "Save Changes"
+                )}
+              </button>
+            </div>
             {/* Security Section */}
             <div className="mt-8 bg-white border border-gray-200 rounded-xl p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">

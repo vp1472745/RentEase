@@ -1308,7 +1308,7 @@ export default function PremiumSubscription() {
                             <input
                               type="tel"
                               placeholder="Phone"
-                              className="w-full  p-2 rounded mb-3 text-white border-b-2 border-b-white font-bold  border-b-black outline-none text-[15px] mt-2"
+                              className="w-full  p-2 rounded mb-3 text-white border-b-2font-bold  border-b-black outline-none text-[15px] mt-2"
                             />
                             <button className="bg-[#2a1035] cursor-pointer      text-white font-bold w-full py-2 rounded hover:bg-purple-900 mt-2">
                               Continue

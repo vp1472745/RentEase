@@ -1018,7 +1018,7 @@ const PropertySearchBox = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             {/* City Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <label className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                 <FiMapPin className="mr-2 text-purple-600" />
                 City
               </label>
@@ -1033,7 +1033,7 @@ const PropertySearchBox = ({
 
             {/* Locality Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <label className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                 <FiHome className="mr-2 text-purple-600" />
                 Popular Localities
               </label>
@@ -1048,7 +1048,7 @@ const PropertySearchBox = ({
 
             {/* BHK Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <label className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                 <FaBed className="mr-2 text-purple-600" />
                 BHK Type
               </label>
@@ -1068,7 +1068,7 @@ const PropertySearchBox = ({
 
             {/* Property Type Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <label className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                 <FiLayers className="mr-2 text-purple-600" />
                 Property Type
               </label>
@@ -1087,7 +1087,7 @@ const PropertySearchBox = ({
 
             {/* Tenant Preference Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <label className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                 <FiUsers className="mr-2 text-purple-600" />
                 Tenant Preference
               </label>
@@ -1107,7 +1107,7 @@ const PropertySearchBox = ({
 
             {/* Price Range */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <label className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                 <FiDollarSign className="mr-2 text-purple-600" />
                 Price Range (₹)
               </label>

@@ -876,7 +876,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                     e.stopPropagation();
                     setIsProfileOpen(false);
                   }}
-                  className="block w-85 rounded-md text-left px-3 py-2 text-black hover:bg-purple-300 flex items-center cursor-pointer"
+                  className="w-85 rounded-md text-left px-3 py-2 text-black hover:bg-purple-300 flex items-center cursor-pointer"
                 >
                   <PiDetective size={20} className="ml-1" />
                   <span className="text-purple-800 hover:text-black px-4">
@@ -890,7 +890,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
                     handleLogout();
                     setIsProfileOpen(false);
                   }}
-                  className="block w-80 ml-3 rounded-md text-left px-4 py-2 mt-3 text-purple-800 hover:text-black hover:border-purple-800 hover:bg-purple-300 flex items-center cursor-pointer border"
+                  className="w-80 ml-3 rounded-md text-left px-4 py-2 mt-3 text-purple-800 hover:text-black hover:border-purple-800 hover:bg-purple-300 flex items-center cursor-pointer border"
                 >
                   <LogOut size={16} className="mr-2 text-purple-800" /> Logout
                   <RiArrowRightSLine className="mr-1 ml-48" size={19} />
