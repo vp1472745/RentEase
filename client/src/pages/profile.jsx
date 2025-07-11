@@ -827,7 +827,8 @@ const Profile = () => {
       }
 
       const result = await updateProfile(formData);
-
+      console.log(result);
+      
       // Update local state with new data
       setProfileImage(result.user.profileImage || previewImage);
       setName(result.user.name || tempName);
