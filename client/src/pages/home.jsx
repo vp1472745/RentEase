@@ -149,18 +149,18 @@ const howItWorksSteps = [
 // Testimonials Data
 const testimonials = [
   {
-    quote: "RentEase made finding my dream apartment incredibly easy. The filters are precise, and connecting with owners was a breeze. Highly recommended!",
-    name: "John Doe",
+    quote: "Roommilega made finding my dream apartment incredibly easy. The filters are precise, and connecting with owners was a breeze. Highly recommended!",
+    name: "Yugant NATH",
     role: "Tenant in Mumbai",
   },
   {
     quote: "As a property owner, I've never had such an easy time finding quality tenants. The platform is intuitive and saves me so much time.",
-    name: "Sarah Johnson",
+    name: "Sneha",
     role: "Property Owner in Delhi",
   },
   {
     quote: "The zero brokerage model is a game changer. I saved over ₹50,000 in fees compared to traditional brokers. Will never go back!",
-    name: "Rahul Sharma",
+    name: "Vicky Sharma",
     role: "Tenant in Bangalore",
   },
   {
@@ -287,7 +287,7 @@ function Home() {
               How It Works
             </motion.h2>
             <motion.p variants={itemVariants} className="text-lg text-gray-600 max-w-3xl mx-auto mt-5">
-              Whether you're searching for your next rental home or looking to list your property, RentEase makes the process simple and seamless for both tenants and owners.
+              Whether you're searching for your next rental home or looking to list your property, Roommilega makes the process simple and seamless for both tenants and owners.
             </motion.p>
           </motion.div>
 
@@ -547,7 +547,7 @@ function Home() {
             className="text-center mb-16"
           >
             <motion.h2 variants={itemVariants} className="text-4xl md:text-5xl font-bold text-purple-800 mb-4">
-              Why Choose RentEase?
+              Why Choose Roommilega?
             </motion.h2>
             <motion.p variants={itemVariants} className="text-lg text-gray-600 max-w-3xl mx-auto">
               We are committed to providing the best rental experience for everyone.
@@ -655,7 +655,7 @@ function Home() {
             Ready to Find Your Perfect Home?
           </motion.h2>
           <motion.p variants={itemVariants} className="text-lg text-gray-300 mb-8 max-w-3xl mx-auto">
-            Join thousands of satisfied renters who found their ideal home with RentEase.
+            Join thousands of satisfied renters who found their ideal home with Roommilega.
           </motion.p>
           <motion.div variants={itemVariants}>
             <Link
