@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProfileHeader from "../../navbar/profile/profileHeader.jsx";
-import ProfileSidebar from "./ProfileSidebar";
-import EditProfileForm from "./EditProfileForm";
-import MyProperties from "./MyProperties";
+import ProfileSidebar from "./profileSidebar";
+import EditProfileForm from "./editProfileForm";
+import MyProperties from "./myProperties";
 import EditPropertyModal from "./editPropertyModal/editPropertyModal";
 import SavedProperties from "./SavedProperties";
 
