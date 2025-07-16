@@ -1,4 +1,4 @@
-/* Custom Scrollbar */
+Custom Scrollbar
 .scrollbar-thin::-webkit-scrollbar {
     width: 8px;
   }

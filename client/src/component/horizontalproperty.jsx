@@ -100,7 +100,7 @@ export default function PropertyCard({ property = {} }) {
                 } sq.ft</span></div>
               <div className="flex items-center"><FaCouch className="mr-3 text-purple-500" /><span>{furnishType}</span></div>
             </div>
-cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
             <p className="text-gray-600 text-sm leading-relaxed mb-6">
               A beautifully designed {bhkType} {propertyType} available for rent in a prime location. Comes with modern amenities and is perfect for families or professionals seeking comfort and convenience.
             </p>

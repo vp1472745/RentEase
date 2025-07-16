@@ -7,31 +7,30 @@ import {
 
 import { useState, useEffect } from "react";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import Navbar from "./component/navbar.jsx";
-import Home from "./pages/home.jsx";
-import Receipt from "./pages/Receiptedgenator.jsx";
+import Navbar from "../src/component/navbar/navbar.jsx";
+import Home from "../src/pages/otherPage/home.jsx";
+// import Receipt from "./pages/Receiptedgenator.jsx";
 import Signup from "./pages/Register&login/signup.jsx";
 import Login from "./pages/Register&login/login.jsx";
 import OtpModal from "./models/otpModel.jsx";
 import ForgotPassword from "./pages/Register&login/Forgotpassword.jsx";
 import VerifyOTP from "./pages/Register&login/Verifyotp.jsx";
 import ResetPassword from "./pages/Register&login/Resetpassword.jsx";
-import Profile from "./pages/profile.jsx";
-import AddProperty from "./pages/addproperty.jsx";
-import Properties from "./pages/property.jsx";
-import Premium from "./pages/Premium.jsx";
-import PropertyPage from "./component/horizontalproperty.jsx";
-import ScrollToTop from "./pages/scrolltop.jsx";
-import MyProperties from "./pages/myProperty.jsx"; // ✅ MyProperties को इम्पोर्ट किया
-import Viewdetails from "../src/pages/popertyCardPart/viewdetails.jsx";
-import Test from "./pages/testPage.jsx";
-import ReportResearch from "./pages/researchReport.jsx";
+import Profile from "../src/component/navbar/profile/profile.jsx";
+import AddProperty from "../src/pages/poprertyPage/addproperty/addproperty.jsx";
+import Properties from "../src/pages/poprertyPage/property.jsx";
+// import PropertyPage from "./component/horizontalproperty.jsx";
+import ScrollToTop from "../src/pages/otherPage/scrolltop.jsx";
+import MyProperties from "../src/pages/poprertyPage/myProperty.jsx"; // ✅ MyProperties को इम्पोर्ट किया
+import Viewdetails from "../src/pages/poprertyPage/viewdetails.jsx";
+// import Test from "./pages/testPage.jsx";
+import ReportResearch from "../src/pages/otherPage/researchReport.jsx";
 import AdminLogin from "./pages/Register&login/adminLogin.jsx";
-import News from "./pages/news.jsx";
-import Housingprotect from "./pages/housingProtect.jsx";
-import PayRent from "./pages/payRent.jsx";
-import Fraud from "./pages/fraud.jsx";
-import UpdateProperty from "./pages/propertyupdate.jsx";
+import News from "../src/pages/otherPage/news.jsx";
+// import Housingprotect from "./pages/housingProtect.jsx";
+import PayRent from "../src/pages/otherPage/download.jsx";
+import Fraud from "../src/pages/otherPage/fraud.jsx";
+import UpdateProperty from "../src/pages/poprertyPage/propertyUpdate/propertyupdate.jsx";
 import AdminDashboard from "./Dashboard/adminDashboard.jsx";
 import AdminRegsiter from "../src/pages/Register&login/adminRegister.jsx";
 import AboutUs from "../src/component/footerPage/aboutUs.jsx"
@@ -121,7 +120,7 @@ function AppContent() {
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/receipted" element={<Receipt />} />
+          {/* <Route path="/receipted" element={<Receipt />} /> */}
          
           <Route
             path="/login"
@@ -141,15 +140,14 @@ function AppContent() {
           />
           <Route path="/profile" element={<Profile />} />
           <Route path="/add-property" element={<AddProperty />} />
-          <Route path="/property" element={<PropertyPage />} />
+          {/* <Route path="/property" element={<PropertyPage />} /> */}
           <Route path="/properties" element={<Properties />} />
-          <Route path="/premium" element={<Premium />} />
           <Route path="/my-properties" element={<MyProperties />} />
           <Route path="/property/:id" element={<Viewdetails />} />
-          <Route path="/test" element={<Test />} />
+          {/* <Route path="/test" element={<Test />} /> */}
           <Route path="/ReportResearch" element={<ReportResearch />} />
           <Route path="/News" element={<News />} />
-          <Route path="/housingProtect" element={<Housingprotect />} />
+          {/* <Route path="/housingProtect" element={<Housingprotect />} /> */}
           <Route path="/PayRent" element={<PayRent />} />
           <Route path="/Fraud" element={<Fraud />} />
           <Route path="/UpdateProperty/:id" element={<UpdateProperty />} />

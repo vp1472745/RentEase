@@ -10,67 +10,75 @@ const propertySchema = new mongoose.Schema(
     state: { type: String, required: true },
     popularLocality: { type: String },
     images: {
-      type: [{
-        url: {
-          type: String,
-          required: true,
-          validate: {
-            validator: function(v) {
-              // More robust URL validation that handles Cloudinary URLs
-              return /^https?:\/\/.+\..+/.test(v) && v.includes('cloudinary.com');
+      type: [
+        {
+          url: {
+            type: String,
+            required: true,
+            validate: {
+              validator: function (v) {
+                // More robust URL validation that handles Cloudinary URLs
+                return (
+                  /^https?:\/\/.+\..+/.test(v) && v.includes("cloudinary.com")
+                );
+              },
+              message: (props) =>
+                `${props.value} is not a valid Cloudinary image URL!`,
             },
-            message: props => `${props.value} is not a valid Cloudinary image URL!`
-          }
+          },
+          type: {
+            type: String,
+            default: "image",
+          },
+          public_id: {
+            type: String,
+            required: false, // Optional for images
+          },
         },
-        type: {
-          type: String,
-          default: "image"
-        },
-        public_id: {
-          type: String,
-          required: false // Optional for images
-        }
-      }],
-      set: function(images) {
+      ],
+      set: function (images) {
         // Convert plain strings to objects
-        return images.map(img => 
-          typeof img === 'string' 
-            ? { url: img, type: 'image' } 
-            : img
+        return images.map((img) =>
+          typeof img === "string" ? { url: img, type: "image" } : img
         );
-      }
+      },
     },
 
     // Video schema
     videos: {
-      type: [{
-        url: { 
-          type: String, 
-          required: true,
-          validate: {
-            validator: function(v) {
-              // More robust URL validation that handles Cloudinary URLs
-              return /^https?:\/\/.+\..+/.test(v) && v.includes('cloudinary.com');
+      type: [
+        {
+          url: {
+            type: String,
+            required: true,
+            validate: {
+              validator: function (v) {
+                // More robust URL validation that handles Cloudinary URLs
+                return (
+                  /^https?:\/\/.+\..+/.test(v) && v.includes("cloudinary.com")
+                );
+              },
+              message: (props) =>
+                `${props.value} is not a valid Cloudinary video URL!`,
             },
-            message: props => `${props.value} is not a valid Cloudinary video URL!`
-          }
+          },
+          public_id: {
+            type: String,
+            required: false, // Made optional to handle existing data
+          },
+          type: {
+            type: String,
+            default: "video",
+          },
         },
-        public_id: { 
-          type: String, 
-          required: false // Made optional to handle existing data
-        },
-        type: { 
-          type: String, 
-          default: "video" 
-        }
-      }],
+      ],
       validate: {
-        validator: function(v) {
+        validator: function (v) {
           // Allow empty array or array with valid video objects
-          return v.every(video => video.url);
+          return v.every((video) => video.url);
         },
-        message: "Videos must have valid URLs"
-      }
+        message: "Videos must have valid URLs",
+      },
     },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
@@ -107,34 +115,56 @@ const propertySchema = new mongoose.Schema(
       },
     },
 
-    // Property Details
     propertyType: {
-      type: [String],
-      required: true,
-      enum: [
-        "apartment",
-        "independent floor",
-        "independent house",
-        "farm house",
-      ],
+      type: String,
+      enum: ["room", "apartment", "pg", "other"],
+      required: [true, "Property type is required"],
+    },
+    
+    roomSubcategory: {
+      type: String,
+      enum: ["independent room", "shared room", "coed"],
       validate: {
         validator: function (v) {
-          return v.length > 0;
+          return this.propertyType !== "room" || !!v;
         },
-        message: "At least one property type must be selected",
+        message: "Room subcategory is required when property type is 'room'",
       },
     },
-    bhkType: {
-      type: [String],
-      required: true,
-      enum: ["1RK", "2BHK", "3BHK", "4+BHK"],
+    
+    apartmentSubcategory: {
+      type: String,
+      enum: ["1BHK", "2BHK", "3BHK & above"],
       validate: {
         validator: function (v) {
-          return v.length > 0;
+          return this.propertyType !== "apartment" || !!v;
         },
-        message: "At least one BHK type must be selected",
+        message: "Apartment subcategory is required when property type is 'apartment'",
       },
     },
+    
+    pgSubcategory: {
+      type: String,
+      enum: ["PG for boys", "PG for girls", "coed"],
+      validate: {
+        validator: function (v) {
+          return this.propertyType !== "pg" || !!v;
+        },
+        message: "PG subcategory is required when property type is 'pg'",
+      },
+    },
+    
+    otherSubcategory: {
+      type: String,
+      enum: ["farm house", "villa", "studio apartment", "commercial"],
+      validate: {
+        validator: function (v) {
+          return this.propertyType !== "other" || !!v;
+        },
+        message: "Other subcategory is required when property type is 'other'",
+      },
+    },
+    
     furnishType: {
       type: [String],
       required: true,
@@ -168,18 +198,16 @@ const propertySchema = new mongoose.Schema(
       ],
     },
 
-    
     nearby: {
-      type: [{
-        name: { type: String, required: false },
-        distance: { type: String, required: false },
-        unit: { type: String, default: "km", enum: ["km", "m"] }
-      }],
-      default: []
+      type: [
+        {
+          name: { type: String, required: false },
+          distance: { type: String, required: false },
+          unit: { type: String, default: "km", enum: ["km", "m"] },
+        },
+      ],
+      default: [],
     },
-
-
-  
 
     // Facilities & Features
     facilities: {
@@ -236,7 +264,7 @@ const propertySchema = new mongoose.Schema(
         message: "Available date cannot be in the past for new properties",
       },
     },
-    
+
     securityDeposit: {
       type: Number,
       required: true,

@@ -3,7 +3,7 @@ const popularLocalitiesData = {
   Bengaluru: ["Indiranagar", "Whitefield", "Koramangala", "Jayanagar", "Electronic City"],
   Hyderabad: ["Banjara Hills", "Gachibowli", "Jubilee Hills", "Madhapur", "Hitech City"],
   Kolkata: ["Salt Lake City", "Park Street", "Ballygunge", "Alipore", "New Town"],
-  Bhopal: ["MInal Residency bhopal","Inderapuri","Ashoka Garden","Prabhat Pertrol Pump","Arera Colony", "MP Nagar", "Kolar Road", "Hoshangabad Road", "Shahpura","New Market"],
+  Bhopal: ["Minal Residency bhopal","Indrapuri","Ashoka Garden","Prabhat Pertrol Pump","Arera Colony", "MP Nagar", "Kolar Road", "Hoshangabad Road", "Shahpura","New Market"],
   Jaipur: ["Malviya Nagar", "Vaishali Nagar", "Raja Park", "Mansarovar", "C-Scheme"],
   Noida: ["Sector 18", "Sector 62", "Sector 50", "Sector 137", "Sector 15"],
   Delhi: ["Connaught Place", "Hauz Khas", "South Extension", "Karol Bagh", "Greater Kailash"],

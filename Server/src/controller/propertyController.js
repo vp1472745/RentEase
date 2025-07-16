@@ -21,7 +21,10 @@ export const addProperty = async (req, res) => {
       images,
       videos, // Added videos field
       propertyType,
-      bhkType,
+      roomSubcategory,
+      apartmentSubcategory,
+      pgSubcategory,
+      otherSubcategory,
       area,
       furnishType,
       facilities,
@@ -50,22 +53,14 @@ export const addProperty = async (req, res) => {
       bachelorAllowed
     } = req.body;
 
-    // ✅ Convert bhkType to uppercase, propertyType & furnishType to lowercase
-    const formattedBhkType = Array.isArray(bhkType)
-      ? bhkType.map(item => item.toUpperCase())
-      : [bhkType.toUpperCase()];
-
-    const formattedPropertyType = Array.isArray(propertyType)
-      ? propertyType.map(item => item.toLowerCase())
-      : [propertyType.toLowerCase()];
-
+    // propertyType is a string in the model
+    const formattedPropertyType = propertyType ? propertyType.toLowerCase() : undefined;
     const formattedFurnishType = Array.isArray(furnishType)
       ? furnishType.map(item => item.toLowerCase())
-      : [furnishType.toLowerCase()];
-
+      : furnishType ? [furnishType.toLowerCase()] : [];
     const formattedFacilities = Array.isArray(facilities)
       ? facilities.map(item => item.toLowerCase())
-      : [facilities.toLowerCase()];
+      : facilities ? [facilities.toLowerCase()] : [];
 
     const newProperty = new Property({
       /* title, */
@@ -77,7 +72,10 @@ export const addProperty = async (req, res) => {
       videos, // Added videos field
       owner: req.user._id,
       propertyType: formattedPropertyType,
-      bhkType: formattedBhkType,
+      roomSubcategory,
+      apartmentSubcategory,
+      pgSubcategory,
+      otherSubcategory,
       area,
       furnishType: formattedFurnishType,
       facilities: formattedFacilities,
@@ -156,7 +154,7 @@ export const searchProperties = async (req, res) => {
       city, 
       address, 
       propertyType, 
-      bhkType, 
+      
       furnishType, 
       facilities, 
       minRent, 
@@ -187,7 +185,6 @@ export const searchProperties = async (req, res) => {
     // Basic filters
     if (city) filter.city = new RegExp(city, "i");
     if (propertyType) filter.propertyType = { $in: propertyType.split(",").map(pt => pt.toLowerCase()) };
-    if (bhkType) filter.bhkType = { $in: bhkType.split(",").map(bhk => bhk.toUpperCase()) };
     if (furnishType) filter.furnishType = { $in: furnishType.split(",").map(ft => ft.toLowerCase()) };
     
     // Rent range filter
@@ -270,119 +267,172 @@ export const searchProperties = async (req, res) => {
 
 // ✅ Update Property (Owner Only)
 export const updateProperty = async (req, res) => {
+  // --- ENUMS from property.js ---
+  const propertyTypeEnum = ["room", "apartment", "pg", "other"];
+  const roomSubEnum = ["independent room", "shared room", "coed"];
+  const apartmentSubEnum = ["1BHK", "2BHK", "3BHK & above"];
+  const pgSubEnum = ["PG for boys", "PG for girls", "coed"];
+  const otherSubEnum = ["farm house", "villa", "studio apartment", "commercial"];
+  const furnishTypeEnum = ["fully furnished", "semi furnished", "unfurnished"];
+  const genderEnum = ["Couple Friendly", "Family", "Student", "Working professional", "Single"];
+  const facilitiesEnum = ["electricity", "wifi", "water supply", "parking", "security", "lift", "gym", "swimming pool"];
+  const facingEnum = ["North", "South", "East", "West", "North-East", "North-West", "South-East", "South-West"];
+  const parkingEnum = ["None", "Street", "Allocated", "Garage"];
+  const waterEnum = ["Corporation", "Borewell", "Both"];
+  const elecEnum = ["None", "Inverter", "Generator"];
+  const otherSubFields = {
+    room: { field: "roomSubcategory", enum: roomSubEnum },
+    apartment: { field: "apartmentSubcategory", enum: apartmentSubEnum },
+    pg: { field: "pgSubcategory", enum: pgSubEnum },
+    other: { field: "otherSubcategory", enum: otherSubEnum },
+  };
+
+  // Defensive: propertyType fix at the very top
+  if (req.body.propertyType && Array.isArray(req.body.propertyType)) {
+    req.body.propertyType = req.body.propertyType[0];
+  }
+  if (req.body.propertyType && typeof req.body.propertyType !== 'string') {
+    req.body.propertyType = String(req.body.propertyType);
+  }
+  console.log('propertyType in backend payload:', req.body.propertyType, typeof req.body.propertyType);
+  // --- Subcategory strict validation ---
+  Object.entries(otherSubFields).forEach(([type, { field, enum: subEnum }]) => {
+    if (req.body.propertyType === type) {
+      // Only keep the relevant subcategory, validate value
+      if (req.body[field]) {
+        if (!subEnum.includes(req.body[field])) {
+          return res.status(400).json({ message: `Invalid ${field}: ${req.body[field]}` });
+        }
+      } else {
+        return res.status(400).json({ message: `${field} is required for propertyType ${type}` });
+      }
+      // Remove other subcategories
+      Object.values(otherSubFields).forEach(({ field: f }) => {
+        if (f !== field) req.body[f] = undefined;
+      });
+    } else {
+      req.body[field] = undefined;
+    }
+  });
+
+  // Defensive: always arrays of allowed strings for Gender, furnishType, facilities
+  const arrayFields = [
+    { name: 'Gender', allowed: genderEnum },
+    { name: 'furnishType', allowed: furnishTypeEnum },
+    { name: 'facilities', allowed: facilitiesEnum }
+  ];
+  for (const { name, allowed } of arrayFields) {
+    if (req.body[name]) {
+      let arr = req.body[name];
+      if (!Array.isArray(arr)) arr = [arr];
+      arr = arr.map(v => typeof v === 'string' ? v.trim() : '').filter(Boolean);
+      // Validate all values
+      for (const v of arr) {
+        if (!allowed.includes(v)) {
+          return res.status(400).json({ message: `Invalid value for ${name}: ${v}` });
+        }
+      }
+      req.body[name] = arr;
+    }
+  }
+
+  // Defensive: fallback for invalid dates
+  if (req.body.availableFrom) {
+    const date = new Date(req.body.availableFrom);
+    if (isNaN(date.getTime())) {
+      return res.status(400).json({ message: 'Invalid date format for availableFrom' });
+    }
+    req.body.availableFrom = date;
+  }
+
+  // Defensive: enums for facingDirection, parking, waterSupply, electricityBackup
+  if (req.body.facingDirection && !facingEnum.includes(req.body.facingDirection)) {
+    return res.status(400).json({ message: `Invalid facingDirection: ${req.body.facingDirection}` });
+  }
+  if (req.body.parking && !parkingEnum.includes(req.body.parking)) {
+    return res.status(400).json({ message: `Invalid parking: ${req.body.parking}` });
+  }
+  if (req.body.waterSupply && !waterEnum.includes(req.body.waterSupply)) {
+    return res.status(400).json({ message: `Invalid waterSupply: ${req.body.waterSupply}` });
+  }
+  if (req.body.electricityBackup && !elecEnum.includes(req.body.electricityBackup)) {
+    return res.status(400).json({ message: `Invalid electricityBackup: ${req.body.electricityBackup}` });
+  }
+
   try {
     const property = await Property.findById(req.params.id);
-
     if (!property) {
       return res.status(404).json({ message: "Property not found" });
     }
 
-    // Owner verification
+    // Verify ownership
     if (property.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ 
-        message: "Not authorized to update this property" 
-      });
+      return res.status(403).json({ message: "Not authorized to update this property" });
     }
 
-    // Validate allowed updates
     const allowedUpdates = [
       'description', 'address', 'city', 'state', 'images', 'videos',
-      'propertyType', 'bhkType', 'area', 'furnishType', 'facilities',
+      'propertyType', 'roomSubcategory', 'apartmentSubcategory', 'pgSubcategory', 'otherSubcategory',
+      'area', 'furnishType', 'facilities',
       'monthlyRent', 'availableFrom', 'securityDeposit', 'rentalDurationMonths',
       'popularLocality', 'floorNumber', 'totalFloors', 'ageOfProperty',
       'facingDirection', 'maintenanceCharges', 'parking', 'waterSupply',
       'electricityBackup', 'balcony', 'petsAllowed', 'nonVegAllowed',
-      'smokingAllowed', 'bachelorAllowed'
+      'smokingAllowed', 'bachelorAllowed', 'nearby', 'ownerphone', 'ownerName', 'Gender'
     ];
 
     const updates = Object.keys(req.body);
-    const isValidOperation = updates.every(update => 
-      allowedUpdates.includes(update)
-    );
+    const invalidFields = updates.filter(field => !allowedUpdates.includes(field));
 
-    if (!isValidOperation) {
-      return res.status(400).json({ 
-        message: "Attempted to update invalid fields" 
+    if (invalidFields.length > 0) {
+      return res.status(400).json({
+        message: `Attempted to update invalid fields: ${invalidFields.join(", ")}`
       });
     }
 
-    // Remove restricted fields
-    const restrictedFields = ['owner', '_id', 'createdAt', '__v'];
-    restrictedFields.forEach(field => delete req.body[field]);
+    // Convert numeric fields to numbers
+    const numericFields = [
+      'monthlyRent', 'securityDeposit', 'maintenanceCharges',
+      'rentalDurationMonths', 'area', 'floorNumber', 'totalFloors', 'ageOfProperty'
+    ];
 
-    // Handle date formatting for availableFrom
-    if (req.body.availableFrom) {
-      const dateValue = new Date(req.body.availableFrom);
-      if (isNaN(dateValue.getTime())) {
-        return res.status(400).json({ 
-          message: "Invalid date format for availableFrom" 
-        });
-      }
-      req.body.availableFrom = dateValue;
-    }
-
-    // Convert string numbers to actual numbers
-    const numericFields = ['monthlyRent', 'securityDeposit', 'maintenanceCharges', 'rentalDurationMonths', 'area', 'floorNumber', 'totalFloors', 'ageOfProperty'];
-    numericFields.forEach(field => {
+    numericFields.forEach((field) => {
       if (req.body[field] !== undefined && req.body[field] !== '') {
-        const numValue = Number(req.body[field]);
-        if (!isNaN(numValue)) {
-          req.body[field] = numValue;
-        }
+        const num = Number(req.body[field]);
+        if (!isNaN(num)) req.body[field] = num;
       }
     });
 
-    // Format data before update
-    if (req.body.bhkType) {
-      req.body.bhkType = Array.isArray(req.body.bhkType)
-        ? req.body.bhkType.map(item => item.toUpperCase())
-        : [req.body.bhkType.toUpperCase()];
-    }
-
-    if (req.body.propertyType) {
-      req.body.propertyType = Array.isArray(req.body.propertyType)
-        ? req.body.propertyType.map(item => item.toLowerCase())
-        : [req.body.propertyType.toLowerCase()];
-    }
+    // Normalize arrays
+    const toArrayLower = (val) => Array.isArray(val) ? val.map(v => v.toLowerCase()) : [val.toLowerCase()];
 
     if (req.body.furnishType) {
-      req.body.furnishType = Array.isArray(req.body.furnishType)
-        ? req.body.furnishType.map(item => item.toLowerCase())
-        : [req.body.furnishType.toLowerCase()];
+      req.body.furnishType = toArrayLower(req.body.furnishType);
     }
-
     if (req.body.facilities) {
-      req.body.facilities = Array.isArray(req.body.facilities)
-        ? req.body.facilities.map(item => item.toLowerCase())
-        : [req.body.facilities.toLowerCase()];
+      req.body.facilities = toArrayLower(req.body.facilities);
     }
 
-    // Handle images and videos - ensure they have the correct structure
+    // Normalize media (images/videos)
     if (req.body.images) {
-      req.body.images = req.body.images.map(img => {
-        if (typeof img === 'string') {
-          return { url: img, type: 'image' };
-        }
-        return {
-          url: img.url,
-          type: img.type || 'image',
-          public_id: img.public_id
-        };
-      });
+      req.body.images = req.body.images.map(img =>
+        typeof img === 'string'
+          ? { url: img, type: 'image' }
+          : { url: img.url, type: img.type || 'image', public_id: img.public_id }
+      );
     }
 
     if (req.body.videos) {
-      req.body.videos = req.body.videos.map(vid => {
-        if (typeof vid === 'string') {
-          return { url: vid, type: 'video' };
-        }
-        return {
-          url: vid.url,
-          type: vid.type || 'video',
-          public_id: vid.public_id
-        };
-      });
+      req.body.videos = req.body.videos.map(vid =>
+        typeof vid === 'string'
+          ? { url: vid, type: 'video' }
+          : { url: vid.url, type: vid.type || 'video', public_id: vid.public_id }
+      );
     }
+
+    // Remove restricted fields
+    const restrictedFields = ['_id', 'owner', '__v', 'createdAt'];
+    restrictedFields.forEach(field => delete req.body[field]);
 
     console.log('🔧 Processed update data:', req.body);
 
@@ -392,21 +442,22 @@ export const updateProperty = async (req, res) => {
       { new: true, runValidators: true }
     );
 
-    res.status(200).json({ 
+    res.status(200).json({
       success: true,
       message: "Property updated successfully",
-      property: updatedProperty 
+      property: updatedProperty
     });
 
   } catch (error) {
     console.error("Update Property Error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: "Failed to update property",
-      error: error.message 
+      error: error.message
     });
   }
 };
+
 
 // ✅ Delete Property (Owner Only)
 export const deleteProperty = async (req, res) => {

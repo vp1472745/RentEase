@@ -270,8 +270,8 @@ router.put("/:id", authMiddleware, ownerOrAdmin, async (req, res) => {
 
     if (req.body.propertyType) {
       req.body.propertyType = Array.isArray(req.body.propertyType)
-        ? req.body.propertyType.map(item => item.toLowerCase())
-        : [req.body.propertyType.toLowerCase()];
+        ? req.body.propertyType[0].toLowerCase()
+        : req.body.propertyType.toLowerCase();
     }
 
     if (req.body.furnishType) {
