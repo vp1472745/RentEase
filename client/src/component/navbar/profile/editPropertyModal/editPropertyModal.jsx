@@ -53,6 +53,7 @@ const EditPropertyModal = ({ editingProperty, setEditingProperty }) => {
   const [previewImages, setPreviewImages] = useState([]);
   const [previewVideos, setPreviewVideos] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
+  const [updateClickCount, setUpdateClickCount] = useState(0);
 
   useEffect(() => {
     if (editingProperty) {
@@ -196,6 +197,11 @@ const EditPropertyModal = ({ editingProperty, setEditingProperty }) => {
 
   const handlePropertyUpdate = async (e) => {
     e.preventDefault();
+    if (updateClickCount < 1) {
+      setUpdateClickCount(1);
+      alert("Please press 'Update Property' button again to confirm update.");
+      return;
+    }
     if (!validateStep(4)) return;
 
     const token = localStorage.getItem("token");
@@ -329,6 +335,8 @@ const EditPropertyModal = ({ editingProperty, setEditingProperty }) => {
         toast.error(err.response.data.message);
       }
     }
+    // Reset click count after update
+    setUpdateClickCount(0);
   };
 
   // Render the correct step
@@ -393,7 +401,7 @@ const EditPropertyModal = ({ editingProperty, setEditingProperty }) => {
         <ProgressIndicator step={step} setStep={setStep} editFormData={editFormData} />
 
         {/* Form */}
-        <form onSubmit={handlePropertyUpdate}>
+        <form onSubmit={step === 4 ? handlePropertyUpdate : (e) => e.preventDefault()}>
           {stepComponent}
 
           {/* Footer */}

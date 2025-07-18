@@ -29,46 +29,46 @@ const Sidebar = ({ activeTab, setActiveTab, onClose }) => {
     ];
 
     return (
-        <div className="w-64 lg:w-72 bg-white shadow-lg h-screen lg:h-auto flex flex-col">
+        <div className="w-64 lg:w-72 bg-[#1E293B] h-screen lg:h-auto flex flex-col shadow-lg border-r border-[#334155]">
             {/* Mobile Header */}
-            <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-200 bg-white">
-                <h1 className="text-xl font-bold text-purple-600">Admin Panel</h1>
+            <div className="lg:hidden flex items-center justify-between p-4 border-b border-[#334155] bg-[#1E293B]">
+                <h1 className="text-xl font-bold text-[#3B82F6]">Admin Panel</h1>
                 <button
                     onClick={onClose}
-                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="p-2 text-[#F8FAFC] hover:text-[#3B82F6] hover:bg-[#334155] rounded-lg transition-colors"
                 >
                     <FiX className="h-5 w-5" />
                 </button>
             </div>
 
             {/* Desktop Header */}
-            <div className="hidden lg:block p-6 border-b border-gray-200">
-                <h1 className="text-2xl font-bold text-purple-600">Admin Panel</h1>
+            <div className="hidden lg:block p-6 border-b border-[#334155]">
+                <h1 className="text-2xl font-bold text-[#3B82F6]">Admin Panel</h1>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-[#334155] scrollbar-track-[#1E293B]">
                 {navItems.map((item) => (
                     <button
                         key={item.id}
                         onClick={() => handleTabClick(item.id)}
                         className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 text-left ${
                             activeTab === item.id
-                                ? 'bg-purple-600 text-white shadow-md'
-                                : 'text-gray-600 hover:bg-purple-50 hover:text-purple-600'
+                                ? 'bg-[#3B82F6] text-[#F8FAFC] shadow-md'
+                                : 'text-[#F8FAFC] hover:bg-[#334155] hover:text-[#3B82F6]'
                         }`}
                     >
-                        <item.icon className="text-xl flex-shrink-0" />
+                        <item.icon className={`text-xl flex-shrink-0 ${activeTab === item.id ? 'text-[#F8FAFC]' : 'text-[#3B82F6]'}`} />
                         <span className="font-medium truncate">{item.label}</span>
                     </button>
                 ))}
             </nav>
 
             {/* Logout Button */}
-            <div className="p-4 border-t border-gray-200 bg-white">
+            <div className="p-4 border-t border-[#334155] bg-[#1E293B]">
                 <button
                     onClick={handleLogout}
-                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-[#FACC15] hover:bg-[#334155] transition-colors"
                 >
                     <FiLogOut className="text-xl flex-shrink-0" />
                     <span className="font-medium">Logout</span>
@@ -78,4 +78,4 @@ const Sidebar = ({ activeTab, setActiveTab, onClose }) => {
     );
 };
 
-export default Sidebar; 
+export default Sidebar;

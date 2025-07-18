@@ -2,8 +2,7 @@ import mongoose from "mongoose";
 
 const propertySchema = new mongoose.Schema(
   {
-    // Basic Information
-    // title: { type: String, required: true },
+   
     description: { type: String, required: true },
     address: { type: String, required: true },
     city: { type: String, required: true },

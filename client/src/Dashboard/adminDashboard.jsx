@@ -52,7 +52,7 @@ const AdminDashboard = () => {
             case 'settings':
                 return <SettingsTab />;
             case 'adminRegisteration':
-                return <AdminRegisterationTab/>;
+                return <AdminRegisterationTab />;
             default:
                 return <DashboardTab />;
         }
@@ -60,10 +60,10 @@ const AdminDashboard = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+            <div className="min-h-screen bg-[#0F172A] flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3B82F6] mx-auto mb-4"></div>
+                    <p className="text-[#F8FAFC]">Loading...</p>
                 </div>
             </div>
         );
@@ -74,17 +74,17 @@ const AdminDashboard = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[#0F172A] text-[#F8FAFC]">
             {/* Top Bar */}
-            <div className='bg-purple-600 w-full h-16 fixed top-0 z-50 flex items-center justify-between px-4 lg:px-6 shadow-md'>
+            <div className='bg-[#1E293B] w-full h-16 fixed top-0 z-50 flex items-center justify-between px-4 lg:px-6 shadow-md border-b border-[#334155]'>
                 <div className="flex items-center">
                     <button
                         onClick={() => setSidebarOpen(!sidebarOpen)}
-                        className="lg:hidden text-white p-2 rounded-md hover:bg-purple-700 transition-colors"
+                        className="lg:hidden text-[#F8FAFC] p-2 rounded-md hover:bg-[#334155] transition-colors"
                     >
                         {sidebarOpen ? <FiX className="h-6 w-6" /> : <FiMenu className="h-6 w-6" />}
                     </button>
-                    <h1 className="text-white text-lg font-semibold ml-2 lg:ml-0">Admin Panel</h1>
+                    <h1 className="text-[#3B82F6] text-lg font-semibold ml-2 lg:ml-0">Admin Panel</h1>
                 </div>
             </div>
 

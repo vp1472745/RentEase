@@ -99,21 +99,21 @@ const SettingsTab = () => {
     };
 
     return (
-        <div className="overflow-y-auto max-h-[calc(100vh-80px)] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-            <h2 className="text-3xl font-bold text-gray-800 mb-6">Admin Settings</h2>
-            <div className="bg-white p-6 rounded-lg shadow-md">
-                <p>Here you can configure your admin account and application settings.</p>
+        <div className="overflow-y-auto max-h-[calc(100vh-80px)] scrollbar-thin scrollbar-thumb-[#334155] scrollbar-track-[#1E293B] bg-[#0F172A] px-2 py-4">
+            <h2 className="text-3xl font-bold text-[#F8FAFC] mb-6">Admin Settings</h2>
+            <div className="bg-[#1E293B] p-6 rounded-lg shadow-md border border-[#334155] mb-8">
+                <p className="text-[#94A3B8]">Here you can configure your admin account and application settings.</p>
             </div>
             
             {/* User Session Logs Table */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-10">
-                <div className="flex justify-between items-center p-4 border-b">
-                    <h2 className="text-2xl font-bold text-gray-800">User Login/Logout History</h2>
+            <div className="bg-[#1E293B] rounded-xl shadow-sm overflow-hidden mt-10 border border-[#334155]">
+                <div className="flex justify-between items-center p-4 border-b border-[#334155]">
+                    <h2 className="text-2xl font-bold text-[#F8FAFC]">User Login/Logout History</h2>
                     {selectedSessionLogs.length > 0 && (
                         <button
                             onClick={deleteSessionLogs}
                             disabled={deleting}
-                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 disabled:opacity-50"
+                            className="bg-[#FACC15] hover:bg-[#FACC15]/80 text-[#1E293B] px-4 py-2 rounded-lg flex items-center gap-2 disabled:opacity-50 font-medium"
                         >
                             <FiTrash2 />
                             {deleting ? 'Deleting...' : `Delete ${selectedSessionLogs.length} selected`}
@@ -122,61 +122,61 @@ const SettingsTab = () => {
                 </div>
                 {loadingLogs ? (
                     <div className="flex items-center justify-center h-32">
-                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#3B82F6]"></div>
                     </div>
                 ) : errorLogs ? (
-                    <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg">{errorLogs}</div>
+                    <div className="bg-[#FACC15]/10 border-l-4 border-[#FACC15] text-[#FACC15] p-4 rounded-lg">{errorLogs}</div>
                 ) : (
-                    <div className="overflow-x-auto max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50 sticky top-0 z-10">
+                    <div className="overflow-x-auto max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-[#334155] scrollbar-track-[#1E293B]">
+                        <table className="min-w-full divide-y divide-[#334155]">
+                            <thead className="bg-[#1E293B] sticky top-0 z-10">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">
                                         <button
                                             onClick={handleSelectAllSessionLogs}
                                             className="flex items-center"
                                         >
                                             {selectedSessionLogs.length === sessionLogs.length && sessionLogs.length > 0 ? (
-                                                <FiCheckSquare className="text-blue-600" />
+                                                <FiCheckSquare className="text-[#3B82F6]" />
                                             ) : (
-                                                <FiSquare className="text-gray-400" />
+                                                <FiSquare className="text-[#94A3B8]" />
                                             )}
                                         </button>
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Email</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Type</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">User Email</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">User Type</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Event</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Device</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Time</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody className="bg-[#1E293B] divide-y divide-[#334155]">
                                 {sessionLogs.length > 0 ? sessionLogs.map((log) => (
-                                    <tr key={log._id} className="hover:bg-gray-50">
+                                    <tr key={log._id} className="hover:bg-[#334155]">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <button
                                                 onClick={() => handleSessionLogSelect(log._id)}
                                                 className="flex items-center"
                                             >
                                                 {selectedSessionLogs.includes(log._id) ? (
-                                                    <FiCheckSquare className="text-blue-600" />
+                                                    <FiCheckSquare className="text-[#3B82F6]" />
                                                 ) : (
-                                                    <FiSquare className="text-gray-400" />
+                                                    <FiSquare className="text-[#94A3B8]" />
                                                 )}
                                             </button>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{log.userId?.email || 'Guest'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{log.userType || 'N/A'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 flex items-center">
-                                            {log.eventType === 'login' ? <FiLogIn className="mr-1 text-green-600" /> : <FiLogOut className="mr-1 text-red-600" />}
-                                            {log.eventType.charAt(0).toUpperCase() + log.eventType.slice(1)}
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#F8FAFC]">{log.userId?.email || 'Guest'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#94A3B8]">{log.userType || 'N/A'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm flex items-center">
+                                            {log.eventType === 'login' ? <FiLogIn className="mr-1 text-[#22C55E]" /> : <FiLogOut className="mr-1 text-[#FACC15]" />}
+                                            <span className="text-[#F8FAFC]">{log.eventType.charAt(0).toUpperCase() + log.eventType.slice(1)}</span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><span className="inline-flex items-center"><FiMonitor className="mr-2" />{log.device?.slice(0, 30)}...</span></td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.timestamp ? new Date(log.timestamp).toLocaleString() : ''}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#94A3B8]"><span className="inline-flex items-center"><FiMonitor className="mr-2" />{log.device?.slice(0, 30)}...</span></td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#94A3B8]">{log.timestamp ? new Date(log.timestamp).toLocaleString() : ''}</td>
                                     </tr>
                                 )) : (
                                     <tr>
-                                        <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                                        <td colSpan="6" className="px-6 py-12 text-center text-[#94A3B8]">
                                             No session logs found.
                                         </td>
                                     </tr>
@@ -188,14 +188,14 @@ const SettingsTab = () => {
             </div>
 
             {/* User Search Logs Table */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-10">
-                <div className="flex justify-between items-center p-4 border-b">
-                    <h2 className="text-2xl font-bold text-gray-800">User Search Activity</h2>
+            <div className="bg-[#1E293B] rounded-xl shadow-sm overflow-hidden mt-10 border border-[#334155]">
+                <div className="flex justify-between items-center p-4 border-b border-[#334155]">
+                    <h2 className="text-2xl font-bold text-[#F8FAFC]">User Search Activity</h2>
                     {selectedSearchLogs.length > 0 && (
                         <button
                             onClick={deleteSearchLogs}
                             disabled={deleting}
-                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 disabled:opacity-50"
+                            className="bg-[#FACC15] hover:bg-[#FACC15]/80 text-[#1E293B] px-4 py-2 rounded-lg flex items-center gap-2 disabled:opacity-50 font-medium"
                         >
                             <FiTrash2 />
                             {deleting ? 'Deleting...' : `Delete ${selectedSearchLogs.length} selected`}
@@ -204,58 +204,58 @@ const SettingsTab = () => {
                 </div>
                 {loadingLogs ? (
                     <div className="flex items-center justify-center h-32">
-                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#3B82F6]"></div>
                     </div>
                 ) : errorLogs ? (
-                    <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg">{errorLogs}</div>
+                    <div className="bg-[#FACC15]/10 border-l-4 border-[#FACC15] text-[#FACC15] p-4 rounded-lg">{errorLogs}</div>
                 ) : (
-                    <div className="overflow-x-auto max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50 sticky top-0 z-10">
+                    <div className="overflow-x-auto max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-[#334155] scrollbar-track-[#1E293B]">
+                        <table className="min-w-full divide-y divide-[#334155]">
+                            <thead className="bg-[#1E293B] sticky top-0 z-10">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">
                                         <button
                                             onClick={handleSelectAllSearchLogs}
                                             className="flex items-center"
                                         >
                                             {selectedSearchLogs.length === searchLogs.length && searchLogs.length > 0 ? (
-                                                <FiCheckSquare className="text-blue-600" />
+                                                <FiCheckSquare className="text-[#3B82F6]" />
                                             ) : (
-                                                <FiSquare className="text-gray-400" />
+                                                <FiSquare className="text-[#94A3B8]" />
                                             )}
                                         </button>
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Email</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Type</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Search Term</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">User Email</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">User Type</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Search Term</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Device</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Time</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody className="bg-[#1E293B] divide-y divide-[#334155]">
                                 {searchLogs.length > 0 ? searchLogs.map((log) => (
-                                    <tr key={log._id} className="hover:bg-gray-50">
+                                    <tr key={log._id} className="hover:bg-[#334155]">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <button
                                                 onClick={() => handleSearchLogSelect(log._id)}
                                                 className="flex items-center"
                                             >
                                                 {selectedSearchLogs.includes(log._id) ? (
-                                                    <FiCheckSquare className="text-blue-600" />
+                                                    <FiCheckSquare className="text-[#3B82F6]" />
                                                 ) : (
-                                                    <FiSquare className="text-gray-400" />
+                                                    <FiSquare className="text-[#94A3B8]" />
                                                 )}
                                             </button>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{log.userEmail || log.userId?.email || 'Guest'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{log.userType || log.userId?.role || 'N/A'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 flex items-center">{log.searchTerm}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><span className="inline-flex items-center">{log.device?.slice(0, 30)}...</span></td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.timestamp ? new Date(log.timestamp).toLocaleString() : ''}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#F8FAFC]">{log.userEmail || log.userId?.email || 'Guest'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#94A3B8]">{log.userType || log.userId?.role || 'N/A'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#F8FAFC] flex items-center">{log.searchTerm}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#94A3B8]"><span className="inline-flex items-center">{log.device?.slice(0, 30)}...</span></td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#94A3B8]">{log.timestamp ? new Date(log.timestamp).toLocaleString() : ''}</td>
                                     </tr>
                                 )) : (
                                     <tr>
-                                        <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                                        <td colSpan="7" className="px-6 py-12 text-center text-[#94A3B8]">
                                             No search logs found.
                                         </td>
                                     </tr>
@@ -269,4 +269,4 @@ const SettingsTab = () => {
     );
 };
 
-export default SettingsTab; 
+export default SettingsTab;

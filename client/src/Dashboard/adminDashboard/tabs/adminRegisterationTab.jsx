@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "../../../lib/axios"; // Use the correct axios instance
+import axios from "../../../lib/axios";
 import { toast } from "react-toastify";
 import { FiEye, FiEyeOff, FiUpload, FiX } from "react-icons/fi";
 import { motion } from "framer-motion";
@@ -214,17 +214,17 @@ const AdminRegister = () => {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 overflow-y-auto max-h-[calc(100vh-120px)] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 lg:p-8">
+    <div className="space-y-4 sm:space-y-6 overflow-y-auto max-h-[calc(100vh-120px)] scrollbar-thin scrollbar-thumb-[#334155] scrollbar-track-[#1E293B] bg-[#0F172A] px-2 py-4">
+      <div className="bg-[#1E293B] rounded-xl shadow-sm border border-[#334155] p-4 sm:p-6 lg:p-8">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
-              <FaUserShield className="text-purple-600 text-2xl" />
+            <div className="w-16 h-16 bg-[#334155] rounded-full flex items-center justify-center">
+              <FaUserShield className="text-[#3B82F6] text-2xl" />
             </div>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Admin Registration</h1>
-          <p className="text-gray-600 max-w-md mx-auto">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#F8FAFC] mb-2">Admin Registration</h1>
+          <p className="text-[#94A3B8] max-w-md mx-auto">
             Create a new admin account with full access to the platform management system.
           </p>
         </div>
@@ -233,17 +233,17 @@ const AdminRegister = () => {
         <div className="mb-6">
           <div className={`inline-flex items-center px-3 py-2 rounded-full text-sm font-medium ${
             backendStatus === 'connected' 
-              ? 'bg-green-100 text-green-800' 
+              ? 'bg-[#22C55E]/20 text-[#22C55E]' 
               : backendStatus === 'error' 
-              ? 'bg-red-100 text-red-800' 
-              : 'bg-yellow-100 text-yellow-800'
+              ? 'bg-[#FACC15]/20 text-[#FACC15]' 
+              : 'bg-[#3B82F6]/20 text-[#3B82F6]'
           }`}>
             <div className={`w-2 h-2 rounded-full mr-2 ${
               backendStatus === 'connected' 
-                ? 'bg-green-500' 
+                ? 'bg-[#22C55E]' 
                 : backendStatus === 'error' 
-                ? 'bg-red-500' 
-                : 'bg-yellow-500'
+                ? 'bg-[#FACC15]' 
+                : 'bg-[#3B82F6]'
             }`}></div>
             {backendStatus === 'connected' 
               ? 'Backend Connected' 
@@ -258,16 +258,16 @@ const AdminRegister = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6"
+            className="bg-[#22C55E]/10 border border-[#22C55E] rounded-lg p-4 mb-6"
           >
             <div className="flex">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="h-5 w-5 text-[#22C55E]" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-green-800">{success}</p>
+                <p className="text-sm font-medium text-[#22C55E]">{success}</p>
               </div>
             </div>
           </motion.div>
@@ -277,16 +277,16 @@ const AdminRegister = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6"
+            className="bg-[#FACC15]/10 border border-[#FACC15] rounded-lg p-4 mb-6"
           >
             <div className="flex">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="h-5 w-5 text-[#FACC15]" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-red-800">{error}</p>
+                <p className="text-sm font-medium text-[#FACC15]">{error}</p>
               </div>
             </div>
           </motion.div>
@@ -306,7 +306,7 @@ const AdminRegister = () => {
             <div className="space-y-6">
               {/* Name Field */}
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="name" className="block text-sm font-medium text-[#F8FAFC] mb-2">
                   Full Name *
                 </label>
                 <input
@@ -317,13 +317,13 @@ const AdminRegister = () => {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors ${
-                    errors.name ? "border-red-300" : "border-gray-300"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-colors bg-[#1E293B] text-[#F8FAFC] placeholder-[#94A3B8] ${
+                    errors.name ? "border-[#FACC15]" : "border-[#334155]"
                   }`}
                   placeholder="Enter your full name"
                 />
                 {errors.name && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                  <p className="mt-1 text-sm text-[#FACC15] flex items-center">
                     <FiX className="mr-1" /> {errors.name}
                   </p>
                 )}
@@ -331,7 +331,7 @@ const AdminRegister = () => {
 
               {/* Email Field */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-[#F8FAFC] mb-2">
                   Email Address *
                 </label>
                 <input
@@ -342,13 +342,13 @@ const AdminRegister = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors ${
-                    errors.email ? "border-red-300" : "border-gray-300"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-colors bg-[#1E293B] text-[#F8FAFC] placeholder-[#94A3B8] ${
+                    errors.email ? "border-[#FACC15]" : "border-[#334155]"
                   }`}
                   placeholder="Enter your email address"
                 />
                 {errors.email && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                  <p className="mt-1 text-sm text-[#FACC15] flex items-center">
                     <FiX className="mr-1" /> {errors.email}
                   </p>
                 )}
@@ -356,7 +356,7 @@ const AdminRegister = () => {
 
               {/* Phone Field */}
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="phone" className="block text-sm font-medium text-[#F8FAFC] mb-2">
                   Phone Number *
                 </label>
                 <input
@@ -367,13 +367,13 @@ const AdminRegister = () => {
                   required
                   value={formData.phone}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors ${
-                    errors.phone ? "border-red-300" : "border-gray-300"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-colors bg-[#1E293B] text-[#F8FAFC] placeholder-[#94A3B8] ${
+                    errors.phone ? "border-[#FACC15]" : "border-[#334155]"
                   }`}
                   placeholder="Enter your phone number"
                 />
                 {errors.phone && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                  <p className="mt-1 text-sm text-[#FACC15] flex items-center">
                     <FiX className="mr-1" /> {errors.phone}
                   </p>
                 )}
@@ -385,7 +385,7 @@ const AdminRegister = () => {
             <div className="space-y-6">
               {/* Password Field */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-[#F8FAFC] mb-2">
                   Password *
                 </label>
                 <div className="relative">
@@ -397,8 +397,8 @@ const AdminRegister = () => {
                     required
                     value={formData.password}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors ${
-                      errors.password ? "border-red-300" : "border-gray-300"
+                    className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-colors bg-[#1E293B] text-[#F8FAFC] placeholder-[#94A3B8] ${
+                      errors.password ? "border-[#FACC15]" : "border-[#334155]"
                     }`}
                     placeholder="Create a strong password"
                   />
@@ -408,14 +408,14 @@ const AdminRegister = () => {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <FiEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-500" />
+                      <FiEyeOff className="h-5 w-5 text-[#94A3B8] hover:text-[#F8FAFC]" />
                     ) : (
-                      <FiEye className="h-5 w-5 text-gray-400 hover:text-gray-500" />
+                      <FiEye className="h-5 w-5 text-[#94A3B8] hover:text-[#F8FAFC]" />
                     )}
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                  <p className="mt-1 text-sm text-[#FACC15] flex items-center">
                     <FiX className="mr-1" /> {errors.password}
                   </p>
                 )}
@@ -423,7 +423,7 @@ const AdminRegister = () => {
 
               {/* Confirm Password Field */}
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#F8FAFC] mb-2">
                   Confirm Password *
                 </label>
                 <input
@@ -434,49 +434,49 @@ const AdminRegister = () => {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors ${
-                    errors.confirmPassword ? "border-red-300" : "border-gray-300"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-colors bg-[#1E293B] text-[#F8FAFC] placeholder-[#94A3B8] ${
+                    errors.confirmPassword ? "border-[#FACC15]" : "border-[#334155]"
                   }`}
                   placeholder="Confirm your password"
                 />
                 {errors.confirmPassword && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                  <p className="mt-1 text-sm text-[#FACC15] flex items-center">
                     <FiX className="mr-1" /> {errors.confirmPassword}
                   </p>
                 )}
               </div>
 
               {/* Password Requirements */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Password Requirements:</h4>
-                <ul className="space-y-2 text-xs text-gray-600">
+              <div className="bg-[#334155] rounded-lg p-4">
+                <h4 className="text-sm font-medium text-[#F8FAFC] mb-3">Password Requirements:</h4>
+                <ul className="space-y-2 text-xs text-[#94A3B8]">
                   <li className="flex items-center">
                     <div className={`w-2 h-2 rounded-full mr-2 ${
-                      formData.password.length >= 8 ? 'bg-green-500' : 'bg-gray-300'
+                      formData.password.length >= 8 ? 'bg-[#22C55E]' : 'bg-[#94A3B8]'
                     }`}></div>
                     At least 8 characters
                   </li>
                   <li className="flex items-center">
                     <div className={`w-2 h-2 rounded-full mr-2 ${
-                      /[a-z]/.test(formData.password) ? 'bg-green-500' : 'bg-gray-300'
+                      /[a-z]/.test(formData.password) ? 'bg-[#22C55E]' : 'bg-[#94A3B8]'
                     }`}></div>
                     One lowercase letter
                   </li>
                   <li className="flex items-center">
                     <div className={`w-2 h-2 rounded-full mr-2 ${
-                      /[A-Z]/.test(formData.password) ? 'bg-green-500' : 'bg-gray-300'
+                      /[A-Z]/.test(formData.password) ? 'bg-[#22C55E]' : 'bg-[#94A3B8]'
                     }`}></div>
                     One uppercase letter
                   </li>
                   <li className="flex items-center">
                     <div className={`w-2 h-2 rounded-full mr-2 ${
-                      /\d/.test(formData.password) ? 'bg-green-500' : 'bg-gray-300'
+                      /\d/.test(formData.password) ? 'bg-[#22C55E]' : 'bg-[#94A3B8]'
                     }`}></div>
                     One number
                   </li>
                   <li className="flex items-center">
                     <div className={`w-2 h-2 rounded-full mr-2 ${
-                      /[!@#$%^&*]/.test(formData.password) ? 'bg-green-500' : 'bg-gray-300'
+                      /[!@#$%^&*]/.test(formData.password) ? 'bg-[#22C55E]' : 'bg-[#94A3B8]'
                     }`}></div>
                     One special character (!@#$%^&*)
                   </li>
@@ -486,15 +486,15 @@ const AdminRegister = () => {
           </div>
 
           {/* Submit Button */}
-          <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-[#334155]">
             <button
               type="submit"
               disabled={loading || backendStatus === 'error'}
-              className="flex-1 bg-purple-600 text-white py-3 px-6 rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center space-x-2"
+              className="flex-1 bg-[#3B82F6] text-[#F8FAFC] py-3 px-6 rounded-lg hover:bg-[#2563EB] disabled:bg-[#334155] disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center space-x-2"
             >
               {loading ? (
                 <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#F8FAFC]"></div>
                   <span>Creating Account...</span>
                 </>
               ) : (
@@ -504,7 +504,7 @@ const AdminRegister = () => {
             <button
               type="button"
               onClick={() => navigate('/admin/login')}
-              className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+              className="flex-1 bg-[#334155] text-[#F8FAFC] py-3 px-6 rounded-lg hover:bg-[#475569] transition-colors font-medium"
             >
               Back to Login
             </button>
@@ -515,4 +515,4 @@ const AdminRegister = () => {
   );
 };
 
-export default AdminRegister; 
+export default AdminRegister;

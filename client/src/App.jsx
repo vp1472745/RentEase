@@ -30,7 +30,7 @@ import News from "../src/pages/otherPage/news.jsx";
 // import Housingprotect from "./pages/housingProtect.jsx";
 import PayRent from "../src/pages/otherPage/download.jsx";
 import Fraud from "../src/pages/otherPage/fraud.jsx";
-import UpdateProperty from "../src/pages/poprertyPage/propertyUpdate/propertyupdate.jsx";
+// import UpdateProperty from "../src/pages/poprertyPage/propertyUpdate/propertyupdate.jsx";
 import AdminDashboard from "./Dashboard/adminDashboard.jsx";
 import AdminRegsiter from "../src/pages/Register&login/adminRegister.jsx";
 import AboutUs from "../src/component/footerPage/aboutUs.jsx"
@@ -150,7 +150,7 @@ function AppContent() {
           {/* <Route path="/housingProtect" element={<Housingprotect />} /> */}
           <Route path="/PayRent" element={<PayRent />} />
           <Route path="/Fraud" element={<Fraud />} />
-          <Route path="/UpdateProperty/:id" element={<UpdateProperty />} />
+          {/* <Route path="/UpdateProperty/:id" element={<UpdateProperty />} /> */}
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/register" element={<AdminRegsiter />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
