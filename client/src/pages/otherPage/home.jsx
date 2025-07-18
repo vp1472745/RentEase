@@ -309,10 +309,13 @@ function Home() {
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white text-center leading-tight">
               Discover Your <span className="text-indigo-200">Perfect</span> Rental
             </h1>
+          </motion.div>
+          
+          <div className="flex justify-center w-full">
             <p className="mt-4 text-lg sm:text-xl lg:text-2xl text-indigo-100 text-center font-medium max-w-2xl">
               Find your dream home with zero brokerage fees and premium services
             </p>
-          </motion.div>
+          </div>
           
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -328,7 +331,7 @@ function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.7 }}
-            className="mt-8 flex flex-col sm:flex-row gap-4 mb-5"
+            className="mt-8 flex flex-col sm:flex-row gap-15 mb-5"
           >
             <Link
               to="/properties"
@@ -367,8 +370,8 @@ function Home() {
         </motion.div>
       </div>
 
-      {/* Stats Section
-      <section className="py-12 bg-white shadow-sm">
+      {/* Stats Section */}
+      {/* <section className="py-12 bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <motion.div
@@ -412,7 +415,7 @@ function Home() {
             </motion.div>
           </div>
         </div>
-      </section> */}
+      </section>  */}
 
       {/* How It Works Section */}
       <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-blue-50 to-white">
@@ -466,15 +469,15 @@ function Home() {
                 }, {
                   icon: <Search size={22} />, 
                   label: 'Search for Properties', 
-                  desc: 'Search for properties based on your preferences — filter by location, budget, property type, amenities, and more.'
+                  desc: 'Search for properties based on your preferences—filter by location, budget, property type, amenities and more.'
                 }, {
                   icon: <MessageCircle size={22} />, 
                   label: 'Contact Owners', 
-                  desc: 'Get in touch with property owners without any middlemen. Schedule property visits, ask questions, and clarify rental terms — all directly.'
+                  desc: 'Get in touch with property owners directly, without any middlemen. Schedule property visits, ask questions & clarify rental terms—all directly.'
                 }, {
                   icon: <CheckCircle size={22} />, 
                   label: 'Secure Your Home', 
-                  desc: 'Once you\'ve found your ideal home, finalize the deal securely and move in with peace of mind.'
+                  desc: "Once you've found your ideal home, finalize the deal securely and move in with peace of mind."
                 }].map((step, i) => (
                   <motion.li
                     key={i}
@@ -522,19 +525,19 @@ function Home() {
                 {[{
                   icon: <UserPlus size={22} />, 
                   label: 'Sign Up or Log In', 
-                  desc: 'Register as a property owner through the "List My Property" option, or log in to your existing account to manage your listings.'
+                  desc: 'Register as a property owner through the "List My Property" option or log in to your existing account to manage your listings.'
                 }, {
                   icon: <ListPlus size={22} />, 
                   label: 'List Your Property', 
-                  desc: 'Fill out a simple form with property details, photos, rent, and availability to make your listing live.'
+                  desc: 'Fill out a simple form with property details, photos, rent and availability to make your listing live.'
                 }, {
                   icon: <Users size={22} />, 
                   label: 'Connect with Tenants', 
-                  desc: 'Get direct inquiries from verified tenants. Chat, schedule visits, and finalize deals — all without any middlemen.'
+                  desc: 'Get direct inquiries from verified tenants. Chat, schedule visits and finalize deals—all without any middlemen.'
                 }, {
                   icon: <Edit3 size={22} />, 
                   label: 'Manage Your Listing', 
-                  desc: 'Easily update, edit, or remove your property anytime from your personalized owner dashboard.'
+                  desc: 'Easily update, edit and remove your property anytime from your personalized owner dashboard.'
                 }].map((step, i) => (
                   <motion.li
                     key={i}
@@ -571,7 +574,7 @@ function Home() {
               Featured Properties
             </motion.h2>
             <motion.p variants={itemVariants} className="text-lg text-blue-600 max-w-3xl mx-auto">
-              Explore hand-picked properties in top localities, updated daily.
+              Explore & hand-picked properties in top localities, updated daily.
             </motion.p>
           </motion.div>
 

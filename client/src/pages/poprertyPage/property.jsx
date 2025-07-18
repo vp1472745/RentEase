@@ -20,7 +20,8 @@ import {
   FiCalendar,
   FiStar,
   FiEye,
-  FiArrowRight
+  FiArrowRight,
+  FiUser
 } from "react-icons/fi";
 import { FaBed, FaBath, FaRulerCombined, FaWhatsapp } from "react-icons/fa";
 import { IoMdClose } from "react-icons/io";
@@ -462,11 +463,16 @@ function Properties() {
       toast.error("Owner phone number not available");
       return;
     }
+    const token = localStorage.getItem('token');
     const userRole = localStorage.getItem('role');
-    if (userRole === 'tenant') {
+    if (!token) {
+      setShowSignupPopup(true);
+      return;
+    }
+    if (userRole === 'tenant' || userRole === 'owner') {
       window.open(`tel:${phoneNumber}`);
     } else {
-      setShowSignupPopup(true);
+      toast.error("Only tenants or owners can contact property owners.");
     }
   };
 
@@ -551,12 +557,7 @@ function Properties() {
               {filteredProperties.length} properties
             </span>
           </h2>
-          {filteredProperties.length > 0 && (
-            <div className="flex items-center text-sm text-slate-500">
-              <FiFilter className="mr-2 text-indigo-600" />
-              <span>Sorted by: Newest</span>
-            </div>
-          )}
+       
         </div>
 
         {/* Property Listings */}
@@ -586,7 +587,7 @@ function Properties() {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-96 bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+          <div className="flex flex-col items-center justify-center h-96 bg-white rounded-xl shadow-sm p-6   border-slate-200">
             <FiHome className="text-5xl text-slate-300 mb-4" />
             <h3 className="text-xl font-medium text-slate-700 mb-2">
               {searchTerm ? "No matching properties found" : "No properties available"}
@@ -669,9 +670,9 @@ function PropertyCard({
   const isVideoMedia = isVideo(firstMedia);
 
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-slate-100">
-      {/* Media Section with Badges */}
-      <div className="relative h-56 w-full">
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-slate-100 flex flex-col">
+      {/* Media Section */}
+      <div className="relative h-48 sm:h-56 w-full">
         {isVideoMedia ? (
           <VideoPlayer
             src={mediaUrl}
@@ -691,7 +692,7 @@ function PropertyCard({
             }}
           />
         )}
-        
+
         {/* Favorite Button */}
         <button
           onClick={(e) => {
@@ -703,119 +704,116 @@ function PropertyCard({
               ? "bg-rose-500 text-white" 
               : "bg-white text-slate-400 hover:text-rose-500"
           } transition-colors`}
+          title={favorites[property._id] ? "Saved" : "Save"}
         >
-          <FiHeart size={18} fill={favorites[property._id] ? "currentColor" : "none"} />
+          <FiHeart size={20} />
         </button>
-        
+
         {/* Price Badge */}
-        <div className="absolute bottom-3 left-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-3 py-1 rounded-lg text-sm font-semibold shadow-md">
-          ₹{property.monthlyRent}/mo
+        <div className="absolute bottom-3 left-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-1 rounded-lg text-base font-bold shadow-md">
+          <FaRupeeSign className="inline mr-1" />{property.monthlyRent?.toLocaleString()}/mo
         </div>
       </div>
 
-      {/* Details Section */}
-      <div className="p-5">
-        {/* Title, Type, and Location */}
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-slate-800 mb-1 truncate">{property.title}</h3>
-          {/* Property Type Badge */}
-          {property.propertyType && (
-            <span className="inline-block bg-indigo-100 text-indigo-700 text-xs font-semibold px-2 py-1 rounded mr-2 mb-1">
-              Type: {property.propertyType.charAt(0).toUpperCase() + property.propertyType.slice(1)}
+      {/* Main Details Section */}
+      <div className="p-4 flex flex-col gap-3">
+        {/* Title & Address */}
+        <div>
+          <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate mb-1">{property.title}</h3>
+          <div className="flex items-center gap-2">
+            <FiMapPin className="text-indigo-600 text-base" />
+            <span className="text-xs sm:text-sm text-slate-700 font-medium break-words">{property.address}{property.city && `, ${property.city}`}{property.state && `, ${property.state}`}</span>
+          </div>
+        </div>
+
+        {/* Info Badges */}
+        <div className="flex flex-wrap gap-2">
+          <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 px-2 py-1 rounded text-xs font-semibold">
+            <FiHome className="text-indigo-500" />
+            {property.propertyType?.charAt(0).toUpperCase() + property.propertyType?.slice(1) || "Type"}
+          </span>
+          {property.roomSubcategory && (
+            <span className="flex items-center gap-1 bg-purple-50 text-purple-700 px-2 py-1 rounded text-xs font-semibold">
+              <FiLayers className="text-purple-500" />
+              {property.roomSubcategory}
             </span>
           )}
-          <div className="flex items-center text-slate-600 text-sm">
-            <FiMapPin className="mr-1 text-indigo-600" size={14} />
-            <span className="truncate">{property.address}, {property.city}</span>
-          </div>
-        </div>
-        
-        {/* Key Features Grid */}
-        <div className="grid grid-cols-3 gap-3 mb-5">
-          <div className="flex flex-col items-center p-2 bg-slate-50 rounded-lg border border-slate-200">
-            <FaBed className="text-indigo-600 mb-1" size={16} />
-            <span className="text-xs font-medium text-slate-700">{property.bhkType || "N/A"}</span>
-            <span className="text-xs text-slate-500">BHK</span>
-          </div>
-      
-          <div className="flex flex-col items-center p-2 bg-slate-50 rounded-lg border border-slate-200">
-            <FaRulerCombined className="text-indigo-600 mb-1" size={16} />
-            <span className="text-xs font-medium text-slate-700">{property.area || "N/A"}</span>
-            <span className="text-xs text-slate-500">sq.ft</span>
-          </div>
-          
-          <div className="flex flex-col items-center p-2 bg-slate-50 rounded-lg border border-slate-200">
-            <FaBath className="text-indigo-600 mb-1" size={16} />
-            <span className="text-xs font-medium text-slate-700">{property.bathrooms || "N/A"}</span>
-            <span className="text-xs text-slate-500">Bath</span>
-          </div>
-        </div>
-        
-        {/* Divider */}
-        <div className="border-t border-slate-100 my-3"></div>
-        
-        {/* Additional Info */}
-        <div className="grid grid-cols-2 gap-3 text-sm mb-5">
-          <div className="flex items-center text-slate-600">
-            <FiLayers className="mr-2 text-indigo-600" size={14} />
-            <span className="truncate">{property.propertyType || "N/A"}</span>
-          </div>
-          <div className="flex items-center text-slate-600">
-            <FiUsers className="mr-2 text-indigo-600" size={14} />
-            <span className="truncate">
-              {Array.isArray(property.Gender) 
-                ? property.Gender.join(", ") 
-                : property.Gender || "Any"}
+          {property.apartmentSubcategory && (
+            <span className="flex items-center gap-1 bg-purple-50 text-purple-700 px-2 py-1 rounded text-xs font-semibold">
+              <FiLayers className="text-purple-500" />
+              {property.apartmentSubcategory}
             </span>
-          </div>
-          <div className="flex items-center text-slate-600">
-            <FaRupeeSign className="mr-2 text-indigo-600" size={14} />
-            <span className="truncate">₹{property.securityDeposit || "N/A"}</span>
-          </div>
-          <div className="flex items-center text-slate-600">
-            <FiCalendar className="mr-2 text-indigo-600" size={14} />
-            <span className="truncate">
-              {property.availableFrom ? 
-                new Date(property.availableFrom).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric'
-                }) : "N/A"}
+          )}
+          {property.pgSubcategory && (
+            <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700  px-2 py-1 rounded text-xs font-semibold">
+              <FiLayers className="text-indigo
+              -500" />
+              {property.pgSubcategory}
             </span>
-          </div>
+          )}
+          {property.otherSubcategory && (
+            <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700  px-2 py-1 rounded text-xs font-semibold">
+              <FiLayers className="text-purple-500" />
+              {property.otherSubcategory}
+            </span>
+          )}
+          <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 px-2 py-1 rounded text-xs font-semibold">
+            <FaRulerCombined className="text-indigo-500" />
+            {property.area?.toLocaleString() || '0'} sq.ft
+          </span>
+          <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 px-2 py-1 rounded text-xs font-semibold">
+            <FaBed className="text-indigo-500" />
+            {property.bhkType || "N/A"} BHK
+          </span>
+          <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 px-2 py-1 rounded text-xs font-semibold">
+            <FiStar className="text-indigo-500" />
+            {property.furnishType?.join(', ') || 'Unfurnished'}
+          </span>
         </div>
-        
+
+        {/* Owner & Date */}
+        <div className="flex justify-between items-center text-xs text-slate-600">
+          <span className="flex items-center gap-1">
+            <FiCalendar className="text-indigo-500" />
+            {property.availableFrom ? new Date(property.availableFrom).toLocaleDateString() : "N/A"}
+          </span>
+          <span className="flex items-center gap-1">
+            <FiUser className="text-indigo-500" />
+            <span className="font-semibold">Owner:</span>
+            <span className="font-medium">{property.ownerName}</span>
+          </span>
+        </div>
+
         {/* Action Buttons */}
-        <div className="flex justify-between space-x-3">
+        <div className="flex flex-row justify-between gap-2 mt-2">
           <button
             onClick={(e) => {
               e.stopPropagation();
               shareOnWhatsApp(property);
             }}
-            className="flex-1 flex items-center justify-center p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors border border-emerald-100"
+            className="flex-1 flex items-center justify-center p-2 bg-emerald-500 text-white font-bold rounded-lg hover:bg-emerald-600 transition-colors shadow text-xs sm:text-sm"
             title="Share on WhatsApp"
           >
-            <FaWhatsapp size={16} />
+            <FaWhatsapp size={16} className="mr-1" /> WhatsApp
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               contactOwner(property.ownerphone);
             }}
-            className="flex-1 flex items-center justify-center p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors border border-blue-100"
+            className="flex-1 flex items-center justify-center p-2 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 transition-colors shadow text-xs sm:text-sm"
             title="Contact Owner"
           >
-            <FiPhone size={16} />
+            <FiPhone size={16} className="mr-1" /> Call
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               handleViewDetails(property._id);
             }}
-            className="flex-1 flex items-center justify-center p-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-colors"
+            className="flex-1 flex items-center justify-center p-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-colors shadow text-xs sm:text-sm"
           >
-            <span className="text-sm">View</span>
-            <FiArrowRight className="ml-2" size={14} />
+            <FiEye size={16} className="mr-1" /> View
           </button>
         </div>
       </div>
@@ -1017,7 +1015,9 @@ const PropertySearchBox = ({
           </div>
           <input
             type="text"
-            className="block w-full pl-12 pr-10 py-3 text-base border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-800 outline-none transition-all"
+            className="block w-full pl-12 pr-10 py-3 text-base border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-800 outline-none transition-all
+            sm:text-base text-sm
+            "
             placeholder="Search properties, locations, amenities..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -1154,7 +1154,7 @@ const PropertySearchBox = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-5">
           <button
             type="button"
             className="flex items-center text-indigo-600 text-sm font-medium hover:text-indigo-700 transition-colors"
@@ -1164,17 +1164,17 @@ const PropertySearchBox = ({
             {isExpanded ? 'Hide Filters' : 'Advanced Filters'}
           </button>
           
-          <div className="flex space-x-3">
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             <button
               type="button"
-              className="px-5 py-2 text-sm font-medium text-indigo-700 border border-indigo-700 rounded-lg hover:bg-indigo-50 transition-colors"
+              className="px-5 py-2 text-sm font-medium text-indigo-700 border border-indigo-700 rounded-lg hover:bg-indigo-50 transition-colors w-full sm:w-auto"
               onClick={clearFilters}
             >
               Clear All
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-colors flex items-center"
+              className="px-5 py-2 text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-colors flex items-center w-full sm:w-auto"
             >
               <FiSearch className="mr-2" />
               Search

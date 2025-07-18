@@ -91,7 +91,7 @@ const PopularLocalities = ({ selectedCity, onSelect }) => {
         <div className="flex items-center bg-indigo-600/10 px-3 py-2 rounded-lg border border-indigo-400/30">
           <VscGoToSearch className="w-5 h-5 text-indigo-300" />
           <h2 className="ml-2 font-bold text-indigo-100 text-lg tracking-wide">
-            Popular Localities
+            Popular Locations
           </h2>
         </div>
         <div className="hidden sm:block flex-1 ml-4 h-px bg-gradient-to-r from-indigo-400/30 to-transparent"></div>
@@ -99,26 +99,24 @@ const PopularLocalities = ({ selectedCity, onSelect }) => {
 
       {/* Localities Scroll Container */}
       <div className="relative w-full">
-        {/* Scroll Buttons */}
-        {showLeftButton && (
-          <button
-            onClick={() => scroll("left")}
-            className="hidden sm:flex absolute left-0 -ml-4 bg-indigo-700/90 hover:bg-indigo-600 text-white p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 top-1/2 transform -translate-y-1/2 z-10 border border-indigo-400/30 hover:scale-105"
-            aria-label="Scroll left"
-          >
-            <ChevronLeft size={24} className="stroke-[1.5]" />
-          </button>
-        )}
+        {/* Always show Scroll Buttons on desktop */}
+        <button
+          onClick={() => scroll("left")}
+          className="hidden sm:flex absolute left-0 -ml-8 bg-indigo-700/90 hover:bg-indigo-600 text-white p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 top-1/2 transform -translate-y-1/2 z-10 border border-indigo-400/30 hover:scale-105"
+          aria-label="Scroll left"
+          style={{ opacity: localities.length > 0 ? 1 : 0.5, pointerEvents: localities.length > 0 ? 'auto' : 'none' }}
+        >
+          <ChevronLeft size={24} className="stroke-[1.5]" />
+        </button>
 
-        {showRightButton && (
-          <button
-            onClick={() => scroll("right")}
-            className="hidden sm:flex absolute right-0 -mr-4 bg-indigo-700/90 hover:bg-indigo-600 text-white p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 top-1/2 transform -translate-y-1/2 z-10 border border-indigo-400/30 hover:scale-105"
-            aria-label="Scroll right"
-          >
-            <ChevronRight size={24} className="stroke-[1.5]" />
-          </button>
-        )}
+        <button
+          onClick={() => scroll("right")}
+          className="hidden sm:flex absolute right-0 -mr-8 bg-indigo-700/90 hover:bg-indigo-600 text-white p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 top-1/2 transform -translate-y-1/2 z-10 border border-indigo-400/30 hover:scale-105"
+          aria-label="Scroll right"
+          style={{ opacity: localities.length > 0 ? 1 : 0.5, pointerEvents: localities.length > 0 ? 'auto' : 'none' }}
+        >
+          <ChevronRight size={24} className="stroke-[1.5]" />
+        </button>
 
         {/* Localities List */}
         <div

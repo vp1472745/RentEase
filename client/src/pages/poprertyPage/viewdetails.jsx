@@ -536,7 +536,7 @@ const Viewdetails = () => {
               <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
                 <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-6">
                   <div className="mb-4 md:mb-0">
-                    <h1 className="text-2xl font-bold text-slate-800 mb-2">{property.title || 'Property Title'}</h1>
+                    <h1 className="text-2xl font-bold text-slate-800 mb-2">{property.title}</h1>
                     {/* Property Type Badge */}
                     {property.propertyType && (
                       <span className="inline-block bg-indigo-100 text-indigo-700 text-xs font-semibold px-2 py-1 rounded mr-2 mb-1">
@@ -568,7 +568,9 @@ const Viewdetails = () => {
                     )}
                     <div className="flex items-center text-indigo-700 font-semibold">
                       <FiMapPin className="mr-2 flex-shrink-0" />
-                      <span className="truncate">{property.address || ''}, {property.city || ''}, {property.state || ''}</span>
+                      <div className="break-words whitespace-normal text-sm sm:text-base w-full">
+                        {property.address || ''}, {property.city || ''}, {property.state || ''}
+                      </div>
                     </div>
                   </div>
                   

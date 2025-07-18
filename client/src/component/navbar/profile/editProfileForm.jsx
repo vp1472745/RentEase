@@ -97,12 +97,21 @@ const EditProfileForm = ({ profileImage, setProfileImage, name, setName }) => {
           <h2 className="text-xl font-semibold text-indigo-900 mb-6">Profile Picture</h2>
           <div className="text-center">
             <div className="relative inline-block">
-              <img
-                src={profileImage}
-                alt="Profile"
-                className="w-32 h-32 rounded-full object-cover border-4 border-slate-300 cursor-pointer hover:border-indigo-500 transition-all duration-200"
-                onClick={handleImageClick}
-              />
+              {profileImage ? (
+                <img
+                  src={profileImage}
+                  alt="Profile"
+                  className="w-32 h-32 rounded-full object-cover border-4 border-slate-300 cursor-pointer hover:border-indigo-500 transition-all duration-200"
+                  onClick={handleImageClick}
+                />
+              ) : (
+                <div
+                  className="w-32 h-32 rounded-full bg-indigo-200 flex items-center justify-center text-4xl font-bold text-indigo-700 border-4 border-slate-300 cursor-pointer hover:border-indigo-500 transition-all duration-200"
+                  onClick={handleImageClick}
+                >
+                  {tempName?.trim()?.[0]?.toUpperCase() || "U"}
+                </div>
+              )}
               <div
                 onClick={handleImageClick}
                 className="absolute bottom-2 right-2 w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-indigo-700 transition"

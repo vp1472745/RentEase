@@ -221,22 +221,18 @@ const MobileMenu = ({
               <Link
                 to="/PayRent"
                 onClick={handleMenuClick}
-                className="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center p-3 rounded-lg hover:bg-indigo-50 transition-colors"
               >
-                <FaDownload size={20} className="text-blue-600 mr-3" />
+                <FaDownload size={20} className="text-indigo-600 mr-3" />
                 <span className="text-gray-800 font-medium">Download APP</span>
               </Link>
 
-              <div className="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                <img
-                  src={FP}
-                  className="w-6 h-6 object-contain mr-3"
-                  alt="List Property"
-                />
+              <div className="flex items-center p-3 rounded-lg hover:bg-indigo-50 transition-colors">
+                <FaRegFileAlt size={20} className="text-indigo-600 mr-3" />
                 <Link
                   to="/add-property"
                   onClick={handleMenuClick}
-                  className="text-gray-800 font-medium"
+                  className="text-black font-medium"
                 >
                   List Property
                 </Link>
@@ -269,12 +265,10 @@ const MobileMenu = ({
                   <Link
                     to="/profile"
                     onClick={handleMenuClick}
-                    className="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex items-center p-3 rounded-lg hover:bg-indigo-50 transition-colors"
                   >
-                    <FaUser size={20} className="text-purple-600 mr-3" />
-                    <span className="text-gray-800 font-medium">
-                      My Profile
-                    </span>
+                    <FaUser size={20} className="text-indigo-600 mr-3" />
+                    <span className="text-gray-800 font-medium">My Profile</span>
                   </Link>
 
                   {/* Saved Properties */}
@@ -284,24 +278,20 @@ const MobileMenu = ({
                         e.stopPropagation();
                         setIsSavedPropertiesOpen(!isSavedPropertiesOpen);
                       }}
-                      className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-indigo-50 transition-colors"
                     >
                       <div className="flex items-center">
-                        <FiHeart size={20} className="text-red-500 mr-3" />
-                        <span className="text-gray-800 font-medium">
-                          Saved Properties
-                        </span>
+                        <FiHeart size={20} className="text-indigo-600 mr-3" />
+                        <span className="text-gray-800 font-medium">Saved Properties</span>
                         {savedProperties.length > 0 && (
-                          <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                          <span className="ml-2 bg-indigo-600 text-white text-xs rounded-full px-2 py-1">
                             {savedProperties.length}
                           </span>
                         )}
                       </div>
                       <MdOutlineKeyboardArrowUp
                         size={16}
-                        className={`transition-transform ${
-                          isSavedPropertiesOpen ? "rotate-180" : ""
-                        }`}
+                        className={`text-indigo-600 transition-transform ${isSavedPropertiesOpen ? "rotate-180" : ""}`}
                       />
                     </button>
 
@@ -362,15 +352,16 @@ const MobileMenu = ({
                                 </button>
                               </div>
                               <div className="mt-2 flex space-x-2">
-                               <button
-  onClick={() => {
-    navigate(`/property/${property._id}`);
-    onClose();
-  }}
-  className="flex-1 bg-purple-600 text-white text-xs py-1 px-2 rounded hover:bg-purple-700 transition-colors"
->
-  View Details
-</button>
+                                {/* Saved Properties "View Details" button */}
+                                <button
+                                  onClick={() => {
+                                    navigate(`/property/${property._id}`);
+                                    onClose();
+                                  }}
+                                  className="flex-1 bg-indigo-600 text-white text-xs py-1 px-2 rounded hover:bg-indigo-700 transition-colors"
+                                >
+                                  View Details
+                                </button>
                               </div>
                             </div>
                           ))
@@ -379,7 +370,7 @@ const MobileMenu = ({
                           <Link
                             to="/profile?tab=savedProperties"
                             onClick={handleMenuClick}
-                            className="block text-center text-purple-600 text-sm py-2 hover:text-purple-700"
+                            className="block text-center text-indigo-600 text-sm py-2 hover:text-indigo-700"
                           >
                             View All Saved Properties ({savedProperties.length})
                           </Link>
@@ -390,28 +381,21 @@ const MobileMenu = ({
 
                   {/* Quick Links */}
                   <div className="space-y-2">
+                    {/* Quick Links Button */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setIsQuickSearchOpen(!isQuickSearchOpen);
                       }}
-                      className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-indigo-50 transition-colors"
                     >
                       <div className="flex items-center">
-                        <img
-                          src={cursor}
-                          alt="Quick Links"
-                          className="w-5 h-5 mr-3"
-                        />
-                        <span className="text-gray-800 font-medium">
-                          Quick Links
-                        </span>
+                        <FaRegLightbulb size={20} className="text-indigo-600 mr-3" />
+                        <span className="text-gray-800 font-medium">Quick Links</span>
                       </div>
                       <MdOutlineKeyboardArrowUp
                         size={16}
-                        className={`transition-transform ${
-                          isQuickSearchOpen ? "rotate-180" : ""
-                        }`}
+                        className={`text-indigo-600 transition-transform ${isQuickSearchOpen ? "rotate-180" : ""}`}
                       />
                     </button>
 
@@ -486,20 +470,12 @@ const MobileMenu = ({
                       className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       <div className="flex items-center">
-                        <img
-                          src={services}
-                          alt="Services"
-                          className="w-5 h-5 mr-3"
-                        />
-                        <span className="text-gray-800 font-medium">
-                          Services
-                        </span>
+                        <IoDiamondOutline size={20} className="text-indigo-600 mr-3" />
+                        <span className="text-gray-800 font-medium">Services</span>
                       </div>
                       <MdOutlineKeyboardArrowUp
                         size={16}
-                        className={`transition-transform ${
-                          isServicesOpen ? "rotate-180" : ""
-                        }`}
+                        className={`text-indigo-600 transition-transform ${isServicesOpen ? "rotate-180" : ""}`}
                       />
                     </button>
 
@@ -535,12 +511,10 @@ const MobileMenu = ({
                   <Link
                     to="/Fraud"
                     onClick={handleMenuClick}
-                    className="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex items-center p-3 rounded-lg hover:bg-indigo-50 transition-colors"
                   >
-                    <PiDetective size={20} className="text-red-600 mr-3" />
-                    <span className="text-gray-800 font-medium">
-                      Report a Fraud
-                    </span>
+                    <PiDetective size={20} className="text-indigo-600 mr-3" />
+                    <span className="text-gray-800 font-medium">Report a Fraud</span>
                   </Link>
 
                   {/* Logout */}
@@ -550,10 +524,10 @@ const MobileMenu = ({
                       handleLogout();
                       handleMenuClick();
                     }}
-                    className="flex items-center w-full p-3 rounded-lg hover:bg-red-50 transition-colors text-red-600"
+                    className="flex items-center w-full p-3 rounded-lg hover:bg-indigo-50 transition-colors text-indigo-600"
                   >
                     <LogOut size={20} className="mr-3" />
-                    <span className="font-medium">Logout</span>
+                    <span className="font-medium text-black">Logout</span>
                   </button>
                 </div>
               ) : (
@@ -563,7 +537,7 @@ const MobileMenu = ({
                       <Link
                         to="/signup"
                         onClick={handleMenuClick}
-                        className="flex items-center w-full p-3 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+                        className="flex items-center w-full p-3 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
                       >
                         <FaUserPlus size={20} className="mr-3" />
                         <span className="font-medium">Create Account</span>
@@ -571,7 +545,7 @@ const MobileMenu = ({
                       <Link
                         to="/login"
                         onClick={handleMenuClick}
-                        className="flex items-center w-full p-3 rounded-lg border border-purple-600 text-purple-600 hover:bg-purple-50 transition-colors"
+                        className="flex items-center w-full p-3 rounded-lg border border-indigo-600 text-indigo-600 hover:bg-indigo-50 transition-colors"
                       >
                         <FaSignInAlt size={20} className="mr-3" />
                         <span className="font-medium">Login</span>
@@ -588,34 +562,33 @@ const MobileMenu = ({
               <div className="space-y-3">
                 <h3 className="text-sm font-medium text-gray-600">Follow Us</h3>
                 <div className="flex space-x-4">
-                 
                   <a
                     href="https://www.instagram.com/v_i_n_e_e_t_9630?igsh=MXR3cTFnMWllMXh0Yg=="
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <FaInstagram className="text-2xl text-pink-600 hover:text-pink-700 cursor-pointer" />
+                    <FaInstagram className="text-2xl text-[#E4405F] hover:text-[#C13584] cursor-pointer" />
                   </a>
                   <a
                     href="https://linkedin.com"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <FaLinkedin className="text-2xl text-blue-700 hover:text-blue-800 cursor-pointer" />
+                    <FaLinkedin className="text-2xl text-[#0077B5] hover:text-[#005983] cursor-pointer" />
                   </a>
                   <a
                     href="https://twitter.com"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <FaTwitter className="text-2xl text-blue-400 hover:text-blue-500 cursor-pointer" />
+                    <FaTwitter className="text-2xl text-[#1DA1F2] hover:text-[#0d8ddb] cursor-pointer" />
                   </a>
                   <a
                     href="https://youtube.com"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <FaYoutube className="text-2xl text-red-600 hover:text-red-700 cursor-pointer" />
+                    <FaYoutube className="text-2xl text-[#FF0000] hover:text-[#b80000] cursor-pointer" />
                   </a>
                 </div>
               </div>
@@ -666,13 +639,14 @@ const MobileMenu = ({
             </div>
 
             <div className="space-y-4">
+              {/* Auth Modal Buttons */}
               <Link
                 to="/signup"
                 onClick={() => {
                   setIsAuthModalOpen(false);
                   onClose();
                 }}
-                className="block w-full bg-purple-600 text-white text-center py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors font-semibold"
+                className="block w-full bg-indigo-600 text-white text-center py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors font-semibold"
               >
                 Create Account
               </Link>
@@ -683,7 +657,7 @@ const MobileMenu = ({
                   setIsAuthModalOpen(false);
                   onClose();
                 }}
-                className="block w-full bg-white text-purple-600 text-center py-3 px-4 rounded-lg border-2 border-purple-600 hover:bg-purple-50 transition-colors font-semibold"
+                className="block w-full bg-white text-indigo-600 text-center py-3 px-4 rounded-lg border-2 border-indigo-600 hover:bg-indigo-50 transition-colors font-semibold"
               >
                 Login
               </Link>
