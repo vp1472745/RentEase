@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "../../lib/axios.js";
-import { FaRupeeSign } from "react-icons/fa";
+import { FaRupeeSign, FaCat } from "react-icons/fa";
+import loadingC from '../../assets/loadingCat.gif'
 import { toast } from 'react-toastify';
 import {
   FiHeart,
@@ -359,25 +360,25 @@ function Properties() {
   const toggleFavorite = async (propertyId) => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
+      const userRole = localStorage.getItem('role');
+      // If not logged in or not tenant/owner, redirect to signup
+      if (!token || !(userRole === 'tenant' || userRole === 'owner')) {
         navigate('/signup');
         return;
       }
 
       const isCurrentlySaved = favorites[propertyId];
-      
+
       if (isCurrentlySaved) {
         await axios.delete(`/api/properties/save/${propertyId}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
-        
         setFavorites((prev) => ({
           ...prev,
           [propertyId]: false,
         }));
-        
         toast.success('Property removed from saved');
       } else {
         try {
@@ -386,18 +387,21 @@ function Properties() {
               Authorization: `Bearer ${token}`
             }
           });
-          
           setFavorites((prev) => ({
             ...prev,
             [propertyId]: true,
           }));
-          
           if (response.data.alreadySaved) {
             toast.info('Property is already saved');
           } else {
             toast.success('Property saved successfully');
           }
         } catch (saveError) {
+          // If session expired (401), redirect to signup
+          if (saveError.response?.status === 401) {
+            navigate('/signup');
+            return;
+          }
           if (saveError.response?.status === 400 && saveError.response?.data?.message === "Property already saved") {
             setFavorites((prev) => ({
               ...prev,
@@ -412,6 +416,11 @@ function Properties() {
 
       window.dispatchEvent(new Event('savedPropertyUpdated'));
     } catch (error) {
+      // If session expired (401), redirect to signup
+      if (error.response?.status === 401) {
+        navigate('/signup');
+        return;
+      }
       console.error('Error toggling favorite:', error);
       const errorMessage = error.response?.data?.message || 'Failed to update saved property';
       toast.error(errorMessage);
@@ -562,11 +571,17 @@ function Properties() {
 
         {/* Property Listings */}
         {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="flex flex-col items-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600 mb-4"></div>
-              <p className="text-slate-600">Loading properties...</p>
+          <div className="flex flex-col items-center justify-center h-64">
+            <div className="relative mb-4">
+             
+             <img src={loadingC} alt="" />
             </div>
+            <p className="text-slate-600 font-semibold text-lg flex items-center gap-2">
+              Searching properties...
+            </p>
+            <p className="text-slate-400 mt-2 text-sm">
+              Please wait while we fetch the latest listings for you.
+            </p>
           </div>
         ) : filteredProperties.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
@@ -1144,9 +1159,8 @@ const PropertySearchBox = ({
                   type="number"
                   className="flex-1 px-4 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-800 outline-none transition-all"
                   placeholder="Max"
-                  value={maxPrice}
+                  value={Number.isFinite(Number(maxPrice)) ? maxPrice : ''}
                   onChange={(e) => setMaxPrice(e.target.value)}
-                  min="0"
                 />
               </div>
             </div>

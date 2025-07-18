@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from '../../lib/axios.js';
 import { FaGooglePlay, FaApple } from "react-icons/fa";
+import loadingC from '../../assets/loadingCat.gif'
+
 import { FaRupeeSign } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
 import {
@@ -25,8 +27,10 @@ import {
   FiCompass,
   FiX,
   FiChevronRight,
-  FiChevronLeft as FiChevronLeftIcon
+  FiChevronLeft as FiChevronLeftIcon,
+  FiSearch
 } from "react-icons/fi";
+import { FaCat } from "react-icons/fa"; // Add this import with your other icons
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -196,7 +200,7 @@ const Viewdetails = () => {
       return;
     }
     const userRole = localStorage.getItem('role');
-    if (userRole === 'tenant') {
+    if (userRole === 'tenant'||userRole === 'owner') {
       window.open(`tel:${property.ownerphone}`);
     } else {
       setShowSignupPopup(true);
@@ -298,8 +302,16 @@ const Viewdetails = () => {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-lg text-slate-700">Loading property details...</p>
+          <div className="relative mb-4 flex items-center justify-center">
+           
+            <img src={loadingC} alt="" />
+          </div>
+          <p className="mt-4 text-lg text-slate-700 flex items-center justify-center gap-2">
+            Loading property details...
+          </p>
+          <p className="text-slate-400 mt-2 text-sm">
+            Please wait while we fetch the latest property information for you.
+          </p>
         </div>
       </div>
     );

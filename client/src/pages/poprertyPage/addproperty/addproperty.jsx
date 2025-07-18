@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowRight, FaCheck, FaArrowLeft } from "react-icons/fa";
 
@@ -65,6 +65,10 @@ const AddProperty = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showOwnerModal, setShowOwnerModal] = useState(false);
 
+  const formRef = useRef(null);
+  // Top reference for scroll
+  const topRef = useRef(null);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -79,6 +83,8 @@ const AddProperty = () => {
       setShowOwnerModal(true);
     }
   }, [navigate]);
+
+
 
   const validateStep = (step) => {
     const errors = {};
@@ -228,7 +234,7 @@ const AddProperty = () => {
     const safeArray = (arr, allowed) => {
       if (!arr) return [];
       if (!Array.isArray(arr)) arr = [arr];
-      arr = arr.map(v => typeof v === 'string' ? v.trim() : '').filter(Boolean);
+      arr = arr.map((v) => (typeof v === "string" ? v.trim() : "")).filter(Boolean);
       for (const v of arr) {
         if (!allowed.includes(v)) {
           setError(`Invalid value: ${v}`);
@@ -259,7 +265,7 @@ const AddProperty = () => {
       availableFrom: formData.availableFrom ? new Date(formData.availableFrom).toISOString() : undefined,
     };
     // Remove unused subcategories
-    ["roomSubcategory", "apartmentSubcategory", "pgSubcategory", "otherSubcategory"].forEach(f => {
+    ["roomSubcategory", "apartmentSubcategory", "pgSubcategory", "otherSubcategory"].forEach((f) => {
       if (f !== subcategoryField) delete submitData[f];
     });
 
@@ -292,8 +298,25 @@ const AddProperty = () => {
     }
   };
 
-  const nextStep = () => validateStep(step) && step < 4 && setStep((prev) => prev + 1);
-  const prevStep = () => step > 1 && setStep((prev) => prev - 1);
+  const nextStep = () => {
+    if (validateStep(step) && step < 4) {
+      setStep((prev) => prev + 1);
+      // Scroll to top of form on next step
+      if (topRef.current) {
+        topRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
+
+  const prevStep = () => {
+    if (step > 1) {
+      setStep((prev) => prev - 1);
+      // Scroll to top of form on previous step
+      if (topRef.current) {
+        topRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
 
   const calculateProgress = () => {
     const stepDefinitions = [
@@ -355,54 +378,55 @@ const AddProperty = () => {
 
   return (
     <>
+      <div ref={topRef}></div>
       <div className="bg-slate-700 w-[100%] h-19"></div>
       <div className="flex flex-col md:flex-row items-start justify-center min-h-[90vh] p-4 md:p-6 h-[90vh] bg-white w-[100%]">
-      <div className="hidden md:block w-64 mr-8 p-6 rounded-lg shadow-md sticky top-2 h-150 border-2 border-indigo-600">
-  <div className="flex justify-center mb-6">
-    <div className="w-32 h-32 font-bold">
-      <CircularProgressbar
-        value={progress}
-        text={`${Math.round(progress)}%`}
-        styles={buildStyles({
-          textColor: "#1F2937", // slate-800
-          pathColor: "#4F46E5", // indigo-600
-          trailColor: "#E5E7EB", // slate-200
-          textSize: "24px",
-        })}
-      />
-    </div>
-  </div>
+        {/* Sidebar - Steps Indicator */}
+        <div className="hidden md:block w-64 mr-8 p-6 rounded-lg shadow-md sticky top-2 h-150 border-2 border-indigo-600">
+          <div className="flex justify-center mb-6">
+            <div className="w-32 h-32 font-bold">
+              <CircularProgressbar
+                value={progress}
+                text={`${Math.round(progress)}%`}
+                styles={buildStyles({
+                  textColor: "#1F2937", // slate-800
+                  pathColor: "#4F46E5", // indigo-600
+                  trailColor: "#E5E7EB", // slate-200
+                  textSize: "24px",
+                })}
+              />
+            </div>
+          </div>
 
-  <div className="space-y-4">
-    {[1, 2, 3, 4].map((stepNumber) => (
-      <div
-        key={stepNumber}
-        className={`flex items-center p-3 rounded-lg cursor-pointer transition-all ${
-          step === stepNumber ? "bg-slate-50 border border-slate-200 shadow-sm" : ""
-        }`}
-        onClick={() => setStep(stepNumber)}
-      >
-        <div
-          className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 font-semibold text-sm ${
-            step >= stepNumber ? "bg-indigo-600 text-white" : "bg-slate-200 text-slate-700"
-          }`}
-        >
-          {step > stepNumber ? <FaCheck size={14} /> : stepNumber}
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map((stepNumber) => (
+              <div
+                key={stepNumber}
+                className={`flex items-center p-3 rounded-lg cursor-pointer transition-all ${
+                  step === stepNumber ? "bg-slate-50 border border-slate-200 shadow-sm" : ""
+                }`}
+                onClick={() => setStep(stepNumber)}
+              >
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 font-semibold text-sm ${
+                    step >= stepNumber ? "bg-indigo-600 text-white" : "bg-slate-200 text-slate-700"
+                  }`}
+                >
+                  {step > stepNumber ? <FaCheck size={14} /> : stepNumber}
+                </div>
+                <div>
+                  <h3 className="text-indigo-600 font-semibold">Step {stepNumber}</h3>
+                  <p className="text-sm text-slate-700">
+                    {stepNumber === 1 && "Basic Information"}
+                    {stepNumber === 2 && "Property Details"}
+                    {stepNumber === 3 && "Rent & Facilities"}
+                    {stepNumber === 4 && "Upload Media"}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div>
-          <h3 className="text-indigo-600 font-semibold">Step {stepNumber}</h3>
-          <p className="text-sm text-slate-700">
-            {stepNumber === 1 && "Basic Information"}
-            {stepNumber === 2 && "Property Details"}
-            {stepNumber === 3 && "Rent & Facilities"}
-            {stepNumber === 4 && "Upload Media"}
-          </p>
-        </div>
-      </div>
-    ))}
-  </div>
-</div>
-
 
         {/* Main Form */}
         <div className="w-full md:w-2/3 bg-white p-6 rounded-lg h-150 overflow-y-auto shadow-2xl border-2 border-purple-800">

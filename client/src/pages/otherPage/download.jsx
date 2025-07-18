@@ -55,7 +55,7 @@ For more information, visit: www.roommilega.in
 
   return (
     <>
-      <div className='h-19 w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md mt-1 font-mono'></div>
+      <div className='h-19 w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md  font-mono'></div>
       
       <div className='flex flex-col lg:flex-row mx-auto justify-center items-center bg-gray-100 min-h-[80vh] py-10 px-4'>
         {/* Form Section */}

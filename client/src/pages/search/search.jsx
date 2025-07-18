@@ -149,12 +149,10 @@ const SearchBar = () => {
               key={btn.value}
               type="button"
               className={`
-                flex items-center justify-center flex-1 min-w-0 px-1.5 py-2 sm:px-4 sm:py-3 font-medium text-xs sm:text-sm gap-1 sm:gap-2
-                ${
-                  selectedTypeButton === btn.value
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
-                    : "bg-transparent text-gray-700 hover:bg-white/50"
-                }
+                flex items-center justify-center flex-1 min-w-0 px-1.5 py-2 sm:px-3 sm:py-3 font-medium text-xs sm:text-sm gap-1 sm:gap-2
+                ${selectedTypeButton === btn.value
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
+                  : "bg-transparent text-gray-700 hover:bg-white/50"}
                 ${idx === 0 ? "rounded-tl-xl" : ""}
                 ${idx === propertyTypeButtons.length - 1 ? "rounded-tr-xl" : ""}
                 transition-all duration-200
@@ -169,8 +167,8 @@ const SearchBar = () => {
                 )
               }
             >
-              <span className="text-sm sm:text-lg" aria-hidden>{btn.icon}</span>
-              <span className="text-center whitespace-nowrap">{btn.label}</span>
+              <span className="text-sm sm:text-sm">{btn.icon}</span>
+              <span className="truncate text-xs sm:text-sm max-w-[60px] sm:max-w-none">{btn.label}</span>
             </button>
           ))}
         </div>

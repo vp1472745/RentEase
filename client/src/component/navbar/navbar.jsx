@@ -66,7 +66,8 @@ import {
   FaBed,
   FaRulerCombined,
 } from "react-icons/fa";
-
+import logo from '../../assets/home.png'
+import logo2 from '../../assets/scrolllogo.png'
 function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -418,8 +419,12 @@ function Navbar({ isAuthenticated, setIsAuthenticated, user, setUser }) {
             : "text-white hover:text-purple-200"
         }`}
       >
-        <Home size={28} className="mr-3" />
-        <span className="font-extrabold tracking-wide">RoomMilega</span>
+        <img
+          src={isScrolled ? logo2  : logo}
+          alt=""
+          className="w-5 h-5 transition-all duration-300"
+        />
+        <span className="font-extrabold tracking-wide">Roommilega</span>
       </Link>
       <div className="hidden md:flex items-center space-x-20">
         <Link
